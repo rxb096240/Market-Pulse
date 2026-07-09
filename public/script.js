@@ -909,9 +909,11 @@ async function refreshNews(){
 /* ---- News: Google News RSS (US / World) ---- */
 const GNEWS_US_URL = `${API_BASE}/api/news/google?edition=us`;
 const GNEWS_WORLD_URL = `${API_BASE}/api/news/google?edition=world`;
+const GNEWS_INDIA_URL = `${API_BASE}/api/news/google?edition=in`;
 
 let usNewsLoaded = false;
 let worldNewsLoaded = false;
+let indiaNewsLoaded = false;
 
 function parseGoogleNewsRss(xmlText, tag){
   try{
@@ -974,6 +976,22 @@ async function refreshWorldNews(){
   renderNewsColumn('worldNewsList', dedupeSortAndTrim(items, 20));
   worldNewsLoaded = true;
 }
+
+async function refreshIndiaNews(){
+  const container = document.getElementById('indiaNewsList');
+  if(!container) return;
+  if(!indiaNewsLoaded) container.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  // We tag these as 'India' so they get labeled cleanly in the UI
+  const items = await fetchGoogleNews(GNEWS_INDIA_URL, 'India');
+  if(items.length === 0){
+    if(!indiaNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
+    return;
+  }
+  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20));
+  indiaNewsLoaded = true;
+}
+
 
 /* ---- Crypto Overview (sortable markets table) ---- */
 let marketsData = [];
