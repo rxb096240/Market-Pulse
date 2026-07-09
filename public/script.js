@@ -1120,6 +1120,8 @@ function showView(view){
     refreshUsNews();
   }else if(view === 'news-world'){
     refreshWorldNews();
+  }else if(view === 'news-india'){
+    refreshIndiaNews();
   }
 }
 
@@ -1146,6 +1148,7 @@ function refreshCurrentViewNews(){
   if(currentView === 'crypto-news' || currentView === 'stocks-news') refreshNews();
   else if(currentView === 'news-us') refreshUsNews();
   else if(currentView === 'news-world') refreshWorldNews();
+  else if(currentView === 'news-india') refreshIndiaNews();
 }
 
 initGrids();
