@@ -765,8 +765,9 @@ document.addEventListener('click', (e) => {
 
 /* ---- News ---- */
 async function fetchCryptoNewsFor(coin){
-  const yahooSym = `${coin.sym.toUpperCase()}-USD`;
-  const target = `${API_BASE}/api/news/search?q=${encodeURIComponent(yahooSym)}`;
+  // Try fallback search queries if the backend API prefers standard names over Yahoo tickers
+  const query = coin.sym === 'BTC' ? 'BTC-USD' : `${coin.name} crypto`; 
+  const target = `${API_BASE}/api/news/search?q=${encodeURIComponent(query)}`;
   try{
     const json = await fetchJsonWithTimeout(target, 8000);
     const items = json.news || [];
@@ -785,8 +786,15 @@ async function fetchCryptoNewsFor(coin){
 
 async function fetchCryptoNews(){
   if(COINS.length === 0) return [];
-  const results = await Promise.all(COINS.map(c => fetchCryptoNewsFor(c)));
-  return results.flat();
+  
+  // Running Promise.allSettled guarantees that even if one coin's news 
+  // fails, it won't break the news load sequence for the rest of your watchlist.
+  const results = await Promise.allSettled(COINS.map(c => fetchCryptoNewsFor(c)));
+  
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value)
+    .flat();
 }
 
 async function fetchStockNewsFor(sym){
