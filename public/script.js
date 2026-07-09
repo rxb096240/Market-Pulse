@@ -1170,6 +1170,29 @@ function refreshCurrentViewNews(){
   else if(currentView === 'news-india') refreshIndiaNews();
 }
 
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const sidenav = document.querySelector('.sidenav');
+
+function openDrawer(){
+  sidenav.classList.add('open');
+  drawerOverlay.classList.add('open');
+}
+function closeDrawer(){
+  sidenav.classList.remove('open');
+  drawerOverlay.classList.remove('open');
+}
+
+hamburgerBtn?.addEventListener('click', openDrawer);
+drawerOverlay?.addEventListener('click', closeDrawer);
+
+// Close the drawer after picking a nav item, but only on mobile widths
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if(window.innerWidth <= 820) closeDrawer();
+  });
+});
+
 initGrids();
 trackSavedPortfolioAssets().then(() => { refreshAll(); });
 renderPortfolio();
