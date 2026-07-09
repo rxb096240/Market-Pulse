@@ -765,9 +765,13 @@ document.addEventListener('click', (e) => {
 
 /* ---- News ---- */
 async function fetchCryptoNewsFor(coin){
-  // Try fallback search queries if the backend API prefers standard names over Yahoo tickers
-  const query = coin.sym === 'BTC' ? 'BTC-USD' : `${coin.name} crypto`; 
+  // Check if the current coin is BTC, ETH, or XRP to use the exact Yahoo ticker
+  const targetTicker = coin.sym.toUpperCase();
+  const useYahooTicker = ['BTC', 'ETH', 'XRP'].includes(targetTicker);
+  
+  const query = useYahooTicker ? `${targetTicker}-USD` : `${coin.name} crypto`; 
   const target = `${API_BASE}/api/news/search?q=${encodeURIComponent(query)}`;
+  
   try{
     const json = await fetchJsonWithTimeout(target, 8000);
     const items = json.news || [];
@@ -783,6 +787,7 @@ async function fetchCryptoNewsFor(coin){
     return [];
   }
 }
+
 
 async function fetchCryptoNews(){
   if(COINS.length === 0) return [];
