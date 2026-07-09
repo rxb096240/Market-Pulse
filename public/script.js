@@ -292,17 +292,29 @@ function setStatus(ok){
   }
 }
 
+let isRefreshing = false;
+
 async function refreshAll(){
-  const [cryptoOk, stockOk] = await Promise.all([fetchCrypto(), fetchStocks()]);
-  buildTape();
-  setStatus(cryptoOk || stockOk);
-  renderPortfolio();
-  if(currentView === 'crypto-trending'){
-    refreshTrending();
-  }else if(currentView === 'crypto-overview'){
-    refreshMarketsOverview();
+  if(isRefreshing) return; // Skip if a refresh is already running
+  isRefreshing = true;
+  
+  try {
+    const [cryptoOk, stockOk] = await Promise.all([fetchCrypto(), fetchStocks()]);
+    buildTape();
+    setStatus(cryptoOk || stockOk);
+    renderPortfolio();
+    if(currentView === 'crypto-trending'){
+      refreshTrending();
+    }else if(currentView === 'crypto-overview'){
+      refreshMarketsOverview();
+    }
+  } catch(e) {
+    console.error("Refresh cycle failed:", e);
+  } finally {
+    setTimeout(() => { isRefreshing = false; }, 2000);
   }
 }
+
 
 function tickClock(){
   const el = document.getElementById('clock-time');
@@ -1140,6 +1152,6 @@ initGrids();
 trackSavedPortfolioAssets().then(() => { refreshAll(); });
 renderPortfolio();
 tickClock();
-setInterval(refreshAll, 30000);
+setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
 setInterval(tickClock, 1000);
