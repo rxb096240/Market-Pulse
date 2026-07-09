@@ -2,10 +2,10 @@
   "name": "ticker-dashboard-backend",
   "version": "1.0.0",
   "description": "Express backend that proxies CoinGecko/Yahoo Finance/Google News to solve CORS for the ticker dashboard frontend",
-  "main": "server.js",
+  "main": "public/src/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node public/src/server.js"
   },
   "dependencies": {
     "express": "^4.19.2"
