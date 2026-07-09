@@ -1114,7 +1114,8 @@ const VIEW_TITLES = {
   'stocks-portfolio': 'Stocks · Portfolio',
   'stocks-news': 'Stocks · News',
   'news-us': 'News · US',
-  'news-world': 'News · World'
+  'news-world': 'News · World',
+  'news-india': 'News . India'
 };
 
 function showView(view){
