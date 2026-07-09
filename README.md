@@ -20,7 +20,6 @@ from the browser.
 ## Run it
 
 ```bash
-cd backend
 npm install
 npm start
 ```
