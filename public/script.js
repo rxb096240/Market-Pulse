@@ -1016,7 +1016,6 @@ function renderStocksMarketsTable(){
         <td>${escapeHtml(s.name)}</td>
         <td>$${fmtPrice(s.price)}</td>
         <td class="mt-chg ${chgCls}">${chg !== null && chg !== undefined ? chgArrow + Math.abs(chg).toFixed(2) + '%' : '--'}</td>
-        <td>${s.marketCap ? fmtCap(s.marketCap) : '--'}</td>
         <td>${s.volume ? fmtCap(s.volume) : '--'}</td>
         <td><button class="mt-add-btn" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}" ${alreadyTracked ? 'disabled' : ''}>${alreadyTracked ? 'Added' : '+ Add'}</button></td>
       </tr>
