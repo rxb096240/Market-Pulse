@@ -4,7 +4,6 @@
 
 const express = require('express');
 const path = require('path');
-app.use(express.static(path.join(__dirname, 'public')));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -150,6 +149,7 @@ app.get('/api/news/search', async (req, res) => {
 const GNEWS_URLS = {
   us: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
   world: 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en',
+  in: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
 };
 
 app.get('/api/news/google', async (req, res) => {
