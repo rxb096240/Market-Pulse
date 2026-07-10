@@ -84,7 +84,6 @@ app.get('/api/stocks/markets', async (req, res) => {
             name: meta.shortName || sym,
             price,
             changePct,
-            marketCap: null,   // v8/chart doesn't return this
             volume: meta.regularMarketVolume ?? null
           };
         })
