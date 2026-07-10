@@ -983,12 +983,14 @@ async function refreshIndiaNews(){
   if(!indiaNewsLoaded) container.innerHTML = '<div class="news-loading">Loading news…</div>';
 
   // We tag these as 'India' so they get labeled cleanly in the UI
+  const items = await fetchGoogleNews(GNEWS_INDIA_URL, 'India');
   items.forEach(item => { if(item.source === 'Google News') item.source = 'NDTV'; });
+
   if(items.length === 0){
     if(!indiaNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20));
+  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20), false);
   indiaNewsLoaded = true;
 }
 
