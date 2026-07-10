@@ -149,7 +149,7 @@ app.get('/api/news/search', async (req, res) => {
 const GNEWS_URLS = {
   us: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
   world: 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en',
-  in: 'https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en',
+  in: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
 };
 
 app.get('/api/news/google', async (req, res) => {
