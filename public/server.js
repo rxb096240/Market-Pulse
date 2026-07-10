@@ -50,6 +50,54 @@ async function fetchText(url, timeoutMs = 8000) {
     clearTimeout(timer);
   }
 }
+// Static list of ~100 large-cap US stocks (S&P 100-style). This changes
+// rarely, so no need to fetch it dynamically — just update by hand
+// occasionally.
+const TOP_100_STOCKS = [
+  'AAPL','MSFT','GOOGL','GOOG','AMZN','NVDA','META','TSLA','BRK.B','AVGO',
+  'JPM','LLY','V','UNH','XOM','MA','COST','HD','PG','JNJ',
+  'NFLX','ABBV','BAC','CRM','WMT','KO','MRK','CVX','AMD','PEP',
+  'ADBE','TMO','ACN','ORCL','LIN','MCD','ABT','CSCO','WFC','GE',
+  'DHR','TXN','PM','IBM','CAT','VZ','INTU','AMGN','NOW','QCOM',
+  'ISRG','SPGI','BKNG','GS','UNP','AXP','NEE','PGR','RTX','HON',
+  'T','LOW','SYK','ETN','PFE','BLK','TJX','MDT','ELV','C',
+  'BSX','SCHW','ADP','MU','MMC','PLD','ANET','LMT','VRTX','CB',
+  'GILD','ADI','KLAC','SBUX','MO','FI','UBER','AMAT','PANW','ICE',
+  'DE','CME','SO','APH','MDLZ','ZTS','CI','SHW','WM','PYPL'
+];
+
+app.get('/api/stocks/markets', async (req, res) => {
+  try {
+    const chunkSize = 50;
+    const chunks = [];
+    for (let i = 0; i < TOP_100_STOCKS.length; i += chunkSize) {
+      chunks.push(TOP_100_STOCKS.slice(i, i + chunkSize));
+    }
+
+    const { data } = await cachedFetch('stocks:top100', 30_000, async () => {
+      const results = await Promise.all(chunks.map(async (chunk) => {
+        const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.join(',')}`;
+        const { data } = await fetchJson(url, 10_000);
+        return data?.quoteResponse?.result || [];
+      }));
+      return { data: results.flat(), contentType: 'application/json' };
+    });
+
+    const mapped = data.map(q => ({
+      symbol: q.symbol,
+      name: q.shortName || q.longName || q.symbol,
+      price: q.regularMarketPrice,
+      changePct: q.regularMarketChangePercent,
+      marketCap: q.marketCap,
+      volume: q.regularMarketVolume
+    }));
+
+    res.json(mapped);
+  } catch (e) {
+    console.error('stocks overview fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch stocks overview' });
+  }
+});
 
 // CORS: allow the frontend (any origin) to call this API. Since this server
 // itself will typically also serve the frontend as static files, this is
