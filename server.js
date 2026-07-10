@@ -69,31 +69,33 @@ const TOP_100_STOCKS = [
 
 app.get('/api/stocks/markets', async (req, res) => {
   try {
-    const chunkSize = 50;
-    const chunks = [];
-    for (let i = 0; i < TOP_100_STOCKS.length; i += chunkSize) {
-      chunks.push(TOP_100_STOCKS.slice(i, i + chunkSize));
-    }
-
     const { data } = await cachedFetch('stocks:top100', 30_000, async () => {
-      const results = await Promise.all(chunks.map(async (chunk) => {
-        const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.join(',')}`;
-        const { data } = await fetchJson(url, 10_000);
-        return data?.quoteResponse?.result || [];
-      }));
-      return { data: results.flat(), contentType: 'application/json' };
+      const results = await Promise.allSettled(
+        TOP_100_STOCKS.map(async (sym) => {
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`;
+          const { data } = await fetchJson(url, 8000);
+          const meta = data?.chart?.result?.[0]?.meta;
+          if (!meta || meta.regularMarketPrice === undefined) throw new Error('no data for ' + sym);
+          const prevClose = meta.previousClose ?? meta.chartPreviousClose;
+          const price = meta.regularMarketPrice;
+          const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
+          return {
+            symbol: sym,
+            name: meta.shortName || sym,
+            price,
+            changePct,
+            marketCap: null,   // v8/chart doesn't return this
+            volume: meta.regularMarketVolume ?? null
+          };
+        })
+      );
+      const mapped = results
+        .filter(r => r.status === 'fulfilled')
+        .map(r => r.value);
+      return { data: mapped, contentType: 'application/json' };
     });
 
-    const mapped = data.map(q => ({
-      symbol: q.symbol,
-      name: q.shortName || q.longName || q.symbol,
-      price: q.regularMarketPrice,
-      changePct: q.regularMarketChangePercent,
-      marketCap: q.marketCap,
-      volume: q.regularMarketVolume
-    }));
-
-    res.json(mapped);
+    res.json(data);
   } catch (e) {
     console.error('stocks overview fetch failed:', e.message);
     res.status(502).json({ error: 'Failed to fetch stocks overview' });
