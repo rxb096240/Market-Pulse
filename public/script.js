@@ -1440,7 +1440,7 @@ function showView(view){
   }else if(view === 'stocks-overview'){
   refreshStocksMarketsOverview();
 }
-
+}
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 });
