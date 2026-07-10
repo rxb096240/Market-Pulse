@@ -22,6 +22,78 @@ try{
   if(saved) PORTFOLIO = JSON.parse(saved);
 }catch(e){ PORTFOLIO = []; }
 
+const supabaseClient = window.supabase.createClient(
+  'https://lrxkqzubhcnzqtrmdimq.supabase.co',
+  'sb_publishable_k65mjJvZn92WQJM7BC6rWQ_X1rMsOVz'
+);
+
+let currentUser = null;
+let authMode = 'signin'; // or 'signup'
+
+const authBtn = document.getElementById('authBtn');
+const authModalBackdrop = document.getElementById('authModalBackdrop');
+const authModalClose = document.getElementById('authModalClose');
+const authModalTitle = document.getElementById('authModalTitle');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authError = document.getElementById('authError');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authToggleText = document.getElementById('authToggleText');
+const authToggleLink = document.getElementById('authToggleLink');
+
+function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
+function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail.value=''; authPassword.value=''; }
+
+function updateAuthUI(){
+  if(currentUser){
+    authBtn.textContent = currentUser.email;
+  }else{
+    authBtn.textContent = 'Sign in';
+  }
+}
+
+authBtn?.addEventListener('click', () => {
+  if(currentUser){
+    supabaseClient.auth.signOut();
+  }else{
+    openAuthModal();
+  }
+});
+
+authModalClose?.addEventListener('click', closeAuthModal);
+
+authToggleLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  authModalTitle.textContent = authMode === 'signin' ? 'Sign in' : 'Sign up';
+  authSubmitBtn.textContent = authMode === 'signin' ? 'Sign in' : 'Sign up';
+  authToggleText.textContent = authMode === 'signin' ? 'No account?' : 'Already have one?';
+  authToggleLink.textContent = authMode === 'signin' ? 'Sign up' : 'Sign in';
+});
+
+authSubmitBtn?.addEventListener('click', async () => {
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if(!email || !password){ authError.textContent = 'Enter both email and password.'; return; }
+
+  authSubmitBtn.disabled = true;
+  const fn = authMode === 'signin' ? 'signInWithPassword' : 'signUp';
+  const { data, error } = await supabaseClient.auth[fn]({ email, password });
+  authSubmitBtn.disabled = false;
+
+  if(error){ authError.textContent = error.message; return; }
+  if(authMode === 'signup' && !data.session){
+    authError.textContent = 'Check your email to confirm your account.';
+    return;
+  }
+  closeAuthModal();
+});
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  currentUser = session?.user || null;
+  updateAuthUI();
+});
+
 const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
 let paletteIdx = 0;
 function nextColor(){ const c = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++; return c; }
