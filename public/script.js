@@ -962,6 +962,112 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+//Top 100 Stocks with high market cap
+let stocksMarketsData = [];
+let stocksMarketsLoaded = false;
+let stocksMarketsSortField = 'symbol';
+let stocksMarketsSortDir = 'asc';
+
+async function fetchStocksOverview(){
+  try{
+    const data = await fetchJsonWithTimeout(`${API_BASE}/api/stocks/markets`, 12000);
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    console.error('Stocks overview fetch failed:', e);
+    return [];
+  }
+}
+
+function sortStocksMarkets(){
+  const dir = stocksMarketsSortDir === 'asc' ? 1 : -1;
+  stocksMarketsData.sort((a, b) => {
+    let av = a[stocksMarketsSortField];
+    let bv = b[stocksMarketsSortField];
+    if(stocksMarketsSortField === 'symbol' || stocksMarketsSortField === 'name'){
+      av = (av || '').toLowerCase();
+      bv = (bv || '').toLowerCase();
+      if(av < bv) return -1 * dir;
+      if(av > bv) return 1 * dir;
+      return 0;
+    }
+    av = av === null || av === undefined ? -Infinity : av;
+    bv = bv === null || bv === undefined ? -Infinity : bv;
+    return (av - bv) * dir;
+  });
+}
+
+function renderStocksMarketsTable(){
+  const tbody = document.getElementById('stocksMarketsTableBody');
+  if(!tbody) return;
+  if(stocksMarketsData.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" class="news-loading">Market data unavailable — try again shortly.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = stocksMarketsData.map(s => {
+    const chg = s.changePct;
+    const chgCls = chg === null || chg === undefined ? '' : (chg >= 0 ? 'up' : 'down');
+    const chgArrow = chg === null || chg === undefined ? '' : (chg >= 0 ? '▲ ' : '▼ ');
+    const alreadyTracked = STOCKS.some(x => x.sym === s.symbol);
+    return `
+      <tr>
+        <td>${escapeHtml(s.symbol)}</td>
+        <td>${escapeHtml(s.name)}</td>
+        <td>$${fmtPrice(s.price)}</td>
+        <td class="mt-chg ${chgCls}">${chg !== null && chg !== undefined ? chgArrow + Math.abs(chg).toFixed(2) + '%' : '--'}</td>
+        <td>${s.marketCap ? fmtCap(s.marketCap) : '--'}</td>
+        <td>${s.volume ? fmtCap(s.volume) : '--'}</td>
+        <td><button class="mt-add-btn" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}" ${alreadyTracked ? 'disabled' : ''}>${alreadyTracked ? 'Added' : '+ Add'}</button></td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('.mt-add-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try{
+        await ensureStockTracked(btn.dataset.symbol);
+        buildTape();
+        refreshNews();
+        btn.textContent = 'Added';
+        btn.disabled = true;
+      }catch(e){ /* leave button as-is on failure */ }
+    });
+  });
+}
+
+async function refreshStocksMarketsOverview(){
+  if(!stocksMarketsLoaded){
+    const tbody = document.getElementById('stocksMarketsTableBody');
+    if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="news-loading">Loading market data…</td></tr>';
+  }
+  const data = await fetchStocksOverview();
+  if(data.length > 0){
+    stocksMarketsData = data;
+    stocksMarketsLoaded = true;
+  }
+  sortStocksMarkets();
+  renderStocksMarketsTable();
+}
+
+document.querySelectorAll('#stocksMarketsTable thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const field = th.dataset.sort;
+    if(stocksMarketsSortField === field){
+      stocksMarketsSortDir = stocksMarketsSortDir === 'asc' ? 'desc' : 'asc';
+    }else{
+      stocksMarketsSortField = field;
+      stocksMarketsSortDir = field === 'symbol' || field === 'name' ? 'asc' : 'desc';
+    }
+    document.querySelectorAll('#stocksMarketsTable thead th').forEach(h => {
+      h.classList.remove('sort-active', 'sort-asc', 'sort-desc');
+    });
+    th.classList.add('sort-active', stocksMarketsSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    sortStocksMarkets();
+    renderStocksMarketsTable();
+  });
+});
+
 /* ---- News ---- */
 async function fetchCryptoNewsFor(coin){
   // Check if the current coin is BTC, ETH, or XRP to use the exact Yahoo ticker
