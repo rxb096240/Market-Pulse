@@ -523,6 +523,34 @@ async function runCryptoSearch(q, resultsEl, onPick){
   }
 }
 
+async function runStockSearch(q, resultsEl, onPick){
+  if(!q){ closeResults(resultsEl); return; }
+  try{
+    const res = await fetch(`${API_BASE}/api/stock/search?q=${encodeURIComponent(q)}`);
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    const quotes = (data.quotes || []).slice(0, 8);
+    if(quotes.length === 0){
+      resultsEl.innerHTML = `<div class="result-note">No matches for "${q}"</div>`;
+      resultsEl.classList.add('open');
+      return;
+    }
+    resultsEl.innerHTML = quotes.map(item => `
+      <div class="result-item" data-symbol="${item.symbol}" data-name="${(item.name||'').replace(/"/g,'&quot;')}">
+        <span class="result-name">${item.name}</span>
+        <span class="result-sym">${item.symbol}</span>
+      </div>
+    `).join('');
+    resultsEl.classList.add('open');
+    resultsEl.querySelectorAll('.result-item').forEach(el => {
+      el.addEventListener('click', () => onPick({ symbol: el.dataset.symbol, name: el.dataset.name }));
+    });
+  }catch(e){
+    resultsEl.innerHTML = `<div class="result-note">Search unavailable — try again.</div>`;
+    resultsEl.classList.add('open');
+  }
+}
+
 /* ---- Crypto watchlist search bar ---- */
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
@@ -558,9 +586,9 @@ async function addStockFromSearch(rawSym){
     await ensureStockTracked(sym);
     buildTape();
     refreshNews();
-    stockSearchHint.textContent = `Added ${sym}. Type an exact ticker symbol and press Enter to add another.`;
+    stockSearchHint.textContent = `Added ${sym}. Search by company name or ticker to add another.`;
   }catch(e){
-    stockSearchHint.textContent = `Couldn't find a ticker matching "${sym}". Check the symbol and try again.`;
+    stockSearchHint.textContent = `Couldn't find a ticker matching "${sym}". Check the name/symbol and try again.`;
   }
   closeResults(stockSearchResults);
   stockSearchInput.value = '';
@@ -569,12 +597,11 @@ async function addStockFromSearch(rawSym){
 if(stockSearchInput){
   stockSearchInput.addEventListener('input', () => {
     const q = stockSearchInput.value.trim();
+    clearTimeout(stockSearchTimer);
     if(!q){ closeResults(stockSearchResults); return; }
-    stockSearchResults.innerHTML = `<div class="result-item" data-sym="${q.toUpperCase()}">
-      <span class="result-name">Add "${q.toUpperCase()}" as a stock</span>
-    </div>`;
-    stockSearchResults.classList.add('open');
-    stockSearchResults.querySelector('.result-item').addEventListener('click', () => addStockFromSearch(q));
+    stockSearchTimer = setTimeout(() => {
+      runStockSearch(q, stockSearchResults, (pick) => addStockFromSearch(pick.symbol));
+    }, 350);
   });
   stockSearchInput.addEventListener('keydown', (e) => {
     if(e.key === 'Enter') addStockFromSearch(stockSearchInput.value);
@@ -861,6 +888,25 @@ const pfStockPriceInput = document.getElementById('pfStockPriceInput');
 const pfStockAddBtn = document.getElementById('pfStockAddBtn');
 const pfStockHint = document.getElementById('pfStockHint');
 
+let pfPendingStock = null;
+let pfStockSearchDebounce = null;
+
+if(pfStockSymbolInput){
+  pfStockSymbolInput.addEventListener('input', () => {
+    pfPendingStock = null;
+    const q = pfStockSymbolInput.value.trim();
+    clearTimeout(pfStockSearchDebounce);
+    if(!q){ closeResults(pfStockSearchResults); return; }
+    pfStockSearchDebounce = setTimeout(() => {
+      runStockSearch(q, pfStockSearchResults, (pick) => {
+        pfPendingStock = pick;
+        pfStockSymbolInput.value = `${pick.name} (${pick.symbol})`;
+        closeResults(pfStockSearchResults);
+      });
+    }, 350);
+  });
+}
+
 if(pfStockAddBtn){
   pfStockAddBtn.addEventListener('click', async () => {
     const qty = parseFloat(pfStockQtyInput.value);
@@ -869,8 +915,8 @@ if(pfStockAddBtn){
       pfStockHint.textContent = 'Enter a quantity and average buy price greater than zero.';
       return;
     }
-    const sym = pfStockSymbolInput.value.trim().toUpperCase();
-    if(!sym){ pfStockHint.textContent = 'Enter a ticker symbol.'; return; }
+    const sym = pfPendingStock ? pfPendingStock.symbol : pfStockSymbolInput.value.trim().toUpperCase();
+    if(!sym){ pfStockHint.textContent = 'Search a company name or ticker first.'; return; }
 
     pfStockAddBtn.disabled = true;
     const originalLabel = pfStockAddBtn.textContent;
