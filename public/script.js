@@ -1405,6 +1405,7 @@ const VIEW_TITLES = {
   'crypto-overview': 'Crypto · Overview',
   'crypto-portfolio': 'Crypto · Portfolio',
   'crypto-news': 'Crypto · News',
+  'stocks-overview': 'Stocks · Overview',
   'stocks-watchlist': 'Stocks Watchlist',
   'stocks-portfolio': 'Stocks · Portfolio',
   'stocks-news': 'Stocks · News',
@@ -1436,7 +1437,8 @@ function showView(view){
     refreshWorldNews();
   }else if(view === 'news-india'){
     refreshIndiaNews();
-  }
+  }else if(view === 'stocks-overview'){
+  refreshStocksMarketsOverview();
 }
 
 document.querySelectorAll('.nav-item').forEach(btn => {
