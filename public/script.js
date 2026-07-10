@@ -149,8 +149,6 @@ async function deleteWatchlistItem(type, key){
 }
 
 const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
-
-const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
 let paletteIdx = 0;
 function nextColor(){ const c = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++; return c; }
 
