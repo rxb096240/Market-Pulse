@@ -94,6 +94,62 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   updateAuthUI();
 });
 
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  currentUser = session?.user || null;
+  updateAuthUI();
+  if(currentUser) loadUserWatchlist();          // ADD THIS LINE
+});
+
+// ADD THIS WHOLE BLOCK
+async function loadUserWatchlist(){
+  if(!currentUser) return;
+  const { data, error } = await supabaseClient
+    .from('watchlists')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if(error){ console.error('Failed to load watchlist:', error); return; }
+  if(!data || data.length === 0) return;
+
+  const savedCrypto = data.filter(row => row.asset_type === 'crypto');
+  const savedStocks = data.filter(row => row.asset_type === 'stock');
+
+  if(savedCrypto.length > 0){
+    COINS.length = 0;
+    savedCrypto.forEach(row => COINS.push({ id: row.asset_key, sym: row.sym, name: row.name, color: nextColor() }));
+  }
+  if(savedStocks.length > 0){
+    STOCKS.length = 0;
+    savedStocks.forEach(row => STOCKS.push({ sym: row.asset_key, name: row.name, color: nextColor() }));
+  }
+
+  initGrids();
+  refreshAll();
+}
+
+async function saveWatchlistItem(type, key, sym, name){
+  if(!currentUser) return;
+  const { error } = await supabaseClient.from('watchlists').insert({
+    user_id: currentUser.id,
+    asset_type: type,
+    asset_key: key,
+    sym, name
+  });
+  if(error) console.error('Failed to save watchlist item:', error);
+}
+
+async function deleteWatchlistItem(type, key){
+  if(!currentUser) return;
+  const { error } = await supabaseClient.from('watchlists')
+    .delete()
+    .eq('user_id', currentUser.id)
+    .eq('asset_type', type)
+    .eq('asset_key', key);
+  if(error) console.error('Failed to delete watchlist item:', error);
+}
+
+const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
+
 const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
 let paletteIdx = 0;
 function nextColor(){ const c = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++; return c; }
@@ -209,6 +265,7 @@ function removeItem(type, key){
   if(card) card.remove();
   buildTape();
   refreshNews();
+  deleteWatchlistItem(type, key);   // ADD THIS LINE
 }
 
 function updateCard(key, price, changePct, capText){
@@ -401,12 +458,13 @@ function ensureCryptoTracked(id, symbol, name){
     const errEl = cg.querySelector('.err');
     if(errEl) errEl.remove();
     cg.appendChild(buildCard(COINS[COINS.length-1], id, 'crypto'));
+    saveWatchlistItem('crypto', id, symbol.toUpperCase(), name);   // ADD THIS LINE
   }
 }
 
 async function ensureStockTracked(sym){
   if(!STOCKS.some(s => s.sym === sym)){
-    const data = await fetchOneStock(sym); // throws if invalid — caller should catch
+    const data = await fetchOneStock(sym);
     STOCKS.push({ sym, name: data.shortName, color: nextColor() });
     latestStockData[sym] = data;
     const sg = document.getElementById('stockGrid');
@@ -414,6 +472,7 @@ async function ensureStockTracked(sym){
     if(errEl) errEl.remove();
     sg.appendChild(buildCard(STOCKS[STOCKS.length-1], sym, 'stock'));
     updateCard(sym, data.price, data.changePct, '');
+    saveWatchlistItem('stock', sym, data.shortName, data.shortName);   // ADD THIS LINE
   }
 }
 
