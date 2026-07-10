@@ -254,6 +254,23 @@
     </footer>
   </div>
 </div>
+  <div class="news-modal-backdrop" id="authModalBackdrop">
+  <div class="news-modal" style="max-width:360px; height:auto;">
+    <div class="news-modal-header">
+      <div class="news-modal-title" id="authModalTitle">Sign in</div>
+      <button class="news-modal-close" id="authModalClose">×</button>
+    </div>
+    <div style="padding:18px; display:flex; flex-direction:column; gap:10px;">
+      <input id="authEmail" type="email" placeholder="Email" class="qty-input" style="width:100%;">
+      <input id="authPassword" type="password" placeholder="Password" class="qty-input" style="width:100%;">
+      <div id="authError" style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--down); min-height:14px;"></div>
+      <button id="authSubmitBtn" class="add-btn" style="width:100%;">Sign in</button>
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); text-align:center;">
+        <span id="authToggleText">No account?</span> <a href="#" id="authToggleLink" style="color:var(--amber);">Sign up</a>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 </body>
