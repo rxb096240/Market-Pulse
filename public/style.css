@@ -347,8 +347,13 @@
     white-space:nowrap;
     table-layout:fixed;     
   }
-  .markets-table th:nth-child(2), .markets-table td:nth-child(2){ width:240px; }
-  .markets-table th:nth-child(3), .markets-table td:nth-child(3){ width:110px; }
+  .markets-table th:nth-child(1), .markets-table td:nth-child(1){ width:44px; }
+  .markets-table th:nth-child(2), .markets-table td:nth-child(2){ width:200px; }
+  .markets-table th:nth-child(3), .markets-table td:nth-child(3){ width:100px; }
+  .markets-table th:nth-child(4), .markets-table td:nth-child(4){ width:80px; }
+  .markets-table th:nth-child(5), .markets-table td:nth-child(5){ width:130px; }
+  .markets-table th:nth-child(6), .markets-table td:nth-child(6){ width:130px; }
+  .markets-table th:nth-child(7), .markets-table td:nth-child(7){ width:90px; }
   .markets-table thead th{
     position:sticky;
     top:0;
