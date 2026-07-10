@@ -19,6 +19,7 @@
 
       <div class="nav-group">
       <div class="nav-group-label">Stocks</div>
+      <button class="nav-item active" data-view="stocks-overview">Overview</button>
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
@@ -154,6 +155,29 @@
           </div>
         </div>
       </section>
+
+      <!-- Stocks Overview -->
+<section class="view-panel" data-view-panel="stocks-overview">
+  <div class="trending-intro">Top 100 US stocks by index weight. Tap a column to sort.</div>
+  <div class="markets-table-wrap">
+    <table class="markets-table" id="stocksMarketsTable">
+      <thead>
+        <tr>
+          <th data-sort="symbol" class="sort-active sort-asc">Symbol</th>
+          <th data-sort="name">Name</th>
+          <th data-sort="price">Price</th>
+          <th data-sort="changePct">Change %</th>
+          <th data-sort="marketCap">Market Cap</th>
+          <th data-sort="volume">Volume</th>
+          <th class="no-sort"></th>
+        </tr>
+      </thead>
+      <tbody id="stocksMarketsTableBody">
+        <tr><td colspan="7" class="news-loading">Loading market data…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
       <!-- Stocks Watchlist -->
       <section class="view-panel" data-view-panel="stocks-watchlist">
