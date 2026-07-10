@@ -942,6 +942,7 @@ if(pfStockAddBtn){
       buildTape();
       refreshNews();
       pfStockSymbolInput.value = '';
+      pfPendingStock = null;
       pfStockQtyInput.value = '';
       pfStockPriceInput.value = '';
       pfStockHint.textContent = 'Holding added.';
