@@ -15,6 +15,9 @@ const STOCKS = [
   { sym:'FIG',   name:'Figma',      color:'#A259FF' },
 ];
 
+const DEFAULT_COINS = COINS.map(c => ({...c}));
+const DEFAULT_STOCKS = STOCKS.map(s => ({...s}));
+
 // Portfolio holdings: { id, type: 'crypto'|'stock', key, sym, name, qty, avgPrice }
 let PORTFOLIO = [];
 try{
@@ -89,15 +92,23 @@ authSubmitBtn?.addEventListener('click', async () => {
   closeAuthModal();
 });
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  currentUser = session?.user || null;
-  updateAuthUI();
-});
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
+  const wasLoggedIn = !!currentUser;
   currentUser = session?.user || null;
   updateAuthUI();
-  if(currentUser) loadUserWatchlist();          // ADD THIS LINE
+
+  if(currentUser){
+    COINS.length = 0;
+    STOCKS.length = 0;
+    initGrids();
+    loadUserWatchlist();
+  }else if(wasLoggedIn){
+    COINS.length = 0; DEFAULT_COINS.forEach(c => COINS.push({...c}));
+    STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
+    initGrids();
+    refreshAll();
+  }
 });
 
 // ADD THIS WHOLE BLOCK
