@@ -340,6 +340,7 @@
   }
   .markets-table{
     width:100%;
+    min-width:720px;
     border-collapse:collapse;
     font-family:'IBM Plex Mono',monospace;
     font-size:13px;
