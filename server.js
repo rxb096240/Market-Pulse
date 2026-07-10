@@ -129,6 +129,22 @@ app.get('/api/stock/quote/:symbol', async (req, res) => {
   }
 });
 
+app.get('/api/stock/search', async (req, res) => {
+  const q = (req.query.q || '').toString();
+  if (!q) return res.status(400).json({ error: 'q param required' });
+  try {
+    const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=8&newsCount=0`;
+    const { data } = await cachedFetch(`stocksearch:${q.toLowerCase()}`, 60_000, () => fetchJson(url));
+    const quotes = (data.quotes || [])
+      .filter(x => x.symbol && (x.quoteType === 'EQUITY' || x.quoteType === 'ETF'))
+      .map(x => ({ symbol: x.symbol, name: x.shortname || x.longname || x.symbol, exchange: x.exchange }));
+    res.json({ quotes });
+  } catch (e) {
+    console.error('stock search failed:', q, e.message);
+    res.status(502).json({ error: 'Search unavailable' });
+  }
+});
+
 app.get('/api/news/search', async (req, res) => {
   const q = (req.query.q || '').toString();
   if (!q) return res.status(400).json({ error: 'q param required' });
