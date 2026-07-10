@@ -388,6 +388,10 @@
     padding:11px 14px;
     vertical-align:middle;
   }
+  .markets-table td{
+    padding:11px 14px;
+    vertical-align:middle;
+  }
   .mt-rank{ color:var(--muted); }
   .mt-coin{
     display:flex;
