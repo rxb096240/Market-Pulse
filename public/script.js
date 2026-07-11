@@ -743,6 +743,7 @@ function removePortfolioEntry(id){
   savePortfolio();
   renderCryptoPortfolio();
   renderStockPortfolio();
+  deleteSupabasePortfolioItem(id);
 }
 
 function currentPriceFor(entry){
