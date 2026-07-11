@@ -451,25 +451,22 @@ async function fetchOneStock(sym){
 async function fetchStocks(){
   if(STOCKS.length === 0) return true;
   let anyOk = false;
-  // Fetch all symbols concurrently — each one already races its own set of
-  // CORS proxies, so there's no need to serialize across symbols too.
-  const results = await Promise.allSettled(STOCKS.map(s => fetchOneStock(s.sym)));
-  results.forEach((result, i) => {
-    const sym = STOCKS[i].sym;
-    if(result.status === 'fulfilled'){
+  for(const s of STOCKS){
+    try{
+      const data = await fetchOneStock(s.sym);
       anyOk = true;
-      const data = result.value;
-      latestStockData[sym] = data;
+      latestStockData[s.sym] = data;
       const label = data.session === 'pre' ? 'Pre-market'
         : data.session === 'post' ? 'After hours'
         : '';
-      updateCard(sym, data.price, data.changePct, label);
-    }else{
-      console.error('Stock fetch failed:', sym, result.reason);
-      const capEl = document.getElementById('cap-'+sym);
-      if(capEl && !latestStockData[sym]) capEl.textContent = 'unavailable';
+      updateCard(s.sym, data.price, data.changePct, label);
+    }catch(err){
+      console.error('Stock fetch failed:', s.sym, err);
+      const capEl = document.getElementById('cap-'+s.sym);
+      if(capEl && !latestStockData[s.sym]) capEl.textContent = 'unavailable';
     }
-  });
+    await sleep(250); // stagger requests to Yahoo to avoid 429s
+  }
   return anyOk;
 }
 
