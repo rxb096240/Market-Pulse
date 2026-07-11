@@ -719,7 +719,9 @@
     .price{ font-size:22px; }
     header{ padding:16px 14px 10px; }
     .qty-input, .price-input{ width:100px; }
-    .trending-price{ min-width:70px; font-size:12px; }
+    .trending-price{ min-width:70px; font-size:12px;
+    #authBtn{ max-width:80px; }
+    .greeting{ display:none; }                   }
   }
 
   /* ---- News article modal ---- */
