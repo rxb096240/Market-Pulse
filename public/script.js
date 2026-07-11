@@ -907,21 +907,29 @@ if(pfCryptoAddBtn){
     pfCryptoAddBtn.disabled = true;
     const originalLabel = pfCryptoAddBtn.textContent;
     pfCryptoAddBtn.textContent = 'Adding…';
-
-    try{
+try{
       ensureCryptoTracked(pfPendingCoin.id, pfPendingCoin.symbol, pfPendingCoin.name);
       await fetchCrypto();
-      PORTFOLIO.push({
-        id: 'pf-' + Date.now(),
+
+      const localId = 'pf-' + Date.now();
+      const newEntry = {
+        id: localId,
         type: 'crypto',
         key: pfPendingCoin.id,
         sym: pfPendingCoin.symbol.toUpperCase(),
         name: pfPendingCoin.name,
         qty, avgPrice
-      });
-
+      };
+      PORTFOLIO.push(newEntry);
       savePortfolio();
       renderCryptoPortfolio();
+
+      const supabaseId = await saveSupabasePortfolioItem(newEntry);
+      if(supabaseId){
+        newEntry.id = supabaseId;
+        savePortfolio();
+      }
+
       buildTape();
       refreshNews();
       pfCryptoSymbolInput.value = '';
