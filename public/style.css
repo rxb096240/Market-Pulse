@@ -207,6 +207,31 @@
   .tape-item .chg.up{ color:var(--up); }
   .tape-item .chg.down{ color:var(--down); }
 
+  .markets-summary-wrap{
+    border-bottom:1px solid var(--panel-border);
+    background:#0E1217;
+    overflow-x:auto;
+    white-space:nowrap;
+  }
+  .markets-summary{
+    display:inline-flex;
+    gap:28px;
+    padding:12px 20px;
+  }
+  .ms-item{
+    font-family:'IBM Plex Mono',monospace;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    flex-shrink:0;
+  }
+  .ms-label{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .ms-price{ font-size:14px; font-weight:600; color:var(--text); }
+  .ms-chg{ font-size:11.5px; font-weight:600; }
+  .ms-chg.up{ color:var(--up); }
+  .ms-chg.down{ color:var(--down); }
+
+
   main{ padding:22px 16px 44px; max-width:1440px; margin:0 auto; width:100%; }
 
   /* ---- View switching ---- */
