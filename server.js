@@ -179,6 +179,43 @@ app.get('/api/stock/quote/:symbol', async (req, res) => {
   }
 });
 
+const MARKET_SUMMARY_SYMBOLS = [
+  { symbol: '^GSPC', label: 'S&P 500' },
+  { symbol: '^DJI',  label: 'Dow 30' },
+  { symbol: '^IXIC', label: 'Nasdaq' },
+  { symbol: '^RUT',  label: 'Russell 2000' },
+  { symbol: '^VIX',  label: 'VIX' },
+  { symbol: 'GC=F',  label: 'Gold' },
+  { symbol: 'BTC-USD', label: 'Bitcoin USD' },
+  { symbol: 'CL=F',  label: 'Crude Oil' }
+];
+
+app.get('/api/markets/summary', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('markets:summary', 30_000, async () => {
+      const results = await Promise.allSettled(
+        MARKET_SUMMARY_SYMBOLS.map(async ({ symbol, label }) => {
+          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+          const { data } = await fetchJson(url, 8000);
+          const meta = data?.chart?.result?.[0]?.meta;
+          if (!meta || meta.regularMarketPrice === undefined) throw new Error('no data for ' + symbol);
+          const prevClose = meta.previousClose ?? meta.chartPreviousClose;
+          const price = meta.regularMarketPrice;
+          const change = prevClose ? price - prevClose : 0;
+          const changePct = prevClose ? (change / prevClose) * 100 : 0;
+          return { symbol, label, price, change, changePct };
+        })
+      );
+      const mapped = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+      return { data: mapped, contentType: 'application/json' };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('markets summary fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch markets summary' });
+  }
+});
+
 app.get('/api/stock/search', async (req, res) => {
   const q = (req.query.q || '').toString();
   if (!q) return res.status(400).json({ error: 'q param required' });
