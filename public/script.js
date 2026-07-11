@@ -993,16 +993,23 @@ if(pfStockAddBtn){
         pfStockHint.textContent = `Couldn't find a ticker matching "${sym}".`;
         return;
       }
-      const name = (STOCKS.find(s => s.sym === sym) || {}).name || sym;
-      PORTFOLIO.push({
-        id: 'pf-' + Date.now(),
+     const name = (STOCKS.find(s => s.sym === sym) || {}).name || sym;
+      const localId = 'pf-' + Date.now();
+      const newEntry = {
+        id: localId,
         type: 'stock',
         key: sym,
         sym, name, qty, avgPrice
-      });
-
+      };
+      PORTFOLIO.push(newEntry);
       savePortfolio();
       renderStockPortfolio();
+
+      const supabaseId = await saveSupabasePortfolioItem(newEntry);
+      if(supabaseId){
+        newEntry.id = supabaseId;
+        savePortfolio();
+      }
       buildTape();
       refreshNews();
       pfStockSymbolInput.value = '';
