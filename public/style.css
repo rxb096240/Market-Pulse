@@ -165,7 +165,7 @@
     font-family:'IBM Plex Mono',monospace;
     letter-spacing:1px; text-transform:uppercase;
   }
-  .header-right{ display:flex; align-items:center; gap:16px; }
+  .header-right{ display:flex; align-items:center; gap:16px; min-width:0;}
   .greeting{
     font-family:'IBM Plex Mono',monospace;
     font-size:12px;
