@@ -103,11 +103,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     STOCKS.length = 0;
     initGrids();
     loadUserWatchlist();
+    loadUserPortfolio();
   }else if(wasLoggedIn){
     COINS.length = 0; DEFAULT_COINS.forEach(c => COINS.push({...c}));
     STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
     initGrids();
     refreshAll();
+    renderPortfolio();
   }
 });
 
