@@ -1532,6 +1532,7 @@ const VIEW_TITLES = {
 
 function showView(view){
   currentView = view;
+  updateTopBannerVisibility(view);
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
@@ -1610,6 +1611,10 @@ initGrids();
 trackSavedPortfolioAssets().then(() => { refreshAll(); });
 renderPortfolio();
 tickClock();
+updateTopBannerVisibility(currentView);
 setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
 setInterval(tickClock, 1000);
+setInterval(() => {
+  if(currentView === 'stocks-overview') refreshMarketsSummary();
+}, 90000);
