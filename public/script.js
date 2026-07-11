@@ -1139,6 +1139,51 @@ document.querySelectorAll('#stocksMarketsTable thead th[data-sort]').forEach(th 
   });
 });
 
+async function fetchMarketsSummary(){
+  try{
+    const data = await fetchJsonWithTimeout(`${API_BASE}/api/markets/summary`, 10000);
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    console.error('Markets summary fetch failed:', e);
+    return [];
+  }
+}
+
+async function refreshMarketsSummary(){
+  const el = document.getElementById('marketsSummary');
+  if(!el) return;
+  const items = await fetchMarketsSummary();
+  if(items.length === 0) return;
+
+  el.innerHTML = items.map(item => {
+    const cls = item.changePct >= 0 ? 'up' : 'down';
+    const arrow = item.changePct >= 0 ? '+' : '';
+    return `
+      <div class="ms-item">
+        <div class="ms-label">${escapeHtml(item.label)}</div>
+        <div class="ms-price">${fmtPrice(item.price)}</div>
+        <div class="ms-chg ${cls}">${arrow}${item.change.toFixed(2)} ${arrow}${item.changePct.toFixed(2)}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateTopBannerVisibility(view){
+  const summaryWrap = document.getElementById('marketsSummaryWrap');
+  const tapeWrap = document.querySelector('.tape-wrap');
+  if(!summaryWrap || !tapeWrap) return;
+
+  if(view === 'stocks-overview'){
+    summaryWrap.style.display = 'block';
+    tapeWrap.style.display = 'none';
+    refreshMarketsSummary();
+  }else{
+    summaryWrap.style.display = 'none';
+    tapeWrap.style.display = 'block';
+  }
+}
+
+/* ---- Sidenav view switching ---- */
 /* ---- News ---- */
 async function fetchCryptoNewsFor(coin){
   // Check if the current coin is BTC, ETH, or XRP to use the exact Yahoo ticker
