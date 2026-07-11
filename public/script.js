@@ -159,6 +159,60 @@ async function deleteWatchlistItem(type, key){
   if(error) console.error('Failed to delete watchlist item:', error);
 }
 
+async function loadUserPortfolio(){
+  if(!currentUser) return;
+  const { data, error } = await supabaseClient
+    .from('portfolio_holdings')
+    .select('*')
+    .eq('user_id', currentUser.id);
+
+  if(error){ console.error('Failed to load portfolio:', error); return; }
+  if(!data) return;
+
+  PORTFOLIO = data.map(row => ({
+    id: row.id,
+    type: row.asset_type,
+    key: row.asset_key,
+    sym: row.sym,
+    name: row.name,
+    qty: row.qty,
+    avgPrice: row.avg_price
+  }));
+
+  savePortfolio(); // keep localStorage in sync as an offline fallback
+  renderPortfolio();
+}
+
+async function saveSupabasePortfolioItem(entry){
+  if(!currentUser) return;
+  const { data, error } = await supabaseClient
+    .from('portfolio_holdings')
+    .insert({
+      user_id: currentUser.id,
+      asset_type: entry.type,
+      asset_key: entry.key,
+      sym: entry.sym,
+      name: entry.name,
+      qty: entry.qty,
+      avg_price: entry.avgPrice
+    })
+    .select()
+    .single();
+
+  if(error){ console.error('Failed to save portfolio item:', error); return null; }
+  return data.id; // real Supabase row id, replaces the local 'pf-<timestamp>' id
+}
+
+async function deleteSupabasePortfolioItem(id){
+  if(!currentUser) return;
+  const { error } = await supabaseClient
+    .from('portfolio_holdings')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', currentUser.id);
+  if(error) console.error('Failed to delete portfolio item:', error);
+}
+
 const PALETTE = ['#5EE6C9','#FF9DBB','#7BD3FF','#FFD166','#C792EA','#8FE388','#FF9F68','#6FD6FF'];
 let paletteIdx = 0;
 function nextColor(){ const c = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++; return c; }
