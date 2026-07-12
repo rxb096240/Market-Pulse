@@ -283,14 +283,20 @@ app.get('/api/forex/rates', async (req, res) => {
   try {
     const { data } = await cachedFetch('forex:rates', 60 * 60_000, async () => {
       const codes = Object.keys(FOREX_CURRENCIES).join(',');
-      const url = `https://api.frankfurter.dev/v2/rates?base=USD&quotes=${codes}`;
+      const url = `https://api.frankfurter.dev/v1/latest?base=USD&symbols=${codes}`;
       const { data: raw } = await fetchJson(url, 8000);
+
+      // TEMP DEBUG — remove once forex rendering is confirmed working
+      console.log('forex raw response:', JSON.stringify(raw));
 
       const rates = Object.entries(raw.rates || {}).map(([code, rate]) => ({
         currency: FOREX_CURRENCIES[code] || code,
         code,
         rate
       }));
+
+      // TEMP DEBUG — remove once forex rendering is confirmed working
+      console.log('forex mapped rates:', JSON.stringify(rates));
 
       return {
         data: { base: 'USD', asOf: raw.date || null, rates },
