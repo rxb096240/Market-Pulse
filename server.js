@@ -322,3 +322,7 @@ app.get('*', (req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Ticker dashboard backend running at http://localhost:${PORT}`);
 });
+
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+});
