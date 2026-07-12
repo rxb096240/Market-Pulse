@@ -1524,7 +1524,10 @@ const VIEW_TITLES = {
   'stocks-news': 'Stocks · News',
   'news-us': 'News · US',
   'news-world': 'News · World',
-  'news-india': 'News . India'
+  'news-india': 'News . India',
+  'learn-stocks': 'Learn · Stocks Basics',
+  'learn-index-funds': 'Learn · Index Funds',
+  'learn-crypto': 'Learn · Crypto Basics'
 };
 
 function showView(view){
