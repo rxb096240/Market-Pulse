@@ -1572,7 +1572,8 @@ const VIEW_TITLES = {
   'news-india': 'News . India',
   'learn-stocks': 'Learn · Stocks Basics',
   'learn-index-funds': 'Learn · Index Funds',
-  'learn-crypto': 'Learn · Crypto Basics'
+  'learn-crypto': 'Learn · Crypto Basics',
+  'forex-rates': 'Forex'
 };
 
 function showView(view){
@@ -1601,6 +1602,8 @@ function showView(view){
     refreshIndiaNews();
   }else if(view === 'stocks-overview'){
   refreshStocksMarketsOverview();
+  }else if(view === 'forex-rates'){
+  refreshForexRates();
 }
 }
 document.querySelectorAll('.nav-item').forEach(btn => {
