@@ -268,6 +268,43 @@ app.get('/api/news/google', async (req, res) => {
   }
 });
 
+const FOREX_CURRENCIES = {
+  EUR: 'Euro',
+  GBP: 'British Pound',
+  JPY: 'Japanese Yen',
+  INR: 'Indian Rupee',
+  CAD: 'Canadian Dollar',
+  AUD: 'Australian Dollar',
+  CHF: 'Swiss Franc',
+  CNY: 'Chinese Yuan'
+};
+
+app.get('/api/forex/rates', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('forex:rates', 60 * 60_000, async () => {
+      const codes = Object.keys(FOREX_CURRENCIES).join(',');
+      const url = `https://api.frankfurter.dev/v2/rates?base=USD&quotes=${codes}`;
+      const { data: raw } = await fetchJson(url, 8000);
+
+      const rates = Object.entries(raw.rates || {}).map(([code, rate]) => ({
+        currency: FOREX_CURRENCIES[code] || code,
+        code,
+        rate
+      }));
+
+      return {
+        data: { base: 'USD', asOf: raw.date || null, rates },
+        contentType: 'application/json'
+      };
+    });
+
+    res.json(data);
+  } catch (e) {
+    console.error('forex rates fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch forex rates' });
+  }
+});
+
 // ---- Serve the static frontend (index.html, script.js, style.css) ----
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
