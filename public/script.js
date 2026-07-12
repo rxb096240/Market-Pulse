@@ -1140,10 +1140,10 @@ function renderForexTable(data){
     return;
   }
 
-  if(asOfEl && data.asOf){
-    asOfEl.innerHTML = `<span style="color:var(--amber);">As of ${data.asOf}</span>`;
-  }
-
+if(asOfEl && data.asOf){
+  asOfEl.innerHTML = `<span class="as-of">As of ${data.asOf}</span>`;
+}
+  
   tbody.innerHTML = data.rates.map(r => `
     <tr>
       <td>${escapeHtml(r.currency)}</td>
