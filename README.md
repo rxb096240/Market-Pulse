@@ -1,102 +1,103 @@
-# Market Pulse Backend
+# Market Pulse
 
-An Express backend that solves the CORS problem for the Market Pulse
-crypto/stock/sports ticker dashboard by proxying the external APIs the
-frontend needs (CoinGecko, Yahoo Finance, Google News RSS) instead of
-calling them straight from the browser.
+A full-stack financial dashboard for tracking crypto, stocks, and sports —
+live prices, portfolio tracking, market news, and scores in one place.
+Built with a Node.js/Express backend and a vanilla JS frontend, deployed
+on Render, and also wrapped as an Android WebView app.
 
-## Why this was needed
+## Features
 
-- CoinGecko already sends CORS headers, so those calls worked fine directly.
-- **Yahoo Finance** and **Google News RSS** do **not** send CORS headers, so
-  the old frontend routed those requests through public third-party CORS
-  proxies (`allorigins.win`, `codetabs.com`), racing several of them at once
-  and rate-limiting itself to avoid getting blocked. That's slow, unreliable,
-  and depends on services you don't control.
-- Server-to-server HTTP requests aren't subject to CORS at all, so this
-  backend just fetches the data itself and re-serves it same-origin. The
-  frontend no longer needs any proxy-racing logic.
-- All upstream calls go through a `cachedFetch` helper with per-route TTLs,
-  and heavier symbol batches (stock watchlist, top-100 table, markets
-  summary banner) are fetched sequentially with small delays instead of in
-  parallel, to avoid tripping Yahoo Finance's rate limits (`429`s).
+- **Stocks Overview** (homepage) — markets summary banner (S&P 500, Dow,
+  Nasdaq, Russell 2000, VIX, Gold, Bitcoin, Crude Oil) and a sortable
+  Top 100 stocks table by market cap
+- **Crypto & Stock Watchlists** — track custom lists of coins/tickers with
+  live price, % change, and market cap; add assets via company-name or
+  ticker search
+- **Crypto Trending & Markets Overview** — trending coins and a sortable
+  top-100 crypto markets table
+- **Portfolio Tracking** — log holdings (quantity + avg buy price) for both
+  crypto and stocks, with live cost basis, current value, and P/L
+- **News** — asset-specific news for tracked tickers/coins, plus US, World,
+  and India news feeds
+- **Sports** — live scoreboards for Soccer and Tennis
+- **Weather widget** — local weather via browser geolocation
+- **Auth** — sign in to sync watchlists and portfolio across devices
+- **Mobile-friendly** — slide-in nav drawer, responsive layout, wrapped as
+  an Android WebView app
 
-## Run it
+## Tech Stack
+
+**Backend**
+- Node.js + Express
+- In-memory caching layer (`cachedFetch`) with per-route TTLs (10–120s)
+- Deployed on Render
+
+**Frontend**
+- Vanilla JavaScript (no framework)
+- IBM Plex Mono + Inter fonts
+- Dark theme with amber accents, CSS custom properties for theming
+
+**Data & Auth**
+- Supabase — authentication and portfolio persistence (`portfolio_holdings`
+  table with row-level security), with localStorage as an offline fallback
+
+## APIs Used
+
+All external calls are proxied server-side (rather than called directly
+from the browser) to avoid CORS issues and rate-limit problems, and to
+keep API usage consistent across clients.
+
+| Provider | Used for |
+|---|---|
+| **CoinGecko** | Crypto prices, market cap, search, trending coins |
+| **Yahoo Finance** (`v8/finance/chart`, search) | Stock quotes, company/ticker search, top-100 markets table, stock news |
+| **Google News RSS** | US and World news |
+| **NDTV Feedburner RSS** | India news (Times of India is blocked by bot detection) |
+| **ESPN** | Soccer and Tennis scoreboards |
+| **Open-Meteo** | Weather data |
+| **Supabase** | Auth and portfolio/watchlist storage |
+
+## API Routes
+
+| Route | Returns |
+|---|---|
+| `GET /api/crypto/price?ids=bitcoin,ethereum` | Live prices for given coin IDs |
+| `GET /api/crypto/markets` | Top 100 coins by market cap |
+| `GET /api/crypto/search?query=doge` | Coin search results |
+| `GET /api/crypto/trending` | Trending coins |
+| `GET /api/stock/quote/:symbol` | Single stock quote |
+| `GET /api/stock/search?q=apple` | Stock/company search |
+| `GET /api/stocks/markets` | Top 100 large-cap stocks |
+| `GET /api/markets/summary` | Markets summary banner data |
+| `GET /api/news/search?q=AAPL` | News for a given symbol/query |
+| `GET /api/news/google?edition=us\|world\|in` | Google/NDTV news feed by edition |
+
+## Getting Started
 
 ```bash
 npm install
 npm start
 ```
 
-Locally the server defaults to **http://localhost:3000** (or whatever
-`PORT` is set to). The server serves `public/index.html`, `style.css`, and
-`script.js` directly, and the same origin also exposes the API routes
-below, so there's nothing else to configure.
+Then open **http://localhost:3000** (or whatever port is set via the
+`PORT` environment variable — Render assigns its own, typically `10000`).
+The server serves the frontend (`public/index.html`, `style.css`,
+`script.js`) and exposes the API routes above from the same origin, so
+there's nothing else to configure locally.
 
-If you want to run the frontend from a different origin/port (e.g. a
-separate static file server) instead of letting Express serve it, just
-change `API_BASE` at the top of `public/script.js` to the backend's URL,
-e.g. `const API_BASE = 'http://localhost:3000';`.
+To point the frontend at a different backend origin, change `API_BASE`
+at the top of `public/script.js`:
 
-## Deployment
-
-The app is deployed on **Render**. Render assigns its own `PORT`
-(typically `10000`), which the server binds to via `process.env.PORT`.
-The startup log line (`Ticker dashboard running at localhost:<PORT>`)
-reflects the port the Node process is bound to *inside* its own
-container — Render's routing layer sits in front of it and maps the
-public `*.onrender.com` URL to that internal port. This is expected
-and not an error.
-
-The app is also wrapped in an Android WebView for a mobile build.
-
-## API routes
-
-| Route | Proxies |
-|---|---|
-| `GET /api/crypto/price?ids=bitcoin,ethereum` | CoinGecko `simple/price` |
-| `GET /api/crypto/markets` | CoinGecko `coins/markets` (top 100 by market cap) |
-| `GET /api/crypto/search?query=doge` | CoinGecko `search` |
-| `GET /api/crypto/trending` | CoinGecko `search/trending` |
-| `GET /api/stock/quote/:symbol` | Yahoo Finance `v8/finance/chart` (per-symbol quote) |
-| `GET /api/stock/search?q=apple` | Yahoo Finance company-name/ticker search |
-| `GET /api/stocks/markets` | Top-100 large-cap stocks overview table |
-| `GET /api/markets/summary` | Markets summary banner: S&P 500, Dow, Nasdaq, Russell 2000, VIX, Gold, Bitcoin, Crude Oil |
-| `GET /api/news/search?q=AAPL` | Yahoo Finance news search |
-| `GET /api/news/google?edition=us\|world\|in` | Google News RSS (US, World, and India editions), returned as XML in the shape the frontend parses |
-
-All routes respond with the same JSON (or XML, for the news feed) shape
-the frontend reads directly, so no other frontend logic needs to change
-when the backend changes providers.
-
-### Note on Yahoo Finance
-
-`v8/finance/chart` (per-symbol) is used instead of the `v7/finance/quote`
-batch endpoint, since the batch endpoint hit crumb/cookie auth issues.
-This means multiple symbols require multiple sequential requests rather
-than a single batch call — hence the sequential-with-delay fetching
-pattern used for larger symbol sets.
-
-### Note on India news
-
-Times of India's RSS feed is blocked by bot detection, so the India
-edition is sourced from NDTV's Feedburner feed instead.
-
-## Persistence
-
-- **Auth & portfolio holdings** are backed by **Supabase**. Signed-in users'
-  holdings are stored in a `portfolio_holdings` table (with row-level
-  security policies scoping rows to the owning user).
-- **localStorage** is retained as an offline fallback / cache for portfolio
-  data, so the dashboard still works (read-only, locally) if Supabase is
-  unreachable or the user isn't signed in.
-- Watchlists (crypto/stock symbols a user is tracking) are similarly synced
-  to Supabase per-user.
+```js
+const API_BASE = 'http://localhost:3000';
+```
 
 ## Notes
 
-- Responses are cached briefly in memory (10–120s depending on endpoint) to
-  avoid hammering upstream APIs when multiple browser tabs/devices poll this
-  server.
-- No API keys are required for CoinGecko/Yahoo/Google News — same free/public
-  endpoints as before, just fetched server-side.
+- Responses are cached briefly in memory to avoid hammering upstream APIs
+  when multiple tabs/devices poll the server.
+- No API keys are required for CoinGecko, Yahoo Finance, or Google News —
+  all are free/public endpoints, fetched server-side.
+- Larger batch requests (top-100 tables, markets summary) are fetched
+  sequentially with small delays rather than in parallel, to stay under
+  Yahoo Finance's rate limits.
