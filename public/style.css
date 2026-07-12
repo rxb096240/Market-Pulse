@@ -491,6 +491,11 @@
   .mt-add-btn:hover:not(:disabled){ border-color:var(--amber); color:var(--amber); }
   .mt-add-btn:disabled{ opacity:0.5; cursor:default; }
 
+/* Forex table: override the crypto/stock table's wide fixed column widths */
+#forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:auto; }
+#forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:90px; }
+#forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:140px; }
+
   /* ---- Search ---- */
   .search-section{
     background:var(--panel);
