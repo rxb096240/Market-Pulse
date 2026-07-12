@@ -364,6 +364,41 @@
   .trending-add-btn:hover{ filter:brightness(1.08); }
   .trending-add-btn:disabled{ opacity:0.55; cursor:default; }
 
+/* ---- Learn view ---- */
+.learn-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:16px;
+}
+.learn-card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  overflow:hidden;
+}
+.video-embed{
+  position:relative;
+  width:100%;
+  padding-top:56.25%; /* 16:9 */
+  background:#000;
+}
+.video-embed iframe{
+  position:absolute;
+  top:0; left:0;
+  width:100%; height:100%;
+  border:none;
+}
+.learn-card-title{
+  font-size:13.5px;
+  font-weight:600;
+  padding:12px 14px 4px;
+}
+.learn-card-source{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+  padding:0 14px 14px;
+}
   /* ---- Markets overview table ---- */
   .markets-table-wrap{
     overflow-x:auto;
