@@ -1,0 +1,13 @@
+# .github/workflows/keep-alive.yml
+name: Keep Render Awake
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping server
+        run: curl -sf https://market-pulse-1-oe02.onrender.com/api/ping
