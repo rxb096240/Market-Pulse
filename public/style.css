@@ -82,6 +82,10 @@
   }
   .nav-item:hover:not(.active){ background:#1C222B; color:var(--text); }
   .nav-item.active{ background:var(--amber); color:#12161B; font-weight:700; }
+#sidenav [data-view="forex-rates"]{
+  color:var(--text);
+  font-weight:700;
+}
 
   .app-main{
     flex:1;
