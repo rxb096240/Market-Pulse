@@ -51,27 +51,26 @@ async function fetchText(url, timeoutMs = 8000) {
   }
 }
 
-// Static list of ~100 large-cap US stocks (S&P 100-style). This changes
-// rarely, so no need to fetch it dynamically — just update by hand
-// occasionally.
-const TOP_100_STOCKS = [
-  'AAPL','MSFT','GOOGL','GOOG','AMZN','NVDA','META','TSLA','BRK.B','AVGO',
-  'JPM','LLY','V','UNH','XOM','MA','COST','HD','PG','JNJ',
-  'NFLX','ABBV','BAC','CRM','WMT','KO','MRK','CVX','AMD','PEP',
-  'ADBE','TMO','ACN','ORCL','LIN','MCD','ABT','CSCO','WFC','GE',
-  'DHR','TXN','PM','IBM','CAT','VZ','INTU','AMGN','NOW','QCOM',
-  'ISRG','SPGI','BKNG','GS','UNP','AXP','NEE','PGR','RTX','HON',
-  'T','LOW','SYK','ETN','PFE','BLK','TJX','MDT','ELV','C',
-  'BSX','SCHW','ADP','MU','MMC','PLD','ANET','LMT','VRTX','CB',
-  'GILD','ADI','KLAC','SBUX','MO','FI','UBER','AMAT','PANW','ICE',
-  'DE','CME','SO','APH','MDLZ','ZTS','CI','SHW','WM','PYPL'
+// Top 10 AI stocks
+const TOP_10_AI_STOCKS = [
+  'NVDA',  // Nvidia — AI chips/GPUs
+  'MSFT',  // Microsoft — OpenAI partnership, Copilot, Azure AI
+  'GOOGL', // Alphabet — Gemini, DeepMind, TPUs
+  'META',  // Meta — Llama, AI infra
+  'AMZN',  // Amazon — AWS AI/Bedrock, Anthropic investment
+  'AVGO',  // Broadcom — AI networking/custom silicon
+  'AMD',   // AMD — AI GPUs/accelerators
+  'PLTR',  // Palantir — AI/data analytics platforms
+  'ORCL',  // Oracle — AI cloud infrastructure
+  'CRM'    // Salesforce — Agentforce, enterprise AI
 ];
 
 app.get('/api/stocks/markets', async (req, res) => {
   try {
-    const { data } = await cachedFetch('stocks:top100', 30_000, async () => {
-      const results = await Promise.allSettled(
-        TOP_100_STOCKS.map(async (sym) => {
+    const { data } = await cachedFetch('stocks:top10ai', 5 * 60_000, async () => {
+      const mapped = [];
+      for (const sym of TOP_10_AI_STOCKS) {
+        try {
           const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`;
           const { data } = await fetchJson(url, 8000);
           const meta = data?.chart?.result?.[0]?.meta;
@@ -79,18 +78,18 @@ app.get('/api/stocks/markets', async (req, res) => {
           const prevClose = meta.previousClose ?? meta.chartPreviousClose;
           const price = meta.regularMarketPrice;
           const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
-          return {
+          mapped.push({
             symbol: sym,
             name: meta.shortName || sym,
             price,
             changePct,
             volume: meta.regularMarketVolume ?? null
-          };
-        })
-      );
-      const mapped = results
-        .filter(r => r.status === 'fulfilled')
-        .map(r => r.value);
+          });
+        } catch (err) {
+          console.error('stocks overview: failed for', sym, err.message);
+        }
+        await new Promise(r => setTimeout(r, 250));
+      }
       return { data: mapped, contentType: 'application/json' };
     });
 
