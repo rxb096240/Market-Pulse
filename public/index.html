@@ -189,6 +189,28 @@
   </div>
 </section>
 
+      <!-- Forex Rates -->
+<section class="view-panel" data-view-panel="forex-rates">
+  <div class="trending-intro">
+    Exchange rates vs. 1 USD. <span id="forexAsOf"></span> · ECB daily reference rates.
+  </div>
+  <div class="markets-table-wrap">
+    <table class="markets-table" id="forexTable">
+      <thead>
+        <tr>
+          <th>Currency</th>
+          <th>Code</th>
+          <th>Rate (per $1)</th>
+        </tr>
+      </thead>
+      <tbody id="forexTableBody">
+        <tr><td colspan="3" class="news-loading">Loading forex rates…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="search-hint" style="text-align:center; margin-top:10px;">Rates provided by api.frankfurter.dev · not for trading purposes</div>
+</section>
+
       <!-- Stocks Watchlist -->
       <section class="view-panel" data-view-panel="stocks-watchlist">
         <div class="search-section">
