@@ -492,9 +492,9 @@
   .mt-add-btn:disabled{ opacity:0.5; cursor:default; }
 
 /* Forex table: override the crypto/stock table's wide fixed column widths */
-#forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:auto; }
-#forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:90px; }
-#forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:140px; }
+#forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:160px; }
+#forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:80px; }
+#forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:120px; }
 
   /* ---- Search ---- */
   .search-section{
