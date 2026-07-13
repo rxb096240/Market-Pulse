@@ -82,7 +82,8 @@
   }
   .nav-item:hover:not(.active){ background:#1C222B; color:var(--text); }
   .nav-item.active{ background:var(--amber); color:#12161B; font-weight:700; }
-#sidenav [data-view="forex-rates"]{
+#sidenav [data-view="forex-rates"],
+#sidenav [data-view="earnings-calendar"]{
   color:var(--text);
 }
 
