@@ -165,6 +165,96 @@ app.get('/api/crypto/trending', async (req, res) => {
   }
 });
 
+const EARNINGS_WINDOW_DAYS = 14;
+let sp500SymbolMap = null; // cached { SYMBOL: 'Company Name' }
+
+function parseCsv(text){
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  return lines.slice(1).map(line => {
+    // simple split; sp500.csv fields aren't expected to contain commas inside quotes,
+    // but this can be swapped for a proper CSV parser if that turns out wrong
+    const cols = line.split(',');
+    const row = {};
+    headers.forEach((h, i) => { row[h] = (cols[i] || '').trim(); });
+    return row;
+  });
+}
+
+async function fetchSp500List(){
+  const url = 'https://raw.githubusercontent.com/Ate329/top-us-stock-tickers/main/tickers/sp500.csv';
+  const { data: text } = await fetchText(url, 10000); // assumes you have a fetchText helper like fetchJson
+  const rows = parseCsv(text);
+
+  // TEMP DEBUG — remove once column names are confirmed
+  console.log('sp500 csv header sample row:', JSON.stringify(rows[0]));
+
+  const symbolKey = Object.keys(rows[0]).find(k => k.includes('symbol') || k.includes('ticker'));
+  const nameKey = Object.keys(rows[0]).find(k => k.includes('name') || k.includes('company'));
+
+  const map = {};
+  rows.forEach(row => {
+    const sym = row[symbolKey];
+    if (sym) map[sym.toUpperCase()] = row[nameKey] || sym;
+  });
+  return map;
+}
+
+app.get('/api/earnings/calendar', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('earnings:calendar', 60 * 60_000, async () => {
+      // Refresh the S&P 500 list once every 24h (separate long-lived cache)
+      if (!sp500SymbolMap) {
+        sp500SymbolMap = await fetchSp500List();
+      }
+
+      const today = new Date();
+      const end = new Date(today);
+      end.setDate(end.getDate() + EARNINGS_WINDOW_DAYS);
+      const fmt = d => d.toISOString().slice(0, 10);
+
+      const url = `https://finnhub.io/api/v1/calendar/earnings?from=${fmt(today)}&to=${fmt(end)}&token=${process.env.FINNHUB_API_KEY}`;
+      const { data: raw } = await fetchJson(url, 10000);
+      const all = raw.earningsCalendar || [];
+
+      // Filter to S&P 500 only, dedupe by symbol+date
+      const seen = new Set();
+      const filtered = all.filter(e => {
+        const inList = sp500SymbolMap[e.symbol];
+        const key = e.symbol + e.date;
+        if (!inList || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).map(e => ({
+        symbol: e.symbol,
+        name: sp500SymbolMap[e.symbol],
+        date: e.date,
+        hour: e.hour, // 'bmo' | 'amc' | ''
+        epsEstimate: e.epsEstimate,
+        revenueEstimate: e.revenueEstimate
+      }));
+
+      // Group by date
+      const byDate = {};
+      filtered.forEach(e => {
+        if (!byDate[e.date]) byDate[e.date] = [];
+        byDate[e.date].push(e);
+      });
+      const days = Object.keys(byDate).sort().map(date => ({
+        date,
+        entries: byDate[date].sort((a, b) => a.symbol.localeCompare(b.symbol))
+      }));
+
+      return { data: days, contentType: 'application/json' };
+    });
+
+    res.json(data);
+  } catch (e) {
+    console.error('earnings calendar fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch earnings calendar' });
+  }
+});
+
 // ---- Yahoo Finance passthrough endpoints ----
 
 app.get('/api/stock/quote/:symbol', async (req, res) => {
