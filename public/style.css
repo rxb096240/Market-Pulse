@@ -84,8 +84,16 @@
   .nav-item.active{ background:var(--amber); color:#12161B; font-weight:700; }
 #sidenav [data-view="forex-rates"],
 #sidenav [data-view="earnings-calendar"]{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
   color:var(--text);
+  padding:4px 8px;
+  margin-bottom:4px;
 }
+
 
   .app-main{
     flex:1;
