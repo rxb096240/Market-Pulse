@@ -51,45 +51,46 @@ async function fetchText(url, timeoutMs = 8000) {
   }
 }
 
-// Top 10 AI stocks
-const TOP_10_AI_STOCKS = [
-  'NVDA',  // Nvidia — AI chips/GPUs
-  'MSFT',  // Microsoft — OpenAI partnership, Copilot, Azure AI
-  'GOOGL', // Alphabet — Gemini, DeepMind, TPUs
-  'META',  // Meta — Llama, AI infra
-  'AMZN',  // Amazon — AWS AI/Bedrock, Anthropic investment
-  'AVGO',  // Broadcom — AI networking/custom silicon
-  'AMD',   // AMD — AI GPUs/accelerators
-  'PLTR',  // Palantir — AI/data analytics platforms
-  'ORCL',  // Oracle — AI cloud infrastructure
-  'CRM'    // Salesforce — Agentforce, enterprise AI
-];
+const TOP_10_AI_STOCKS = {
+  NVDA: 'Nvidia',
+  MSFT: 'Microsoft',
+  GOOGL: 'Alphabet',
+  META: 'Meta Platforms',
+  AMZN: 'Amazon',
+  AVGO: 'Broadcom',
+  AMD: 'AMD',
+  PLTR: 'Palantir',
+  ORCL: 'Oracle',
+  CRM: 'Salesforce'
+};
 
 app.get('/api/stocks/markets', async (req, res) => {
   try {
     const { data } = await cachedFetch('stocks:top10ai', 5 * 60_000, async () => {
-      const mapped = [];
-      for (const sym of TOP_10_AI_STOCKS) {
-        try {
-          const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`;
+      const symbols = Object.keys(TOP_10_AI_STOCKS);
+      const results = await Promise.allSettled(
+        symbols.map(async (sym) => {
+          const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${process.env.FINNHUB_API_KEY}`;
           const { data } = await fetchJson(url, 8000);
-          const meta = data?.chart?.result?.[0]?.meta;
-          if (!meta || meta.regularMarketPrice === undefined) throw new Error('no data for ' + sym);
-          const prevClose = meta.previousClose ?? meta.chartPreviousClose;
-          const price = meta.regularMarketPrice;
-          const changePct = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
-          mapped.push({
+          if (data.c === undefined || data.c === null || data.c === 0) {
+            throw new Error('no data for ' + sym);
+          }
+          const price = data.c;          // current price
+          const changePct = data.dp;     // % change already provided by Finnhub
+          return {
             symbol: sym,
-            name: meta.shortName || sym,
+            name: TOP_10_AI_STOCKS[sym],
             price,
             changePct,
-            volume: meta.regularMarketVolume ?? null
-          });
-        } catch (err) {
-          console.error('stocks overview: failed for', sym, err.message);
-        }
-        await new Promise(r => setTimeout(r, 250));
-      }
+            volume: null // not available on Finnhub's free /quote endpoint
+          };
+        })
+      );
+
+      const mapped = results
+        .filter(r => r.status === 'fulfilled')
+        .map(r => r.value);
+
       return { data: mapped, contentType: 'application/json' };
     });
 
