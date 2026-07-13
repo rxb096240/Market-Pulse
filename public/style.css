@@ -527,10 +527,10 @@
 #forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:120px; }
 
 #earningsContainer .markets-table th:nth-child(1), #earningsContainer .markets-table td:nth-child(1){ width:80px; }
-#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:220px; }
+#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:350px; }
 #earningsContainer .markets-table th:nth-child(3), #earningsContainer .markets-table td:nth-child(3){ width:120px; }
-#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:90px; }
-#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:auto; }
+#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:80px; }
+#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:130px; }
 
   /* ---- Search ---- */
   .search-section{
