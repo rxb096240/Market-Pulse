@@ -110,6 +110,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     initGrids();
     refreshAll();
     renderPortfolio();
+    practiceAccount = null;
+    practiceHoldings = [];
+    renderPracticeMode();
   }
 });
 
