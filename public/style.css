@@ -1082,3 +1082,206 @@
     .news-modal-backdrop{ padding:0; }
     .news-modal{ max-width:100%; height:100%; border-radius:0; }
   }
+
+/* ============================================================
+   CALCULATOR FEATURE — STYLES
+   Append this block to style.css.
+   Scoped under .calc-panel / --calc-* variables so it won't
+   collide with your existing ticker dashboard styles.
+   ============================================================ */
+
+.calc-panel{
+  /* Reuses your site's existing theme variables (--muted, --amber,
+     --border, --card, --text, --up/--down, etc.) where they exist,
+     falling back to the mockup's palette otherwise. If your actual
+     variable names differ from the guesses below (--card-2, --up,
+     --blue), just adjust the fallback var() names on the right. */
+  --calc-bg: var(--bg, #0B0F19);
+  --calc-card: var(--card, #141A29);
+  --calc-card-2: var(--card-2, #1B2233);
+  --calc-border: var(--border, #252D40);
+  --calc-text: var(--text, #E7EAF1);
+  --calc-muted: var(--muted, #7C8598);
+  --calc-green: var(--up, #34D8A3);
+  --calc-green-dim: #1D3B33;
+  --calc-blue: var(--blue, #5B9DF9);
+  --calc-blue-dim: #1C2C45;
+  --calc-amber: var(--amber, #F2B94B);
+
+  font-family:'Inter',sans-serif;
+  color:var(--calc-text);
+  padding:18px 16px 24px;
+  max-width:480px;
+}
+
+.calc-subnav{
+  display:flex;
+  gap:8px;
+  margin-bottom:18px;
+}
+.calc-subtab{
+  flex:1;
+  background:var(--calc-card);
+  border:1px solid var(--calc-border);
+  color:var(--calc-muted);
+  font-size:12px;
+  font-weight:600;
+  padding:9px 0;
+  border-radius:10px;
+  cursor:pointer;
+}
+.calc-subtab.active{
+  background:var(--calc-green-dim);
+  color:var(--calc-green);
+  border-color:var(--calc-green-dim);
+}
+
+.calc-view{ display:none; }
+.calc-view.active{ display:block; }
+
+.calc-h2{ font-size:19px; font-weight:700; margin-bottom:4px; }
+.calc-sub{ font-size:11.5px; color:var(--calc-muted); margin-bottom:18px; line-height:1.4; }
+
+.calc-input-group{ margin-bottom:14px; }
+.calc-input-label{ font-size:10.5px; color:var(--calc-muted); margin-bottom:6px; display:flex; justify-content:space-between; }
+.calc-input-box{
+  background:var(--calc-card);
+  border:1px solid var(--calc-border);
+  border-radius:10px;
+  padding:9px 13px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;
+  font-weight:500;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.calc-input-box input[type="number"]{
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--calc-text);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;
+  font-weight:500;
+  width:100%;
+}
+.calc-input-box .calc-unit{ color:var(--calc-muted); font-size:11px; font-family:'Inter',sans-serif; white-space:nowrap; margin-left:8px; }
+
+.calc-slider{
+  width:100%;
+  accent-color:var(--calc-green);
+  background:transparent;
+}
+.calc-blue ~ .calc-slider, #mo-rate, #mo-tax-pct{ accent-color:var(--calc-blue); }
+
+.calc-segmented{
+  display:flex;
+  background:var(--calc-card);
+  border:1px solid var(--calc-border);
+  border-radius:10px;
+  padding:3px;
+  margin-bottom:18px;
+}
+.calc-segmented div{
+  flex:1;
+  text-align:center;
+  padding:7px 0;
+  font-size:11px;
+  border-radius:8px;
+  color:var(--calc-muted);
+  font-weight:500;
+  cursor:pointer;
+}
+.calc-segmented div.active{ background:var(--calc-green-dim); color:var(--calc-green); font-weight:600; }
+.calc-segmented.calc-blue div.active{ background:var(--calc-blue-dim); color:var(--calc-blue); }
+
+.calc-hero-result{
+  background:linear-gradient(160deg, var(--calc-card-2), var(--calc-card));
+  border:1px solid var(--calc-border);
+  border-radius:16px;
+  padding:20px 18px;
+  margin-bottom:16px;
+  position:relative;
+  overflow:hidden;
+}
+.calc-hero-result .calc-lbl{ font-size:10.5px; color:var(--calc-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.calc-hero-result .calc-big{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:29px;
+  font-weight:600;
+  color:var(--calc-green);
+  letter-spacing:-0.01em;
+}
+.calc-hero-result.calc-blue .calc-big{ color:var(--calc-blue); }
+.calc-hero-result .calc-delta{ font-size:11px; color:var(--calc-green); margin-top:6px; font-weight:500; }
+.calc-hero-result.calc-blue .calc-delta{ color:var(--calc-blue); }
+.calc-hero-result .calc-accent-bar{
+  position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--calc-green);
+}
+.calc-hero-result.calc-blue .calc-accent-bar{ background:var(--calc-blue); }
+
+.calc-chart-card{
+  background:var(--calc-card);
+  border:1px solid var(--calc-border);
+  border-radius:14px;
+  padding:16px 14px 10px;
+  margin-bottom:16px;
+}
+.calc-chart-title{ font-size:11px; color:var(--calc-muted); margin-bottom:12px; font-weight:500; }
+
+.calc-bars{ display:flex; align-items:flex-end; gap:6px; height:90px; margin-bottom:8px; }
+.calc-bars div{
+  flex:1;
+  background:linear-gradient(180deg, var(--calc-green), #12604A);
+  border-radius:4px 4px 0 0;
+  opacity:.9;
+  min-height:2px;
+}
+.calc-bars div:last-child{ opacity:1; }
+.calc-chart-axis{ display:flex; justify-content:space-between; font-size:9px; color:var(--calc-muted); font-family:'IBM Plex Mono',monospace; }
+
+.calc-donut-row{ display:flex; align-items:center; gap:18px; }
+.calc-donut{
+  width:96px; height:96px; border-radius:50%;
+  position:relative;
+  flex-shrink:0;
+}
+.calc-donut::after{
+  content:"";
+  position:absolute; inset:14px;
+  background:var(--calc-card);
+  border-radius:50%;
+}
+.calc-donut-legend{ font-size:11px; flex:1; }
+.calc-legend-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.calc-swatch{ width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+.calc-legend-row .calc-amt{ margin-left:auto; font-family:'IBM Plex Mono',monospace; color:var(--calc-text); font-weight:500; }
+.calc-legend-row .calc-lbl2{ color:var(--calc-muted); }
+
+.calc-table-card{
+  background:var(--calc-card);
+  border:1px solid var(--calc-border);
+  border-radius:14px;
+  overflow:hidden;
+}
+.calc-table-title{
+  font-size:11px; color:var(--calc-muted); font-weight:500;
+  padding:12px 14px 10px;
+  border-bottom:1px solid var(--calc-border);
+}
+.calc-scroll-body{ max-height:260px; overflow-y:auto; }
+.calc-trow{
+  display:flex;
+  padding:10px 14px;
+  border-bottom:1px solid var(--calc-border);
+  font-size:11px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.calc-trow:last-child{ border-bottom:none; }
+.calc-trow div{ flex:1; }
+.calc-trow div:first-child{ flex:0.6; color:var(--calc-muted); font-family:'Inter',sans-serif; }
+.calc-trow.calc-head{ font-family:'Inter',sans-serif; color:var(--calc-muted); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+.calc-trow .calc-pos{ color:var(--calc-green); }
+.calc-trow.calc-blue .calc-pos{ color:var(--calc-blue); }
+
