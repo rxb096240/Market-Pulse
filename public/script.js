@@ -104,6 +104,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     initGrids();
     loadUserWatchlist();
     loadUserPortfolio();
+    loadPracticeAccount();
   }else if(wasLoggedIn){
     COINS.length = 0; DEFAULT_COINS.forEach(c => COINS.push({...c}));
     STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
