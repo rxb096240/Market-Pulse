@@ -17,9 +17,13 @@
       <span class="nav-brand-text">PULSE</span>
     </div>
 
+    <div class="nav-group">
+      <button class="nav-item active" data-view="home">Home</button>
+    </div>
+
       <div class="nav-group">
       <div class="nav-group-label">Stocks</div>
-      <button class="nav-item active" data-view="stocks-overview">Overview</button>
+      <button class="nav-item" data-view="stocks-overview">Overview</button>
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
@@ -71,7 +75,7 @@
          <span></span><span></span><span></span>
       </button>
       <div class="brand">
-        <div class="sub" id="viewTitle">Stocks · Overview</div>
+        <div class="sub" id="viewTitle">Home</div>
       </div>
       <div class="header-right">
          <button id="authBtn" class="add-btn" style="margin-right:4px;">Sign in</button>
@@ -89,8 +93,131 @@
 
     <main>
 
+      <!-- Home -->
+      <section class="view-panel active" data-view-panel="home">
+        <div class="home-hero">
+          <div class="home-hero-copy">
+            <div class="home-eyebrow">Welcome to Pulse</div>
+            <div class="home-h1">Track the trend,<br><em>all in one place.</em></div>
+            <div class="home-sub">
+              Live stocks and crypto, portfolio tracking, breaking news, forex rates,
+              upcoming earnings, a risk-free practice account, and quick primers if
+              you're just getting started.
+            </div>
+            <div class="home-hero-stats">
+              <div class="home-hero-stat"><div class="n">100+</div><div class="l">Assets tracked</div></div>
+              <div class="home-hero-stat"><div class="n">12</div><div class="l">News feeds</div></div>
+              <div class="home-hero-stat"><div class="n">$10k</div><div class="l">Practice balance</div></div>
+            </div>
+          </div>
+
+          <!-- Static placeholder — not wired to a real composite index yet -->
+          <div class="home-pulse-card">
+            <div class="home-pulse-head">
+              <span class="home-pulse-title">Market Pulse Index</span>
+              <span class="home-pulse-live"><span class="led"></span>LIVE</span>
+            </div>
+            <div class="home-pulse-number">62.4</div>
+            <div class="home-pulse-delta">▲ 3.1 vs. yesterday — broadly risk-on</div>
+            <svg class="home-pulse-svg" viewBox="0 0 400 110" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#00E39A" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#00E39A" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path class="home-pulse-fill" fill="url(#pfill)"
+                d="M0,70 L30,68 L55,72 L80,60 L100,64 L118,20 L128,95 L140,55 L165,58 L190,40 L215,46 L240,30 L265,38 L290,22 L320,34 L345,18 L370,26 L400,10 L400,110 L0,110 Z"/>
+              <path class="home-pulse-line"
+                d="M0,70 L30,68 L55,72 L80,60 L100,64 L118,20 L128,95 L140,55 L165,58 L190,40 L215,46 L240,30 L265,38 L290,22 L320,34 L345,18 L370,26 L400,10"/>
+            </svg>
+            <div class="home-pulse-axis"><span>9:30</span><span>11:00</span><span>1:00</span><span>2:30</span><span>4:00</span></div>
+          </div>
+        </div>
+
+        <!-- Real data: reuses the same /api/markets/summary the Stocks Overview banner already calls -->
+        <div class="home-snap-strip" id="homeSnapshot">
+          <div class="news-loading">Loading market snapshot…</div>
+        </div>
+
+        <div class="section-label">Jump to a section</div>
+        <div class="home-grid">
+          <div class="home-card c-green" data-target-view="stocks-overview">
+            <div class="home-card-top"><span class="home-card-icon">📈</span></div>
+            <div class="home-card-title">Stocks</div>
+            <div class="home-card-sub">Top movers, watchlist &amp; portfolio tracking.</div>
+          </div>
+          <div class="home-card c-amber" data-target-view="crypto-overview">
+            <div class="home-card-top"><span class="home-card-icon">◈</span></div>
+            <div class="home-card-title">Crypto</div>
+            <div class="home-card-sub">Top 100 coins by market cap, trending &amp; holdings.</div>
+          </div>
+          <div class="home-card c-blue" data-target-view="news-us">
+            <div class="home-card-top"><span class="home-card-icon">📰</span></div>
+            <div class="home-card-title">News</div>
+            <div class="home-card-sub">US, World &amp; India headlines, plus market news.</div>
+          </div>
+          <div class="home-card c-violet" data-target-view="forex-rates">
+            <div class="home-card-top"><span class="home-card-icon">💱</span></div>
+            <div class="home-card-title">Forex</div>
+            <div class="home-card-sub">Daily reference exchange rates vs. USD.</div>
+          </div>
+          <div class="home-card c-green" data-target-view="earnings-calendar">
+            <div class="home-card-top"><span class="home-card-icon">🗓</span></div>
+            <div class="home-card-title">Earnings</div>
+            <div class="home-card-sub">Upcoming S&amp;P 500 earnings, next 14 days.</div>
+          </div>
+          <div class="home-card c-blue" data-target-view="practice-mode">
+            <div class="home-card-top"><span class="home-card-icon">🎮</span></div>
+            <div class="home-card-title">Practice</div>
+            <div class="home-card-sub">$10,000 fake money, real live prices.</div>
+          </div>
+          <div class="home-card c-amber" data-target-view="calculators">
+            <div class="home-card-top"><span class="home-card-icon">🧮</span></div>
+            <div class="home-card-title">Calculators</div>
+            <div class="home-card-sub">Compound interest &amp; mortgage estimators.</div>
+          </div>
+          <div class="home-card c-violet" data-target-view="learn-stocks">
+            <div class="home-card-top"><span class="home-card-icon">🎓</span></div>
+            <div class="home-card-title">Learn</div>
+            <div class="home-card-sub">Short videos on stocks, index funds &amp; crypto.</div>
+          </div>
+        </div>
+
+        <!-- Static placeholders — not wired to real portfolio/news-volume data yet -->
+        <div class="home-chart-row">
+          <div class="home-chart-card">
+            <div class="home-chart-card-title">Practice Portfolio Mix</div>
+            <div class="home-donut-row">
+              <div class="home-donut"></div>
+              <div class="home-donut-legend">
+                <div class="home-legend-row"><span class="home-swatch" style="background:#00E39A"></span><span class="home-lbl2">Stocks</span><span class="home-amt">44%</span></div>
+                <div class="home-legend-row"><span class="home-swatch" style="background:#5B9DF9"></span><span class="home-lbl2">Crypto</span><span class="home-amt">24%</span></div>
+                <div class="home-legend-row"><span class="home-swatch" style="background:#FFB020"></span><span class="home-lbl2">Cash</span><span class="home-amt">17%</span></div>
+                <div class="home-legend-row"><span class="home-swatch" style="background:#A98CF7"></span><span class="home-lbl2">Other</span><span class="home-amt">15%</span></div>
+              </div>
+            </div>
+            <div class="home-chart-note">Sample data — connect to your practice account for real numbers.</div>
+          </div>
+          <div class="home-chart-card">
+            <div class="home-chart-card-title">Headlines Tracked This Week</div>
+            <div class="home-bars">
+              <div class="home-bargroup"><div class="home-bar up" style="height:52%"></div></div>
+              <div class="home-bargroup"><div class="home-bar blue" style="height:38%"></div></div>
+              <div class="home-bargroup"><div class="home-bar up" style="height:70%"></div></div>
+              <div class="home-bargroup"><div class="home-bar blue" style="height:44%"></div></div>
+              <div class="home-bargroup"><div class="home-bar up" style="height:85%"></div></div>
+              <div class="home-bargroup"><div class="home-bar blue" style="height:60%"></div></div>
+              <div class="home-bargroup"><div class="home-bar up" style="height:47%"></div></div>
+            </div>
+            <div class="home-bar-axis"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="home-chart-note">Sample data — not yet wired to real headline counts.</div>
+          </div>
+        </div>
+      </section>
+
       <!-- Crypto Overview -->
-      <section class="view-panel active" data-view-panel="crypto-overview">
+      <section class="view-panel" data-view-panel="crypto-overview">
         <div class="trending-intro">Top 100 cryptocurrencies by market cap. Tap a column to sort.</div>
         <div class="markets-table-wrap">
           <table class="markets-table" id="marketsTable">
@@ -590,6 +717,7 @@
 <script src="earnings.js"></script>
 <script src="news.js"></script>
 <script src="calculator.js"></script>
+<script src="home.js"></script>
 <script src="nav.js"></script>
 <script src="main.js"></script>
 </body>
