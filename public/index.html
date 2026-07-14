@@ -54,6 +54,10 @@
     </div>
 
     <div class="nav-group">
+  <button class="nav-item" data-view="calculators">Calculators</button>
+   </div>
+
+    <div class="nav-group">
       <div class="nav-group-label">Learn</div>
       <button class="nav-item" data-view="learn-stocks">Stocks Basics</button>
       <button class="nav-item" data-view="learn-index-funds">Index Funds</button>
@@ -197,6 +201,172 @@
       </tbody>
     </table>
   </div>
+</section>
+
+      <section class="view-panel calc-panel" data-view-panel="calculators">
+
+  <div class="calc-subnav">
+    <button class="calc-subtab active" data-calc="compound">Compound Interest</button>
+    <button class="calc-subtab" data-calc="mortgage">Mortgage</button>
+  </div>
+
+  <!-- ============ COMPOUND INTEREST ============ -->
+  <div class="calc-view active" data-calc-view="compound">
+    <div class="calc-h2">Watch it compound</div>
+    <div class="calc-sub">Adjust the numbers to see how contributions and time turn into growth.</div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Initial amount</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="ci-initial" value="10000" min="0" step="100">
+        <span class="calc-unit">USD</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Monthly contribution</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="ci-contribution" value="200" min="0" step="10">
+        <span class="calc-unit">USD/mo</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Annual rate</span><span id="ci-rate-out">7.0%</span></div>
+      <input type="range" class="calc-slider" id="ci-rate" min="0" max="20" step="0.1" value="7">
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Time horizon</span><span id="ci-years-out">20 yrs</span></div>
+      <input type="range" class="calc-slider" id="ci-years" min="1" max="40" step="1" value="20">
+    </div>
+
+    <div class="calc-segmented" id="ci-freq">
+      <div data-freq="1">Annually</div><div class="active" data-freq="12">Monthly</div><div data-freq="365">Daily</div>
+    </div>
+
+    <div class="calc-hero-result">
+      <div class="calc-accent-bar"></div>
+      <div class="calc-lbl">Future value</div>
+      <div class="calc-big" id="ci-fv">$0</div>
+      <div class="calc-delta" id="ci-delta">▲ $0 in growth &amp; contributions</div>
+    </div>
+
+    <div class="calc-chart-card">
+      <div class="calc-chart-title">Balance by year</div>
+      <div class="calc-bars" id="ci-bars"></div>
+      <div class="calc-chart-axis" id="ci-axis"></div>
+    </div>
+
+    <div class="calc-table-card">
+      <div class="calc-table-title">Year-by-year</div>
+      <div class="calc-trow calc-head"><div>Year</div><div>Contrib.</div><div>Interest</div><div>Balance</div></div>
+      <div id="ci-table-body"></div>
+    </div>
+  </div>
+
+  <!-- ============ MORTGAGE ============ -->
+  <div class="calc-view" data-calc-view="mortgage">
+    <div class="calc-h2">What's the monthly payment?</div>
+    <div class="calc-sub">Estimate principal &amp; interest based on price, down payment, and rate.</div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Home price</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="mo-price" value="450000" min="0" step="1000">
+        <span class="calc-unit">USD</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Down payment</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="mo-down" value="90000" min="0" step="1000">
+        <span class="calc-unit" id="mo-down-pct">20%</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Loan term</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="mo-term" value="30" min="1" max="40" step="1">
+        <span class="calc-unit">years</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Interest rate</span><span id="mo-rate-out">6.75%</span></div>
+      <input type="range" class="calc-slider" id="mo-rate" min="0" max="15" step="0.05" value="6.75">
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Property tax</span><span id="mo-tax-pct-out">1.1%/yr</span></div>
+      <input type="range" class="calc-slider" id="mo-tax-pct" min="0" max="4" step="0.05" value="1.1">
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Home insurance</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="mo-insurance" value="133" min="0" step="1">
+        <span class="calc-unit">USD/mo</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>HOA dues</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="mo-hoa" value="75" min="0" step="1">
+        <span class="calc-unit">USD/mo</span>
+      </div>
+    </div>
+
+    <div class="calc-segmented calc-blue" id="mo-mode">
+      <div class="active" data-mode="payment">Payment</div><div data-mode="amortization">Amortization</div><div data-mode="payoff">Payoff date</div>
+    </div>
+
+    <!-- Payment mode -->
+    <div class="calc-mode-view" data-mode-view="payment">
+      <div class="calc-hero-result calc-blue">
+        <div class="calc-accent-bar"></div>
+        <div class="calc-lbl">Total monthly payment</div>
+        <div class="calc-big" id="mo-total">$0</div>
+        <div class="calc-delta" id="mo-delta"></div>
+      </div>
+
+      <div class="calc-chart-card">
+        <div class="calc-chart-title">Monthly payment breakdown</div>
+        <div class="calc-donut-row">
+          <div class="calc-donut" id="mo-donut"></div>
+          <div class="calc-donut-legend">
+            <div class="calc-legend-row"><span class="calc-swatch" style="background:var(--calc-blue)"></span><span class="calc-lbl2">Principal &amp; interest</span><span class="calc-amt" id="mo-leg-pi">0</span></div>
+            <div class="calc-legend-row"><span class="calc-swatch" style="background:#3E8FE0"></span><span class="calc-lbl2">Property tax</span><span class="calc-amt" id="mo-leg-tax">0</span></div>
+            <div class="calc-legend-row"><span class="calc-swatch" style="background:var(--calc-amber)"></span><span class="calc-lbl2">Home insurance</span><span class="calc-amt" id="mo-leg-ins">0</span></div>
+            <div class="calc-legend-row"><span class="calc-swatch" style="background:#4A5A80"></span><span class="calc-lbl2">HOA dues</span><span class="calc-amt" id="mo-leg-hoa">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Amortization mode -->
+    <div class="calc-mode-view" data-mode-view="amortization" hidden>
+      <div class="calc-table-card">
+        <div class="calc-table-title">Amortization (principal &amp; interest only)</div>
+        <div class="calc-trow calc-head"><div>Mo.</div><div>Principal</div><div>Interest</div><div>Balance</div></div>
+        <div id="mo-amort-body" class="calc-scroll-body"></div>
+      </div>
+    </div>
+
+    <!-- Payoff date mode -->
+    <div class="calc-mode-view" data-mode-view="payoff" hidden>
+      <div class="calc-hero-result calc-blue">
+        <div class="calc-accent-bar"></div>
+        <div class="calc-lbl">Estimated payoff date</div>
+        <div class="calc-big" id="mo-payoff-date">—</div>
+        <div class="calc-delta" id="mo-payoff-sub"></div>
+      </div>
+    </div>
+  </div>
+
 </section>
 
       <!-- Practice Mode -->
