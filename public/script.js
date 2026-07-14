@@ -1627,8 +1627,6 @@ function trackNavVisit(view){
 
 /* ---- Sidenav view switching ---- */
 const VIEW_TITLES = {
-/* ---- Sidenav view switching ---- */
-const VIEW_TITLES = {
   'crypto-watchlist': 'Crypto Watchlist',
   'crypto-trending': 'Crypto · Trending',
   'crypto-overview': 'Crypto · Overview',
