@@ -11,6 +11,7 @@ function trackNavVisit(view){
 
 /* ---- Sidenav view switching ---- */
 const VIEW_TITLES = {
+  'home': 'Home',
   'crypto-watchlist': 'Crypto Watchlist',
   'crypto-trending': 'Crypto · Trending',
   'crypto-overview': 'Crypto · Overview',
@@ -44,7 +45,9 @@ function showView(view){
   const titleEl = document.getElementById('viewTitle');
   if(titleEl) titleEl.textContent = VIEW_TITLES[view] || '';
 
-  if(view === 'crypto-trending'){
+  if(view === 'home'){
+    refreshHomeView();
+  }else if(view === 'crypto-trending'){
     refreshTrending();
   }else if(view === 'crypto-overview'){
     refreshMarketsOverview();
