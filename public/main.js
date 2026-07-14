@@ -26,7 +26,11 @@ initGrids();
 trackSavedPortfolioAssets().then(() => { refreshAll(); });
 renderPortfolio();
 tickClock();
-updateTopBannerVisibility(currentView);
+// showView() sets the active nav item + panel correctly regardless of which
+// section happens to carry the "active" class in the raw HTML, and triggers
+// the matching refresh (refreshHomeView() by default, since currentView
+// starts as 'home' in state.js).
+showView(currentView);
 setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
 setInterval(tickClock, 1000);
