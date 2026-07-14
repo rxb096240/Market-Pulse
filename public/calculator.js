@@ -180,24 +180,25 @@
 
   function renderMortgage() {
     const priceEl = document.getElementById('mo-price');
-    const downEl = document.getElementById('mo-down');
+    const downPctEl = document.getElementById('mo-down-pct');
     const termEl = document.getElementById('mo-term');
     const rateEl = document.getElementById('mo-rate');
     const taxPctEl = document.getElementById('mo-tax-pct');
     const insuranceEl = document.getElementById('mo-insurance');
     const hoaEl = document.getElementById('mo-hoa');
-    if (!priceEl || !downEl || !termEl || !rateEl || !taxPctEl || !insuranceEl || !hoaEl) return;
+    if (!priceEl || !downPctEl || !termEl || !rateEl || !taxPctEl || !insuranceEl || !hoaEl) return;
 
     const homePrice = parseFloat(priceEl.value) || 0;
-    const downPayment = parseFloat(downEl.value) || 0;
+    const downPct = parseFloat(downPctEl.value) || 0;
+    const downPayment = homePrice * (downPct / 100);
     const termYears = parseFloat(termEl.value) || 30;
     const annualRatePct = parseFloat(rateEl.value) || 0;
     const propertyTaxPctPerYear = parseFloat(taxPctEl.value) || 0;
     const insuranceMonthly = parseFloat(insuranceEl.value) || 0;
     const hoaMonthly = parseFloat(hoaEl.value) || 0;
 
-    const downPct = homePrice > 0 ? (downPayment / homePrice) * 100 : 0;
-    document.getElementById('mo-down-pct').textContent = downPct.toFixed(0) + '%';
+    document.getElementById('mo-down-pct-out').textContent = downPct.toFixed(0) + '%';
+    document.getElementById('mo-down-amount').textContent = fmtNum(downPayment);
     document.getElementById('mo-rate-out').textContent = annualRatePct.toFixed(2) + '%';
     document.getElementById('mo-tax-pct-out').textContent = propertyTaxPctPerYear.toFixed(2) + '%/yr';
 
@@ -318,7 +319,7 @@
       if (el) el.addEventListener('input', renderCompoundInterest);
     });
 
-    const moInputs = ['mo-price', 'mo-down', 'mo-term', 'mo-rate', 'mo-tax-pct', 'mo-insurance', 'mo-hoa'];
+    const moInputs = ['mo-price', 'mo-down-pct', 'mo-term', 'mo-rate', 'mo-tax-pct', 'mo-insurance', 'mo-hoa'];
     moInputs.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', renderMortgage);
