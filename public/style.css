@@ -82,8 +82,11 @@
   }
   .nav-item:hover:not(.active){ background:#1C222B; color:var(--text); }
   .nav-item.active{ background:var(--amber); color:#12161B; font-weight:700; }
+
+
 #sidenav [data-view="forex-rates"],
-#sidenav [data-view="earnings-calendar"]{
+#sidenav [data-view="earnings-calendar"],
+#sidenav [data-view="practice-mode"]{
   color:var(--text);
 }
 
@@ -302,6 +305,132 @@
     grid-column:1 / -1;
   }
 
+/* ---- Practice Mode ---- */
+.practice-banner{
+  background:linear-gradient(135deg, #1a2e1f, #12161B);
+  border:1px solid #2a5a3a;
+  border-radius:10px;
+  padding:10px 14px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  color:var(--up);
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.balance-card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:12px;
+  padding:20px;
+  margin-bottom:18px;
+}
+.balance-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;
+  margin-bottom:6px;
+}
+.balance-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:32px; font-weight:700; margin-bottom:10px;
+}
+.balance-sub{ display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; }
+.balance-sub-item{ display:flex; flex-direction:column; gap:2px; }
+.balance-sub-label{ color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; }
+.balance-sub-value{ font-family:'IBM Plex Mono',monospace; font-weight:600; }
+.balance-sub-value.up{ color:var(--up); }
+.balance-sub-value.down{ color:var(--down); }
+
+.buy-card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:18px;
+}
+.buy-title{ font-size:14px; font-weight:600; margin-bottom:12px; }
+.buy-amount-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.buy-amount-input{
+  flex:1;
+  background:#0E1217;
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:18px; font-weight:600;
+  padding:10px 14px;
+  outline:none;
+}
+.quick-amounts{ display:flex; gap:8px; margin-bottom:14px; }
+.quick-amount-btn{
+  flex:1;
+  background:#1C222B;
+  border:1px solid var(--panel-border);
+  color:var(--text);
+  border-radius:7px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  padding:8px 0;
+  cursor:pointer;
+}
+.buy-preview{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:14px;
+  min-height:16px;
+}
+
+.holdings-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:12px;
+}
+.holding-card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.holding-left{ display:flex; flex-direction:column; gap:3px; }
+.holding-sym{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:14px; }
+.holding-blurb{ font-size:11.5px; color:var(--muted); }
+.holding-right{ display:flex; align-items:center; gap:14px; }
+.holding-stats{ text-align:right; }
+.holding-value{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14px; }
+.holding-pl{ font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; }
+.holding-pl.up{ color:var(--up); }
+.holding-pl.down{ color:var(--down); }
+.sell-btn{
+  background:transparent;
+  border:1px solid var(--panel-border);
+  color:var(--text);
+  border-radius:7px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  font-weight:600;
+  padding:8px 12px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.sell-btn:hover{ border-color:var(--down); color:var(--down); }
+
+.reset-link{
+  text-align:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+  text-decoration:underline;
+  margin-top:20px;
+  cursor:pointer;
+}
   /* ---- Trending view ---- */
   .trending-intro{
     font-family:'IBM Plex Mono',monospace;
