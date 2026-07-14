@@ -6,10 +6,17 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 // Simple in-memory cache to avoid hammering upstream APIs when many
 // browser tabs/clients poll this server at once.
 const cache = new Map(); // key -> { expires, data, contentType }
+
+const { createClient } = require('@supabase/supabase-js');
+const supabaseAdmin = createClient(
+  'https://lrxkqzubhcnzqtrmdimq.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function cachedFetch(cacheKey, ttlMs, fetcher) {
   const hit = cache.get(cacheKey);
@@ -50,6 +57,28 @@ async function fetchText(url, timeoutMs = 8000) {
     clearTimeout(timer);
   }
 }
+
+app.post('/api/track/nav', async (req, res) => {
+  try {
+    const { userId, section } = req.body || {};
+    if (!section) return res.status(400).json({ error: 'section required' });
+
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
+      .split(',')[0].trim();
+
+    const { error } = await supabaseAdmin.from('user_activity_log').insert({
+      user_id: userId || null,
+      nav_section: section,
+      ip_address: ip
+    });
+
+    if (error) throw error;
+    res.status(204).end();
+  } catch (e) {
+    console.error('nav tracking failed:', e.message);
+    res.status(500).json({ error: 'Failed to log activity' });
+  }
+});
 
 const TOP_10_AI_STOCKS = {
   NVDA: 'Nvidia',
