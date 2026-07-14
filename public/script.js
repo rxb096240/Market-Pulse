@@ -1617,6 +1617,16 @@ document.querySelectorAll('#marketsTable thead th[data-sort]').forEach(th => {
   });
 });
 
+function trackNavVisit(view){
+  fetch(`${API_BASE}/api/track/nav`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: currentUser?.id || null, section: view })
+  }).catch(() => {}); // fire-and-forget — never block or break navigation on failure
+}
+
+/* ---- Sidenav view switching ---- */
+const VIEW_TITLES = {
 /* ---- Sidenav view switching ---- */
 const VIEW_TITLES = {
   'crypto-watchlist': 'Crypto Watchlist',
@@ -1640,6 +1650,7 @@ const VIEW_TITLES = {
 
 function showView(view){
   currentView = view;
+  trackNavVisit(view);
   updateTopBannerVisibility(view);
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view);
