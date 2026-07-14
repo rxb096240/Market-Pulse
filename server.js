@@ -12,11 +12,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // browser tabs/clients poll this server at once.
 const cache = new Map(); // key -> { expires, data, contentType }
 
-const { createClient } = require('@supabase/supabase-js');
-const supabaseAdmin = createClient(
-  'https://lrxkqzubhcnzqtrmdimq.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 async function cachedFetch(cacheKey, ttlMs, fetcher) {
   const hit = cache.get(cacheKey);
