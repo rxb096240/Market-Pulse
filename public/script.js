@@ -2024,7 +2024,11 @@ function showView(view){
 }else if(view === 'earnings-calendar'){
   refreshEarningsCalendar();
 }else if(view === 'practice-mode'){
-  loadPracticeAccount();
+  if(!currentUser){
+    openAuthModal();
+  }else{
+    loadPracticeAccount();
+  }
 }
 }
 document.querySelectorAll('.nav-item').forEach(btn => {
