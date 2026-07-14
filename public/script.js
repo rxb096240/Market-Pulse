@@ -90,6 +90,7 @@ authSubmitBtn?.addEventListener('click', async () => {
     return;
   }
   closeAuthModal();
+   if(currentView === 'practice-mode') loadPracticeAccount();
 });
 
 
