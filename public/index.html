@@ -203,7 +203,8 @@
   </div>
 </section>
 
-      <section class="view-panel calc-panel" data-view-panel="calculators">
+      <!-- VIEW PANEL — add inside <main>, alongside your other view-panel sections -->
+<section class="view-panel calc-panel" data-view-panel="calculators">
 
   <div class="calc-subnav">
     <button class="calc-subtab active" data-calc="compound">Compound Interest</button>
@@ -279,10 +280,11 @@
     </div>
 
     <div class="calc-input-group">
-      <div class="calc-input-label"><span>Down payment</span></div>
-      <div class="calc-input-box">
-        <input type="number" id="mo-down" value="90000" min="0" step="1000">
-        <span class="calc-unit" id="mo-down-pct">20%</span>
+      <div class="calc-input-label"><span>Down payment</span><span id="mo-down-pct-out">20%</span></div>
+      <input type="range" class="calc-slider" id="mo-down-pct" min="0" max="100" step="1" value="20">
+      <div class="calc-input-box" style="margin-top:8px;">
+        <span id="mo-down-amount">90,000</span>
+        <span class="calc-unit">USD</span>
       </div>
     </div>
 
