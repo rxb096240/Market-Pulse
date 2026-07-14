@@ -86,7 +86,8 @@
 
 #sidenav [data-view="forex-rates"],
 #sidenav [data-view="earnings-calendar"],
-#sidenav [data-view="practice-mode"]{
+#sidenav [data-view="practice-mode"],
+#sidenav [data-view="calculators"]{
   font-family:'IBM Plex Mono',monospace;
     font-size:10px;
     font-weight:700;
