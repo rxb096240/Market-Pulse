@@ -40,7 +40,7 @@ function nextColor(){ const c = PALETTE[paletteIdx % PALETTE.length]; paletteIdx
 let lastPrices = {};
 let latestCryptoData = {};
 let latestStockData = {};
-let currentView = 'stocks-overview';
+let currentView = 'home';
 let searchDebounce = null;
 let stockSearchTimer = null;
 let pfSearchDebounce = null;
@@ -95,4 +95,3 @@ function timeAgo(ms){
   const days = Math.floor(hrs / 24);
   return days + 'd ago';
 }
-
