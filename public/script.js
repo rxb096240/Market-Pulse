@@ -734,6 +734,122 @@ async function refreshTrending(){
   trendingLoaded = true;
 }
 
+let practiceAccount = null; // { cash_balance }
+let practiceHoldings = [];  // [{ id, asset_type, asset_key, sym, name, qty, avg_price }]
+
+async function loadPracticeAccount(){
+  if(!currentUser) return;
+
+  let { data: account } = await supabaseClient
+    .from('practice_accounts')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+
+  if(!account){
+    const { data: created, error } = await supabaseClient
+      .from('practice_accounts')
+      .insert({ user_id: currentUser.id, cash_balance: 10000 })
+      .select()
+      .single();
+    if(error){ console.error('Failed to create practice account:', error); return; }
+    account = created;
+  }
+  practiceAccount = account;
+
+  const { data: holdings, error: hErr } = await supabaseClient
+    .from('practice_holdings')
+    .select('*')
+    .eq('user_id', currentUser.id);
+  if(hErr){ console.error('Failed to load practice holdings:', hErr); return; }
+  practiceHoldings = holdings || [];
+
+  renderPracticeMode();
+}
+
+function currentPracticePriceFor(holding){
+  if(holding.asset_type === 'crypto') return latestCryptoData[holding.asset_key]?.usd;
+  return latestStockData[holding.asset_key]?.price;
+}
+
+async function buyPractice(assetType, key, sym, name, amountUsd, currentPrice){
+  if(!currentUser || !practiceAccount) return;
+  if(!currentPrice || currentPrice <= 0) return;
+  if(amountUsd <= 0 || amountUsd > practiceAccount.cash_balance) return;
+
+  const qtyBought = amountUsd / currentPrice;
+  const existing = practiceHoldings.find(h => h.asset_type === assetType && h.asset_key === key);
+
+  if(existing){
+    const newQty = existing.qty + qtyBought;
+    const newAvgPrice = ((existing.qty * existing.avg_price) + amountUsd) / newQty;
+    const { error } = await supabaseClient
+      .from('practice_holdings')
+      .update({ qty: newQty, avg_price: newAvgPrice })
+      .eq('id', existing.id);
+    if(error){ console.error('Buy update failed:', error); return; }
+  }else{
+    const { error } = await supabaseClient
+      .from('practice_holdings')
+      .insert({
+        user_id: currentUser.id,
+        asset_type: assetType, asset_key: key,
+        sym, name, qty: qtyBought, avg_price: currentPrice
+      });
+    if(error){ console.error('Buy insert failed:', error); return; }
+  }
+
+  const newBalance = practiceAccount.cash_balance - amountUsd;
+  await supabaseClient.from('practice_accounts')
+    .update({ cash_balance: newBalance })
+    .eq('user_id', currentUser.id);
+
+  await supabaseClient.from('practice_transactions').insert({
+    user_id: currentUser.id, type: 'buy',
+    asset_type: assetType, asset_key: key, sym, name,
+    qty: qtyBought, price: currentPrice, amount: amountUsd
+  });
+
+  await loadPracticeAccount();
+}
+
+async function sellAllPractice(holdingId){
+  if(!currentUser || !practiceAccount) return;
+  const holding = practiceHoldings.find(h => h.id === holdingId);
+  if(!holding) return;
+
+  const currentPrice = currentPracticePriceFor(holding);
+  if(!currentPrice) return;
+
+  const saleAmount = holding.qty * currentPrice;
+
+  await supabaseClient.from('practice_holdings').delete().eq('id', holdingId);
+
+  const newBalance = practiceAccount.cash_balance + saleAmount;
+  await supabaseClient.from('practice_accounts')
+    .update({ cash_balance: newBalance })
+    .eq('user_id', currentUser.id);
+
+  await supabaseClient.from('practice_transactions').insert({
+    user_id: currentUser.id, type: 'sell',
+    asset_type: holding.asset_type, asset_key: holding.asset_key,
+    sym: holding.sym, name: holding.name,
+    qty: holding.qty, price: currentPrice, amount: saleAmount
+  });
+
+  await loadPracticeAccount();
+}
+
+async function resetPracticeAccount(){
+  if(!currentUser) return;
+  await supabaseClient.from('practice_holdings').delete().eq('user_id', currentUser.id);
+  await supabaseClient.from('practice_transactions').delete().eq('user_id', currentUser.id);
+  await supabaseClient.from('practice_accounts')
+    .update({ cash_balance: 10000 })
+    .eq('user_id', currentUser.id);
+  await loadPracticeAccount();
+}
+
 /* ---- Portfolio: shared helpers ---- */
 function removePortfolioEntry(id){
   PORTFOLIO = PORTFOLIO.filter(p => p.id !== id);
