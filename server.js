@@ -383,6 +383,61 @@ app.get('/api/news/google', async (req, res) => {
   }
 });
 
+// ---- Reddit passthrough (top posts, r/wallstreetbets, last 24h) ----
+// Cached for 24h and force-refreshed once daily by a GitHub Actions cron
+// job at 8AM EST — see /api/news/reddit/refresh.
+
+const REDDIT_SUBREDDIT = 'wallstreetbets';
+const REDDIT_CACHE_KEY = `reddit:${REDDIT_SUBREDDIT}`;
+const REDDIT_CACHE_TTL = 24 * 60 * 60_000;
+
+async function fetchRedditTop(){
+  const url = `https://www.reddit.com/r/${REDDIT_SUBREDDIT}/top.json?t=day&limit=10`;
+  const { data } = await fetchJson(url, 10000);
+  return (data?.data?.children || []).map(c => c.data).map(p => ({
+    title: p.title,
+    url: `https://www.reddit.com${p.permalink}`,
+    score: p.score,
+    numComments: p.num_comments,
+    flair: p.link_flair_text || null,
+    createdUtc: (p.created_utc || 0) * 1000
+  }));
+}
+
+app.get('/api/news/reddit', async (req, res) => {
+  try {
+    const { data } = await cachedFetch(REDDIT_CACHE_KEY, REDDIT_CACHE_TTL, async () => {
+      const posts = await fetchRedditTop();
+      return {
+        data: { subreddit: REDDIT_SUBREDDIT, updatedAt: Date.now(), posts },
+        contentType: 'application/json'
+      };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('reddit news fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch Reddit posts' });
+  }
+});
+
+// Called once a day by GitHub Actions at 8AM EST to force a fresh cache
+// entry, so the very first user of the day isn't the one paying for the
+// Reddit round-trip.
+app.post('/api/news/reddit/refresh', async (req, res) => {
+  try {
+    const posts = await fetchRedditTop();
+    cache.set(REDDIT_CACHE_KEY, {
+      data: { subreddit: REDDIT_SUBREDDIT, updatedAt: Date.now(), posts },
+      contentType: 'application/json',
+      expires: Date.now() + REDDIT_CACHE_TTL
+    });
+    res.json({ ok: true, count: posts.length });
+  } catch (e) {
+    console.error('reddit refresh failed:', e.message);
+    res.status(502).json({ error: 'Failed to refresh Reddit posts' });
+  }
+});
+
 const FOREX_CURRENCIES = {
   EUR: 'Euro',
   GBP: 'British Pound',
