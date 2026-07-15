@@ -314,6 +314,67 @@
     grid-column:1 / -1;
   }
 
+/* ---- News: Reddit tab ---- */
+.reddit-column-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--reddit, #FF4500);
+}
+.reddit-mark{
+  width:16px; height:16px; border-radius:50%;
+  background:#FF4500;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.reddit-mark svg{ width:10px; height:10px; }
+
+.reddit-list{ display:flex; flex-direction:column; gap:10px; }
+.reddit-refresh-note{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--muted);
+  margin-bottom:2px;
+}
+.reddit-post{
+  display:flex;
+  gap:12px;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:12px 14px;
+  text-decoration:none;
+  color:var(--text);
+  transition:border-color .2s ease, background .2s ease;
+}
+.reddit-post:hover{ border-color:#FF4500; background:#161B22; }
+.reddit-rank{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  color:var(--muted);
+  width:20px;
+  flex-shrink:0;
+}
+.reddit-post-body{ flex:1; min-width:0; }
+.reddit-post-title{ font-size:13px; line-height:1.4; margin-bottom:6px; }
+.reddit-post-meta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--muted);
+}
+.reddit-upvotes{ color:#FF4500; font-weight:600; }
+.reddit-flair{
+  font-size:9.5px;
+  padding:1px 6px;
+  border-radius:4px;
+  background:rgba(255,69,0,0.12);
+  color:#FF4500;
+  border:1px solid rgba(255,69,0,0.25);
+}
+
 /* ---- Practice Mode ---- */
 .practice-banner{
   background:linear-gradient(135deg, #1a2e1f, #12161B);
