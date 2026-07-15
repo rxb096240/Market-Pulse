@@ -29,7 +29,8 @@ const VIEW_TITLES = {
   'learn-crypto': 'Learn · Crypto Basics',
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
-  'practice-mode': 'Practice'
+  'practice-mode': 'Practice',
+  'news-reddit': 'News · Reddit'
 };
 
 function showView(view){
@@ -71,8 +72,10 @@ function showView(view){
   }else{
     loadPracticeAccount();
   }
+}else if(view === 'news-reddit'){
+    refreshRedditNews();
 }
-}
+
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 });
