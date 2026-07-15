@@ -50,7 +50,7 @@ async function refreshHomeView(){
   const items = await fetchMarketsSummary();
   if(items.length > 0) homeLoaded = true;
 
-  const preferredLabels = ['S&P 500', 'Nasdaq', 'BTC/USD', 'Gold'];
+  const preferredLabels = ['S&P 500', 'Nasdaq', 'BTC', 'Gold'];
   const picked = preferredLabels
     .map(label => items.find(i => i.label === label))
     .filter(Boolean);
