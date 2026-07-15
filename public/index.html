@@ -43,7 +43,9 @@
       <button class="nav-item" data-view="news-us">US</button>
       <button class="nav-item" data-view="news-world">World</button>
        <button class="nav-item" data-view="news-india">India</button>
+      <button class="nav-item" data-view="news-reddit">Reddit</button>
     </div>
+
 
     <div class="nav-group">
       <button class="nav-item" data-view="forex-rates">Forex</button>
@@ -625,6 +627,20 @@
         <div class="news-column">
           <div class="news-column-label">India Headlines</div>
           <div class="news-list" id="indiaNewsList">
+            <div class="news-loading">Loading news…</div>
+          </div>
+        </div>
+      </section>
+
+      
+      <!-- News: Reddit -->
+      <section class="view-panel" data-view-panel="news-reddit">
+        <div class="news-column">
+          <div class="news-column-label reddit-column-label">
+            <span class="reddit-mark"><svg viewBox="0 0 20 20" fill="white"><circle cx="10" cy="10" r="9"/></svg></span>
+            r/wallstreetbets · Top 24h
+          </div>
+          <div class="reddit-list" id="redditNewsList">
             <div class="news-loading">Loading news…</div>
           </div>
         </div>
