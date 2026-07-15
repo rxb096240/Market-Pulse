@@ -48,6 +48,7 @@ async function refreshHomeView(){
   // Reuses the same fetchMarketsSummary() defined in markets.js (backed by
   // /api/markets/summary) — no new backend route, no extra API load.
   const items = await fetchMarketsSummary();
+  console.log(items);
   if(items.length > 0) homeLoaded = true;
 
   const preferredLabels = ['S&P 500', 'Nasdaq', 'BTC', 'Gold'];
