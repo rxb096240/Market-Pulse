@@ -51,7 +51,7 @@ async function refreshHomeView(){
   console.log(items);
   if(items.length > 0) homeLoaded = true;
 
-  const preferredLabels = ['S&P 500', 'Dow', 'Nasdaq', 'Russell 2000', 'VIX', 'Gold', 'Crude Oil'];
+  const preferredLabels = ['Nasdaq', 'S&P 500', 'Gold', 'Crude Oil'];
   const picked = preferredLabels
     .map(label => items.find(i => i.label === label))
     .filter(Boolean);
