@@ -220,4 +220,56 @@ async function refreshIndiaNews(){
   indiaNewsLoaded = true;
 }
 
+/* ---- News: Reddit (r/wallstreetbets top posts, refreshed daily at 8AM EST) ---- */
+const REDDIT_NEWS_URL = `${API_BASE}/api/news/reddit`;
+let redditNewsLoaded = false;
+
+function formatRedditCount(n){
+  if(n === undefined || n === null) return '0';
+  if(n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+function renderRedditColumn(elId, payload){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const posts = payload.posts || [];
+  if(posts.length === 0){
+    el.innerHTML = '<div class="news-empty">No trending posts found.</div>';
+    return;
+  }
+  const updatedLabel = payload.updatedAt ? `Updated ${timeAgo(payload.updatedAt)}` : '';
+  el.innerHTML = `
+    <div class="reddit-refresh-note">${escapeHtml(updatedLabel)}</div>
+    ${posts.map((p, i) => `
+      <a class="reddit-post" href="${p.url}" target="_blank" rel="noopener noreferrer">
+        <span class="reddit-rank">${String(i + 1).padStart(2, '0')}</span>
+        <div class="reddit-post-body">
+          <div class="reddit-post-title">${escapeHtml(p.title)}</div>
+          <div class="reddit-post-meta">
+            <span class="reddit-upvotes">▲ ${formatRedditCount(p.score)}</span>
+            <span>💬 ${formatRedditCount(p.numComments)}</span>
+            ${p.flair ? `<span class="reddit-flair">${escapeHtml(p.flair)}</span>` : ''}
+          </div>
+        </div>
+      </a>
+    `).join('')}
+  `;
+}
+
+async function refreshRedditNews(){
+  const container = document.getElementById('redditNewsList');
+  if(!container) return;
+  if(!redditNewsLoaded) container.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  try{
+    const json = await fetchJsonWithTimeout(REDDIT_NEWS_URL, 8000);
+    renderRedditColumn('redditNewsList', json);
+    redditNewsLoaded = true;
+  }catch(e){
+    console.error('Reddit news fetch failed:', e);
+    if(!redditNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
+  }
+}
+
 
