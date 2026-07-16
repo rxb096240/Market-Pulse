@@ -24,6 +24,8 @@ function updateAuthUI(){
   }else{
     authBtn.textContent = 'Sign in';
   }
+  const adminGroup = document.getElementById('adminNavGroup');
+  if(adminGroup) adminGroup.style.display = (currentUser?.email === ADMIN_EMAIL) ? '' : 'none';
 }
 
 authBtn?.addEventListener('click', () => {
