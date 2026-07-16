@@ -75,7 +75,7 @@ function showView(view){
 }else if(view === 'news-reddit'){
     refreshRedditNews();
 }
-
+}
 document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 });
