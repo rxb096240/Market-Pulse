@@ -559,6 +559,16 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+app.get('/api/admin/check', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.json({ isAdmin: false });
+    const { data: userData } = await supabaseAdmin.auth.getUser(token);
+    res.json({ isAdmin: userData?.user?.email === ADMIN_EMAIL });
+  } catch (e) {
+    res.json({ isAdmin: false });
+  }
+});
 
 app.get('/api/admin/stats', async (req, res) => {
   try {
