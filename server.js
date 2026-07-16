@@ -53,6 +53,21 @@ async function fetchText(url, timeoutMs = 8000) {
   }
 }
 
+async function resolveCity(ip){
+  if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.')) {
+    return { city: 'Local', country: 'Local' };
+  }
+  try {
+    const { data } = await fetchJson(`http://ip-api.com/json/${ip}?fields=city,country,status`, 4000);
+    if (data.status !== 'success') return { city: null, country: null };
+    return { city: data.city || null, country: data.country || null };
+  } catch (e) {
+    console.error('geolocation lookup failed:', e.message);
+    return { city: null, country: null };
+  }
+}
+
+
 app.post('/api/track/nav', async (req, res) => {
   try {
     const { userId, section } = req.body || {};
