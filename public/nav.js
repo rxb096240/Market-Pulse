@@ -75,6 +75,8 @@ function showView(view){
   }
 }else if(view === 'news-reddit'){
     refreshRedditNews();
+}else if(view === 'admin-reports'){
+  refreshAdminReports();
 }
 }
 document.querySelectorAll('.nav-item').forEach(btn => {
