@@ -75,11 +75,14 @@ app.post('/api/track/nav', async (req, res) => {
 
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
       .split(',')[0].trim();
+    const { city, country } = await resolveCity(ip);
 
     const { error } = await supabaseAdmin.from('user_activity_log').insert({
       user_id: userId || null,
       nav_section: section,
-      ip_address: ip
+      ip_address: ip,
+      city,
+      country
     });
 
     if (error) throw error;
@@ -89,6 +92,7 @@ app.post('/api/track/nav', async (req, res) => {
     res.status(500).json({ error: 'Failed to log activity' });
   }
 });
+
 
 const TOP_10_AI_STOCKS = {
   NVDA: 'Nvidia',
