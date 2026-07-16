@@ -61,6 +61,7 @@ authSubmitBtn?.addEventListener('click', async () => {
     return;
   }
   closeAuthModal();
+  currentUser = data.user;
    if(currentView === 'practice-mode') loadPracticeAccount();
 });
 
