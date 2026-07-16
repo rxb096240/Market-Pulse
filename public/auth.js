@@ -65,27 +65,3 @@ authSubmitBtn?.addEventListener('click', async () => {
 });
 
 
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  const wasLoggedIn = !!currentUser;
-  currentUser = session?.user || null;
-  updateAuthUI();
-
-  if(currentUser){
-    COINS.length = 0;
-    STOCKS.length = 0;
-    initGrids();
-    loadUserWatchlist();
-    loadUserPortfolio();
-    loadPracticeAccount();
-  }else if(wasLoggedIn){
-    COINS.length = 0; DEFAULT_COINS.forEach(c => COINS.push({...c}));
-    STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
-    initGrids();
-    refreshAll();
-    renderPortfolio();
-    practiceAccount = null;
-    practiceHoldings = [];
-    renderPracticeMode();
-  }
-});
-
