@@ -1,21 +1,23 @@
-const ADMIN_EMAIL = 'a005.ram@gmail.com'; // same email as server.js
 
 async function refreshAdminReports(){
   const panel = document.querySelector('[data-view-panel="admin-reports"]');
   if(!panel) return;
-  if(!currentUser || currentUser.email !== ADMIN_EMAIL){
-    panel.innerHTML = '<div class="empty">Not authorized.</div>';
-    return;
-  }
+
   const token = await getAccessToken();
   const res = await fetch(`${API_BASE}/api/admin/stats`, {
     headers: { Authorization: `Bearer ${token}` }
   });
+
+  if(res.status === 403){
+    panel.innerHTML = '<div class="empty">Not authorized.</div>';
+    return;
+  }
   if(!res.ok){
     document.getElementById('adminCitiesTableBody').innerHTML =
       '<tr><td colspan="3" class="err">Failed to load stats.</td></tr>';
     return;
   }
+
   const stats = await res.json();
   renderAdminStats(stats);
 }
