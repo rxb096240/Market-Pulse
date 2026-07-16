@@ -1460,7 +1460,7 @@
 .home-donut{ width:104px; height:104px; border-radius:50%; position:relative; flex-shrink:0;
   background:conic-gradient(var(--up) 0deg 158deg, var(--home-blue) 158deg 246deg, var(--amber) 246deg 306deg, var(--home-violet) 306deg 360deg); }
 .home-donut::after{ content:""; position:absolute; inset:16px; background:var(--panel); border-radius:50%; }
-.home-donut-legend{ font-size:11.5px; flex:1; }
+.home-donut-legend{ flex:1; max-width:220px; }
 .home-legend-row{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
 .home-swatch{ width:9px; height:9px; border-radius:2px; }
 .home-legend-row .home-amt{ margin-left:auto; font-family:'IBM Plex Mono',monospace; color:var(--text); font-weight:600; }
