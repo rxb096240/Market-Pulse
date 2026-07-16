@@ -40,6 +40,53 @@ function renderHomeSnapshot(items){
   }).join('');
 }
 
+/* ---- Home: Today's Top Movers (whole market, via Yahoo screener) ---- */
+async function fetchTopMovers(){
+  try{
+    const data = await fetchJsonWithTimeout(`${API_BASE}/api/stocks/top-movers`, 10000);
+    return data || null;
+  }catch(e){
+    console.error('Top movers fetch failed:', e);
+    return null;
+  }
+}
+
+function renderTopMovers(data){
+  const el = document.getElementById('homeTopMovers');
+  const noteEl = document.getElementById('homeTopMoversNote');
+  if(!el) return;
+
+  const gainers = data?.gainers || [];
+  const losers = data?.losers || [];
+  if(gainers.length === 0 && losers.length === 0){
+    el.innerHTML = '<div class="err">Top movers unavailable — try again shortly.</div>';
+    return;
+  }
+
+  const col = (label, cls, list) => `
+    <div class="mover-col">
+      <div class="mover-col-label ${cls}">${cls === 'gainers' ? '▲' : '▼'} ${label}</div>
+      ${list.map(m => `
+        <div class="mover-row">
+          <div class="mover-id">
+            <span class="mover-sym">${escapeHtml(m.symbol)}</span>
+            <span class="mover-name">${escapeHtml(m.name)}</span>
+          </div>
+          <div class="mover-chg ${cls === 'gainers' ? 'up' : 'down'}">${m.changePct !== null ? (m.changePct >= 0 ? '+' : '') + m.changePct.toFixed(1) + '%' : '--'}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  el.innerHTML = col('Top Gainers', 'gainers', gainers) + col('Top Losers', 'losers', losers);
+  if(noteEl) noteEl.textContent = 'Movers via Yahoo Finance · whole market, updates every 60s';
+}
+
+async function refreshTopMovers(){
+  const data = await fetchTopMovers();
+  renderTopMovers(data);
+}
+
 async function refreshHomeView(){
   if(!homeLoaded){
     const el = document.getElementById('homeSnapshot');
@@ -48,7 +95,6 @@ async function refreshHomeView(){
   // Reuses the same fetchMarketsSummary() defined in markets.js (backed by
   // /api/markets/summary) — no new backend route, no extra API load.
   const items = await fetchMarketsSummary();
-  console.log(items);
   if(items.length > 0) homeLoaded = true;
 
   const preferredLabels = ['Nasdaq', 'S&P 500', 'Gold', 'Crude Oil'];
@@ -57,6 +103,7 @@ async function refreshHomeView(){
     .filter(Boolean);
 
   renderHomeSnapshot(picked.length > 0 ? picked : items.slice(0, 4));
+  refreshTopMovers();
 }
 
 document.querySelectorAll('.home-card[data-target-view]').forEach(card => {
