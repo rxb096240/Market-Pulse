@@ -616,27 +616,6 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
-app.post('/api/track/nav', async (req, res) => {
-  try {
-    const { userId, section } = req.body;
-    if (!section) return res.status(400).json({ error: 'section required' });
-
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
-      .split(',')[0].trim();
-
-    const { error } = await supabaseAdmin.from('user_activity_log').insert({
-      user_id: userId || null,
-      nav_section: section,
-      ip_address: ip
-    });
-
-    if (error) throw error;
-    res.status(204).end();
-  } catch (e) {
-    console.error('nav tracking failed:', e.message);
-    res.status(500).json({ error: 'Failed to log activity' });
-  }
-});
 
 // ---- Serve the static frontend (index.html, script.js, style.css) ----
 const publicDir = path.join(__dirname, 'public');
