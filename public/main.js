@@ -54,6 +54,7 @@ tickClock();
 // section happens to carry the "active" class in the raw HTML, and triggers
 // the matching refresh (refreshHomeView() by default, since currentView
 // starts as 'home' in state.js).
+if(!VIEW_TITLES[currentView]) currentView = 'home';
 showView(currentView);
 setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
