@@ -393,7 +393,19 @@ const REDDIT_CACHE_TTL = 24 * 60 * 60_000;
 
 async function fetchRedditTop(){
   const url = `https://www.reddit.com/r/${REDDIT_SUBREDDIT}/top.json?t=day&limit=10`;
-  const { data } = await fetchJson(url, 10000);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  let data;
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'web:market-pulse:v1.0 (by /u/market_pulse_bot)' }
+    });
+    if (!res.ok) throw new Error(`Reddit upstream error ${res.status}`);
+    data = await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
   return (data?.data?.children || []).map(c => c.data).map(p => ({
     title: p.title,
     url: `https://www.reddit.com${p.permalink}`,
