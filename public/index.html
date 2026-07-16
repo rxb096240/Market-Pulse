@@ -62,6 +62,10 @@
   <button class="nav-item" data-view="calculators">Calculators</button>
    </div>
 
+    <div class="nav-group" id="adminNavGroup" style="display:none;">
+  <button class="nav-item" data-view="admin-reports">Admin Reports</button>
+</div>
+
     <div class="nav-group">
       <div class="nav-group-label">Learn</div>
       <button class="nav-item" data-view="learn-stocks">Stocks Basics</button>
@@ -111,6 +115,8 @@
               <div class="home-hero-stat"><div class="n">$10k</div><div class="l">Practice balance</div></div>
             </div>
           </div>
+
+          
 
           <!-- Static placeholder — not wired to a real composite index yet -->
           <div class="home-pulse-card">
@@ -209,6 +215,50 @@
           </div>
       </section>
 
+<!-- Admin Reports -->
+<section class="view-panel" data-view-panel="admin-reports">
+  <div class="trending-intro">Live traffic across all users. Visible only to the admin account.</div>
+
+  <div class="summary-bar" id="adminSummaryBar" style="display:none;">
+    <div class="summary-item">
+      <span class="summary-label">Total Hits</span>
+      <span class="summary-value" id="adminTotalHits">0</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Unique Visitors</span>
+      <span class="summary-value" id="adminUniqueUsers">0</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Cities Reached</span>
+      <span class="summary-value" id="adminCities">0</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Most Active View</span>
+      <span class="summary-value" id="adminTopView">—</span>
+    </div>
+  </div>
+
+  <div class="markets-table-wrap">
+    <table class="markets-table">
+      <thead><tr><th>City</th><th>Country</th><th>Hits</th></tr></thead>
+      <tbody id="adminCitiesTableBody">
+        <tr><td colspan="3" class="news-loading">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label">Recent activity</div>
+  <div class="markets-table-wrap">
+    <table class="markets-table">
+      <thead><tr><th>Time</th><th>City</th><th>View</th><th>Signed in</th></tr></thead>
+      <tbody id="adminRecentTableBody">
+        <tr><td colspan="4" class="news-loading">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+      
       <!-- Crypto Overview -->
       <section class="view-panel" data-view-panel="crypto-overview">
         <div class="trending-intro">Top 100 cryptocurrencies by market cap. Tap a column to sort.</div>
@@ -741,6 +791,7 @@
 <script src="news.js"></script>
 <script src="calculator.js"></script>
 <script src="home.js"></script>
+<script src="admin.js"></script>
 <script src="nav.js"></script>
 <script src="main.js"></script>
 </body>
