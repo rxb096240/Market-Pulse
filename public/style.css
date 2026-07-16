@@ -1434,8 +1434,22 @@
 .home-card.c-violet::before{ background:var(--home-violet); } .home-card.c-violet:hover{ border-color:var(--home-violet); }
 .home-card-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
 .home-card-icon{ font-size:19px; }
-.home-card-title{ font-size:14px; font-weight:700; margin-bottom:5px; }
-.home-card-sub{ font-size:11.5px; color:var(--muted); line-height:1.45; }
+.home-chart-card-title{ font-size:11px; color:var(--muted); font-weight:600; margin-bottom:14px; text-transform:uppercase; letter-spacing:.05em; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+
+.home-age-select{
+  background:#0E1217;
+  color:var(--text);
+  border:1px solid var(--panel-border);
+  border-radius:7px;
+  padding:5px 8px;
+  font-size:11px;
+  font-family:'IBM Plex Mono',monospace;
+  text-transform:none;
+  letter-spacing:normal;
+  cursor:pointer;
+}
+.home-age-select:hover,
+.home-age-select:focus{ outline:none; border-color:var(--amber); }.home-card-sub{ font-size:11.5px; color:var(--muted); line-height:1.45; }
 
 .home-chart-row{ display:grid; grid-template-columns:1fr 1.4fr; gap:14px; }
 .home-chart-card{ border:1px solid var(--panel-border); border-radius:14px; background:var(--panel); padding:18px 18px 14px; }
