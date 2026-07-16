@@ -401,7 +401,11 @@ async function fetchRedditTop(){
       signal: controller.signal,
       headers: { 'User-Agent': 'web:market-pulse:v1.0 (by /u/market_pulse_bot)' }
     });
-    if (!res.ok) throw new Error(`Reddit upstream error ${res.status}`);
+if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      console.error('Reddit 403 body:', body.slice(0, 300));
+      throw new Error(`Reddit upstream error ${res.status}`);
+    }
     data = await res.json();
   } finally {
     clearTimeout(timer);
