@@ -30,7 +30,8 @@ const VIEW_TITLES = {
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
   'practice-mode': 'Practice',
-  'news-reddit': 'News · Reddit'
+  'news-reddit': 'News · Reddit',
+  'admin-reports': 'Admin · Reports'
 };
 
 function showView(view){
