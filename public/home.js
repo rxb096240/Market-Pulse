@@ -82,6 +82,48 @@ function renderTopMovers(data){
   if(noteEl) noteEl.textContent = 'Movers via Yahoo Finance · whole market, updates every 60s';
 }
 
+/* ---- Home: Age-Based Suggested Allocation (static guideline, not tied to user's actual holdings) ---- */
+const AGE_ALLOCATIONS = [
+  { label: '20–30', stocks: 70, bonds: 10, cash: 10, crypto: 10 },
+  { label: '30–40', stocks: 65, bonds: 20, cash: 10, crypto: 5 },
+  { label: '40–50', stocks: 55, bonds: 30, cash: 12, crypto: 3 },
+  { label: '50–60', stocks: 47, bonds: 40, cash: 12, crypto: 1 },
+  { label: '60–70', stocks: 39, bonds: 50, cash: 11, crypto: 0 },
+];
+const AGE_ALLOC_COLORS = { stocks: '#00E39A', bonds: '#5B9DF9', cash: '#FFB020', crypto: '#FF6B6B' };
+
+function renderAgeAllocation(index){
+  const donutEl = document.getElementById('homeAgeDonut');
+  const legendEl = document.getElementById('homeAgeLegend');
+  if(!donutEl || !legendEl) return;
+
+  const row = AGE_ALLOCATIONS[index];
+  const parts = ['stocks','bonds','cash','crypto'].filter(k => row[k] > 0);
+
+  let cursor = 0;
+  const stops = parts.map(k => {
+    const start = cursor;
+    cursor += row[k];
+    return `${AGE_ALLOC_COLORS[k]} ${start}% ${cursor}%`;
+  }).join(', ');
+  donutEl.style.background = `conic-gradient(${stops})`;
+
+  legendEl.innerHTML = parts.map(k => `
+    <div class="home-legend-row">
+      <span class="home-swatch" style="background:${AGE_ALLOC_COLORS[k]}"></span>
+      <span class="home-lbl2">${k.charAt(0).toUpperCase() + k.slice(1)}</span>
+      <span class="home-amt">${row[k]}%</span>
+    </div>
+  `).join('');
+}
+
+function initAgeAllocation(){
+  const select = document.getElementById('homeAgeRangeSelect');
+  if(!select) return;
+  select.addEventListener('change', () => renderAgeAllocation(+select.value));
+  renderAgeAllocation(+select.value);
+}
+
 async function refreshTopMovers(){
   const data = await fetchTopMovers();
   renderTopMovers(data);
@@ -109,3 +151,5 @@ async function refreshHomeView(){
 document.querySelectorAll('.home-card[data-target-view]').forEach(card => {
   card.addEventListener('click', () => showView(card.dataset.targetView));
 });
+
+initAgeAllocation();
