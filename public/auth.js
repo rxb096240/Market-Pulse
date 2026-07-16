@@ -18,23 +18,28 @@ const authToggleLink = document.getElementById('authToggleLink');
 function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
 function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail.value=''; authPassword.value=''; }
 
-function updateAuthUI(){
+async function updateAuthUI(){
   if(currentUser){
     authBtn.textContent = currentUser.email;
   }else{
     authBtn.textContent = 'Sign in';
   }
   const adminGroup = document.getElementById('adminNavGroup');
-  if(adminGroup) adminGroup.style.display = (currentUser?.email === ADMIN_EMAIL) ? '' : 'none';
-}
-
-authBtn?.addEventListener('click', () => {
-  if(currentUser){
-    supabaseClient.auth.signOut();
-  }else{
-    openAuthModal();
+  if(adminGroup){
+    if(currentUser){
+      try{
+        const token = await getAccessToken();
+        const res = await fetch(`${API_BASE}/api/admin/check`, { headers: { Authorization: `Bearer ${token}` } });
+        const { isAdmin } = await res.json();
+        adminGroup.style.display = isAdmin ? '' : 'none';
+      }catch(e){
+        adminGroup.style.display = 'none';
+      }
+    }else{
+      adminGroup.style.display = 'none';
+    }
   }
-});
+}
 
 authModalClose?.addEventListener('click', closeAuthModal);
 
