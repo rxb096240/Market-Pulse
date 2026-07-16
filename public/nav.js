@@ -36,6 +36,7 @@ const VIEW_TITLES = {
 
 function showView(view){
   currentView = view;
+  location.hash=view;
   trackNavVisit(view);
   updateTopBannerVisibility(view);
   document.querySelectorAll('.nav-item').forEach(btn => {
