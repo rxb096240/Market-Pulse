@@ -65,4 +65,8 @@ authSubmitBtn?.addEventListener('click', async () => {
    if(currentView === 'practice-mode') loadPracticeAccount();
 });
 
+async function getAccessToken(){
+  const { data } = await supabaseClient.auth.getSession();
+  return data?.session?.access_token || null;
+}
 
