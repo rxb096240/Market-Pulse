@@ -6,6 +6,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 // Simple in-memory cache to avoid hammering upstream APIs when many
@@ -558,7 +559,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const ADMIN_EMAIL = 'a005.ram@gmail.com'; // ← replace with your actual login email
 
 app.get('/api/admin/stats', async (req, res) => {
   try {
