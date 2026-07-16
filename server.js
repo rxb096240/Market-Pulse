@@ -330,6 +330,40 @@ app.get('/api/markets/summary', async (req, res) => {
   }
 });
 
+// ---- Whole-market Top Movers (Yahoo Finance screener, all US-listed stocks) ----
+// Unlike /api/stocks/markets (your curated Top 10 AI Stocks), this pulls from
+// Yahoo's day_gainers / day_losers predefined screener, covering the entire
+// market Yahoo tracks — same undocumented-but-stable endpoint family as your
+// existing /v8/finance/chart calls.
+
+async function fetchYahooScreener(scrId, count){
+  const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=true&lang=en-US&region=US&scrIds=${scrId}&count=${count}`;
+  const { data } = await fetchJson(url, 8000);
+  const quotes = data?.finance?.result?.[0]?.quotes || [];
+  return quotes.map(q => ({
+    symbol: q.symbol,
+    name: q.shortName || q.longName || q.symbol,
+    price: q.regularMarketPrice?.raw ?? null,
+    changePct: q.regularMarketChangePercent?.raw ?? null
+  }));
+}
+
+app.get('/api/stocks/top-movers', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('stocks:top-movers', 60_000, async () => {
+      const [gainers, losers] = await Promise.all([
+        fetchYahooScreener('day_gainers', 5),
+        fetchYahooScreener('day_losers', 5)
+      ]);
+      return { data: { gainers, losers }, contentType: 'application/json' };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('top movers fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch top movers' });
+  }
+});
+
 app.get('/api/stock/search', async (req, res) => {
   const q = (req.query.q || '').toString();
   if (!q) return res.status(400).json({ error: 'q param required' });
