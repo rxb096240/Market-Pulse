@@ -558,6 +558,64 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const ADMIN_EMAIL = 'a005.ram@gmail.com'; // ← replace with your actual login email
+
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const since = (req.query.since || '').toString(); // ISO date string, optional
+    let query = supabaseAdmin.from('user_activity_log').select('*').order('created_at', { ascending: false });
+    if (since) query = query.gte('created_at', since);
+
+    const { data: rows, error } = await query.limit(5000);
+    if (error) throw error;
+
+    const totalHits = rows.length;
+    const uniqueUsers = new Set(rows.map(r => r.user_id || r.ip_address)).size;
+
+    const cityCounts = {};
+    rows.forEach(r => {
+      const key = r.city ? `${r.city}|${r.country || ''}` : null;
+      if (key) cityCounts[key] = (cityCounts[key] || 0) + 1;
+    });
+    const topCities = Object.entries(cityCounts)
+      .map(([key, hits]) => {
+        const [city, country] = key.split('|');
+        return { city, country, hits };
+      })
+      .sort((a, b) => b.hits - a.hits)
+      .slice(0, 10);
+
+    const viewCounts = {};
+    rows.forEach(r => { viewCounts[r.nav_section] = (viewCounts[r.nav_section] || 0) + 1; });
+    const topView = Object.entries(viewCounts).sort((a, b) => b[1] - a[1])[0];
+
+    const recent = rows.slice(0, 25).map(r => ({
+      time: r.created_at, city: r.city, country: r.country,
+      section: r.nav_section, signedIn: !!r.user_id
+    }));
+
+    res.json({
+      totalHits,
+      uniqueUsers,
+      citiesReached: new Set(rows.map(r => r.city).filter(Boolean)).size,
+      topView: topView ? { section: topView[0], count: topView[1] } : null,
+      topCities,
+      recent
+    });
+  } catch (e) {
+    console.error('admin stats fetch failed:', e.message);
+    res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+});
+
 app.post('/api/track/nav', async (req, res) => {
   try {
     const { userId, section } = req.body;
