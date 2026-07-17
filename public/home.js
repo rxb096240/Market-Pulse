@@ -79,7 +79,9 @@ function renderTopMovers(data){
   `;
 
   el.innerHTML = col('Top Gainers', 'gainers', gainers) + col('Top Losers', 'losers', losers);
-  if(noteEl) noteEl.textContent = `Last updated ${new Date().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`;
+  if(noteEl && data?.lastFetched){
+  noteEl.textContent = `Last updated ${new Date(data.lastFetched).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`;
+}
 }
 
 /* ---- Home: Age-Based Suggested Allocation (static guideline, not tied to user's actual holdings) ---- */
