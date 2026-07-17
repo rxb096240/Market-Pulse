@@ -21,6 +21,20 @@
     return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
   }
 
+  // Guards against inputs going blank mid-edit (e.g. clearing a field to type
+  // a new number). Falls back to the last valid value instead of treating an
+  // empty string as 0, so hero stats like the FIRE number don't flash to $0.
+  const lastValidFire = { age: 30, savings: 25000, expenses: 40000, contribution: 18000 };
+
+  function safeFloat(el, fallbackKey) {
+    if (!el) return lastValidFire[fallbackKey];
+    const raw = el.value;
+    const parsed = parseFloat(raw);
+    if (raw === '' || isNaN(parsed)) return lastValidFire[fallbackKey];
+    lastValidFire[fallbackKey] = parsed;
+    return parsed;
+  }
+
   // ---------------------------------------------------------------
   // COMPOUND INTEREST
   // ---------------------------------------------------------------
@@ -178,6 +192,32 @@
     };
   }
 
+  // ---------------------------------------------------------------
+  // FIRE (Financial Independence, Retire Early)
+  // ---------------------------------------------------------------
+  function calculateFire({ age, savings, expenses, contribution, annualRatePct, swrPct }) {
+    const rate = annualRatePct / 100;
+    const swr = swrPct / 100;
+    const fireNumber = swr > 0 ? expenses / swr : 0;
+
+    let balance = savings;
+    let fiYear = null;
+    const yearly = [];
+    const maxYears = 60;
+
+    for (let y = 1; y <= maxYears; y++) {
+      const growth = balance * rate;
+      balance = balance + growth + contribution;
+      yearly.push({ year: y, age: age + y, contribution, growth, balance });
+      if (balance >= fireNumber && fiYear === null) {
+        fiYear = y;
+        break; // stop once FI is reached — no need to project further
+      }
+    }
+
+    return { fireNumber, fiYear, yearly };
+  }
+
   function renderMortgage() {
     const priceEl = document.getElementById('mo-price');
     const downPctEl = document.getElementById('mo-down-pct');
@@ -265,6 +305,66 @@
     }
   }
 
+  function renderFire() {
+    const ageEl = document.getElementById('fire-age');
+    const savingsEl = document.getElementById('fire-savings');
+    const expensesEl = document.getElementById('fire-expenses');
+    const contribEl = document.getElementById('fire-contribution');
+    const rateEl = document.getElementById('fire-return');
+    const swrEl = document.getElementById('fire-swr');
+    if (!ageEl || !savingsEl || !expensesEl || !contribEl || !rateEl || !swrEl) return;
+
+    const age = safeFloat(ageEl, 'age');
+    const savings = safeFloat(savingsEl, 'savings');
+    const expenses = safeFloat(expensesEl, 'expenses');
+    const contribution = safeFloat(contribEl, 'contribution');
+    const annualRatePct = parseFloat(rateEl.value) || 0;
+    const swrPct = parseFloat(swrEl.value) || 0.1; // guard div-by-zero; slider min is 2 anyway
+
+    document.getElementById('fire-return-out').textContent = annualRatePct.toFixed(1) + '%';
+    document.getElementById('fire-swr-out').textContent = swrPct.toFixed(1) + '%';
+
+    const result = calculateFire({ age, savings, expenses, contribution, annualRatePct, swrPct });
+
+    document.getElementById('fire-number').textContent = fmtUSD(result.fireNumber);
+    document.getElementById('fire-delta').textContent = result.fiYear
+      ? `Years to FI: ${result.fiYear} (age ${age + result.fiYear})`
+      : 'Years to FI: 60+ — try increasing contributions';
+
+    renderFireBars(result.yearly, result.fireNumber);
+    renderFireTable(result.yearly, result.fiYear);
+  }
+
+  function renderFireBars(yearly, fireNumber) {
+    const barsEl = document.getElementById('fire-bars');
+    const axisEl = document.getElementById('fire-axis');
+    if (!barsEl || !axisEl || yearly.length === 0) return;
+
+    const maxBalance = Math.max(...yearly.map(y => y.balance), fireNumber);
+    barsEl.innerHTML = yearly.map(y => {
+      const pct = maxBalance > 0 ? Math.max(4, (y.balance / maxBalance) * 100) : 4;
+      return `<div style="height:${pct}%" title="Age ${y.age}: ${fmtUSD(y.balance)}"></div>`;
+    }).join('');
+
+    const totalYears = yearly.length;
+    const axisPoints = [1, Math.round(totalYears * 0.25), Math.round(totalYears * 0.5), Math.round(totalYears * 0.75), totalYears]
+      .filter((v, i, arr) => v > 0 && arr.indexOf(v) === i);
+    axisEl.innerHTML = axisPoints.map(y => `<span>Yr ${y}</span>`).join('');
+  }
+
+  function renderFireTable(yearly, fiYear) {
+    const bodyEl = document.getElementById('fire-table-body');
+    if (!bodyEl) return;
+    bodyEl.innerHTML = yearly.map(y => `
+      <div class="calc-trow${y.year === fiYear ? ' fi-year' : ''}">
+        <div>${y.age}${y.year === fiYear ? ' 🔥' : ''}</div>
+        <div>${fmtNum(y.contribution)}</div>
+        <div class="calc-pos">${fmtNum(y.growth)}</div>
+        <div>${fmtNum(y.balance)}</div>
+      </div>
+    `).join('');
+  }
+
   // ---------------------------------------------------------------
   // Wiring: sub-tabs (Compound / Mortgage), segmented controls,
   // and input listeners.
@@ -319,10 +419,16 @@
       if (el) el.addEventListener('input', renderCompoundInterest);
     });
 
-    const moInputs = ['mo-price', 'mo-down-pct', 'mo-term', 'mo-rate', 'mo-tax-pct', 'mo-insurance', 'mo-hoa'];
+ const moInputs = ['mo-price', 'mo-down-pct', 'mo-term', 'mo-rate', 'mo-tax-pct', 'mo-insurance', 'mo-hoa'];
     moInputs.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', renderMortgage);
+    });
+
+    const fireInputs = ['fire-age', 'fire-savings', 'fire-expenses', 'fire-contribution', 'fire-return', 'fire-swr'];
+    fireInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', renderFire);
     });
   }
 
@@ -337,6 +443,7 @@
 
     renderCompoundInterest();
     renderMortgage();
+    renderFire();
   }
 
   if (document.readyState === 'loading') {
@@ -347,11 +454,13 @@
 
   // Expose for debugging / re-render from other modules (e.g. if
   // your nav.js needs to force a re-render when the view becomes visible).
-  window.PulseCalculators = {
+ window.PulseCalculators = {
     renderCompoundInterest,
     renderMortgage,
+    renderFire,
     calculateCompoundInterest,
-    calculateMortgage
+    calculateMortgage,
+    calculateFire
   };
 
 })();
