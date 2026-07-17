@@ -56,10 +56,6 @@ authBtn?.addEventListener('click', () => {
   openAuthModal();
 });
 
-authToggleLink?.addEventListener('click', (e) => {
-  e.preventDefault();
-  authMode = authMode === 'signin' ? 'signup' : 'signin';
-  ...
 
 authToggleLink?.addEventListener('click', (e) => {
   e.preventDefault();
