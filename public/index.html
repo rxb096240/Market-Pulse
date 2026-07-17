@@ -390,9 +390,10 @@
       <!-- VIEW PANEL — add inside <main>, alongside your other view-panel sections -->
 <section class="view-panel calc-panel" data-view-panel="calculators">
 
-  <div class="calc-subnav">
+ <div class="calc-subnav">
     <button class="calc-subtab active" data-calc="compound">Compound Interest</button>
     <button class="calc-subtab" data-calc="mortgage">Mortgage</button>
+    <button class="calc-subtab" data-calc="fire">FIRE</button>
   </div>
 
   <!-- ============ COMPOUND INTEREST ============ -->
@@ -542,7 +543,7 @@
       </div>
     </div>
 
-    <!-- Payoff date mode -->
+   <!-- Payoff date mode -->
     <div class="calc-mode-view" data-mode-view="payoff" hidden>
       <div class="calc-hero-result calc-blue">
         <div class="calc-accent-bar"></div>
@@ -553,7 +554,75 @@
     </div>
   </div>
 
+  <!-- ============ FIRE ============ -->
+  <div class="calc-view" data-calc-view="fire">
+    <div class="calc-h2">When can you retire?</div>
+    <div class="calc-sub">Estimate your FIRE number and years to financial independence.</div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Current age</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="fire-age" value="30" min="10" max="90" step="1">
+        <span class="calc-unit">years</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Current savings/investments</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="fire-savings" value="25000" min="0" step="500">
+        <span class="calc-unit">USD</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Annual expenses</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="fire-expenses" value="40000" min="0" step="500">
+        <span class="calc-unit">USD/yr</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Annual contribution</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="fire-contribution" value="18000" min="0" step="500">
+        <span class="calc-unit">USD/yr</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Expected annual return</span><span id="fire-return-out">7.0%</span></div>
+      <input type="range" class="calc-slider" id="fire-return" min="0" max="15" step="0.1" value="7">
+    </div>
+
+    <div class="calc-input-group">
+      <div class="calc-input-label"><span>Safe withdrawal rate</span><span id="fire-swr-out">4.0%</span></div>
+      <input type="range" class="calc-slider" id="fire-swr" min="2" max="6" step="0.1" value="4">
+    </div>
+
+    <div class="calc-hero-result">
+      <div class="calc-accent-bar"></div>
+      <div class="calc-lbl">Your FIRE number</div>
+      <div class="calc-big" id="fire-number">$0</div>
+      <div class="calc-delta" id="fire-delta">Years to FI: —</div>
+    </div>
+
+    <div class="calc-chart-card">
+      <div class="calc-chart-title">Balance vs. FIRE number, by year</div>
+      <div class="calc-bars" id="fire-bars"></div>
+      <div class="calc-chart-axis" id="fire-axis"></div>
+    </div>
+
+    <div class="calc-table-card">
+      <div class="calc-table-title">Year-by-year</div>
+      <div class="calc-trow calc-head"><div>Age</div><div>Contrib.</div><div>Growth</div><div>Balance</div></div>
+      <div id="fire-table-body"></div>
+    </div>
+  </div>
+
 </section>
+
 
       <!-- Practice Mode -->
 <section class="view-panel" data-view-panel="practice-mode">
