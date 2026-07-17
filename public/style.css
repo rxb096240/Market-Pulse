@@ -1346,6 +1346,7 @@
 .calc-trow.calc-head{ font-family:'Inter',sans-serif; color:var(--calc-muted); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
 .calc-trow .calc-pos{ color:var(--calc-green); }
 .calc-trow.calc-blue .calc-pos{ color:var(--calc-blue); }
+.calc-trow.fi-year{ background:rgba(0,227,154,0.08); }
 
 /* ============================================================
    HOME DASHBOARD — STYLES
