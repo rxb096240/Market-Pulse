@@ -370,12 +370,12 @@ async function fetchYahooScreener(scrId, count){
 
 app.get('/api/stocks/top-movers', async (req, res) => {
   try {
-    const { data } = await cachedFetch('stocks:top-movers', 60_000, async () => {
+   const { data } = await cachedFetch('stocks:top-movers', 60_000, async () => {
       const [gainers, losers] = await Promise.all([
         fetchYahooScreener('day_gainers', 5),
         fetchYahooScreener('day_losers', 5)
       ]);
-      return { data: { gainers, losers }, contentType: 'application/json' };
+      return { data: { gainers, losers, lastFetched: Date.now() }, contentType: 'application/json' };
     });
     res.json(data);
   } catch (e) {
