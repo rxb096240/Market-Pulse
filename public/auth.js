@@ -41,7 +41,25 @@ async function updateAuthUI(){
   }
 }
 
+
 authModalClose?.addEventListener('click', closeAuthModal);
+
+authBtn?.addEventListener('click', () => {
+  if(currentUser){
+    return;
+  }
+  authMode = 'signin';
+  authModalTitle.textContent = 'Sign in';
+  authSubmitBtn.textContent = 'Sign in';
+  authToggleText.textContent = 'No account?';
+  authToggleLink.textContent = 'Sign up';
+  openAuthModal();
+});
+
+authToggleLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  ...
 
 authToggleLink?.addEventListener('click', (e) => {
   e.preventDefault();
