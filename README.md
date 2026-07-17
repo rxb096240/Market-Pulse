@@ -1,103 +1,82 @@
 # Market Pulse
 
-A full-stack financial dashboard for tracking crypto, stocks, and sports —
-live prices, portfolio tracking, market news, and scores in one place.
-Built with a Node.js/Express backend and a vanilla JS frontend, deployed
-on Render, and also wrapped as an Android WebView app.
+A free, real-time stock, crypto, and forex tracking dashboard with practice trading, earnings calendars, and financial education — built as a web app and wrapped as an Android app.
+
+**Live site:** [market-pulse.fyi](https://market-pulse.fyi)
+
+---
 
 ## Features
 
-- **Stocks Overview** (homepage) — markets summary banner (S&P 500, Dow,
-  Nasdaq, Russell 2000, VIX, Gold, Bitcoin, Crude Oil) and a sortable
-  Top 100 stocks table by market cap
-- **Crypto & Stock Watchlists** — track custom lists of coins/tickers with
-  live price, % change, and market cap; add assets via company-name or
-  ticker search
-- **Crypto Trending & Markets Overview** — trending coins and a sortable
-  top-100 crypto markets table
-- **Portfolio Tracking** — log holdings (quantity + avg buy price) for both
-  crypto and stocks, with live cost basis, current value, and P/L
-- **News** — asset-specific news for tracked tickers/coins, plus US, World,
-  and India news feeds
-- **Sports** — live scoreboards for Soccer and Tennis
-- **Weather widget** — local weather via browser geolocation
-- **Auth** — sign in to sync watchlists and portfolio across devices
-- **Mobile-friendly** — slide-in nav drawer, responsive layout, wrapped as
-  an Android WebView app
+### Markets & Tracking
+- **Crypto Overview** — Top 100 coins by market cap (CoinGecko), sortable table
+- **Stocks Overview** — Curated "Top 10 AI Stocks" with live quotes (Finnhub)
+- **Watchlists** — Add/track individual stocks and coins
+- **Markets Summary Banner** — S&P 500, Dow, Nasdaq, Russell 2000, VIX, Gold, Bitcoin, Crude Oil at a glance
+- **Today's Top Movers** — Whole-market gainers/losers (Yahoo Finance screener), with a live "last updated" timestamp reflecting actual cache refresh time
+- **Forex Rates** — Daily reference exchange rates vs. USD (Frankfurter API, 1-hour server-side cache)
+- **Earnings Calendar** — Upcoming S&P 500 earnings, next 14 days (Finnhub, filtered against S&P 500 constituent list)
+- **Trending** — Trending coins via CoinGecko
+
+### Portfolio & Practice Trading
+- **Practice Mode** — $10,000 simulated trading account with real live prices, zero real-money risk
+- **Portfolio Tracking** — Persisted stock and crypto holdings (Supabase), with cost basis, P/L, and P/L% calculations
+- **Home Dashboard**
+  - Market Pulse Index and live market snapshot strip
+  - **Suggested Allocation by Age** — age-bracket dropdown (20–30 through 60–70) showing a Stocks/Bonds/Cash/Crypto reference allocation
+  - Today's Top Movers, side by side with Suggested Allocation
+
+### News & Learning
+- Regional news tabs (US, World, India) and dedicated Stocks/Crypto news feeds
+- **Learn** section — embedded video primers on stock basics, index funds, and crypto fundamentals
+
+### Account & Admin
+- Email/password authentication (Supabase Auth), gating Practice Mode and Portfolio features
+- **Admin Reports** — traffic and usage analytics (city/country breakdown, recent activity log, most active view) via a dedicated `user_activity_log` table, visible only to admin accounts
+
+### Reliability
+- Server-side caching per endpoint to stay within third-party API rate limits
+- GitHub Actions keep-alive workflow pinging `/api/ping` every 10 minutes to prevent Render free-tier spin-down
+- Sequential-with-delay fetching for rate-limited sources (Yahoo Finance); parallel fetching where allowed (Finnhub)
+
+---
 
 ## Tech Stack
 
-**Backend**
-- Node.js + Express
-- In-memory caching layer (`cachedFetch`) with per-route TTLs (10–120s)
-- Deployed on Render
+**Front end:**
+- Vanilla JavaScript (no framework) — modular files (`home.js`, `auth.js`, `portfolio.js`, `markets.js`, `forex.js`, `earnings.js`, `news.js`, `calculator.js`, `practice.js`, `trending.js`, `watchlist.js`, `admin.js`, `nav.js`, `main.js`)
+- HTML5 / CSS3 — custom CSS with CSS variables for theming, CSS Grid/Flexbox layouts, responsive design
+- Fonts: Inter, IBM Plex Mono (Google Fonts)
 
-**Frontend**
-- Vanilla JavaScript (no framework)
-- IBM Plex Mono + Inter fonts
-- Dark theme with amber accents, CSS custom properties for theming
+**Back end:**
+- Node.js with Express
+- In-memory per-endpoint caching layer (`cachedFetch`)
+- RESTful API routes for markets, stocks, crypto, forex, earnings, news, portfolio, practice trading, and admin analytics
 
-**Data & Auth**
-- Supabase — authentication and portfolio persistence (`portfolio_holdings`
-  table with row-level security), with localStorage as an offline fallback
+**Data & Auth:**
+- **Supabase** — authentication (email/password), Postgres database for `portfolio_holdings`, `user_activity_log`, and practice trading data, with Row-Level Security (RLS) policies
+- Supabase Admin client (`supabaseAdmin`) using a service role key for server-side writes (e.g. activity tracking)
 
-## APIs Used
+**Hosting & Infra:**
+- **Render.com** — backend/API hosting (free tier)
+- **GitHub Actions** — scheduled keep-alive workflow to prevent free-tier spin-down
+- Custom domain: `market-pulse.fyi`
 
-All external calls are proxied server-side (rather than called directly
-from the browser) to avoid CORS issues and rate-limit problems, and to
-keep API usage consistent across clients.
+**Third-party data APIs:**
+- Yahoo Finance — stock quotes, top movers screener
+- Finnhub — curated stock quotes, earnings calendar
+- CoinGecko — crypto market data, trending coins
+- Frankfurter (ECB) — forex reference rates
+- Google News RSS / NDTV Feedburner — news aggregation
 
-| Provider | Used for |
-|---|---|
-| **CoinGecko** | Crypto prices, market cap, search, trending coins |
-| **Yahoo Finance** (`v8/finance/chart`, search) | Stock quotes, company/ticker search, top-100 markets table, stock news |
-| **Google News RSS** | US and World news |
-| **NDTV Feedburner RSS** | India news (Times of India is blocked by bot detection) |
-| **ESPN** | Soccer and Tennis scoreboards |
-| **Open-Meteo** | Weather data |
-| **Supabase** | Auth and portfolio/watchlist storage |
+**Mobile:**
+- Android WebView wrapper around the web app
+- App icon generation via Node's `sharp` library
 
-## API Routes
+---
 
-| Route | Returns |
-|---|---|
-| `GET /api/crypto/price?ids=bitcoin,ethereum` | Live prices for given coin IDs |
-| `GET /api/crypto/markets` | Top 100 coins by market cap |
-| `GET /api/crypto/search?query=doge` | Coin search results |
-| `GET /api/crypto/trending` | Trending coins |
-| `GET /api/stock/quote/:symbol` | Single stock quote |
-| `GET /api/stock/search?q=apple` | Stock/company search |
-| `GET /api/stocks/markets` | Top 100 large-cap stocks |
-| `GET /api/markets/summary` | Markets summary banner data |
-| `GET /api/news/search?q=AAPL` | News for a given symbol/query |
-| `GET /api/news/google?edition=us\|world\|in` | Google/NDTV news feed by edition |
+## Disclaimers
 
-## Getting Started
-
-```bash
-npm install
-npm start
-```
-
-Then open **http://localhost:3000** (or whatever port is set via the
-`PORT` environment variable — Render assigns its own, typically `10000`).
-The server serves the frontend (`public/index.html`, `style.css`,
-`script.js`) and exposes the API routes above from the same origin, so
-there's nothing else to configure locally.
-
-To point the frontend at a different backend origin, change `API_BASE`
-at the top of `public/script.js`:
-
-```js
-const API_BASE = 'http://localhost:3000';
-```
-
-## Notes
-
-- Responses are cached briefly in memory to avoid hammering upstream APIs
-  when multiple tabs/devices poll the server.
-- No API keys are required for CoinGecko, Yahoo Finance, or Google News —
-  all are free/public endpoints, fetched server-side.
-- Larger batch requests (top-100 tables, markets summary) are fetched
-  sequentially with small delays rather than in parallel, to stay under
-  Yahoo Finance's rate limits.
+- Practice Mode uses simulated funds only — no real money is at risk and no real trades are placed.
+- Suggested age-based allocation is a general reference guideline, not personalized financial advice.
+- Market data is provided by third-party APIs and may be delayed; not intended for actual trading decisions.
