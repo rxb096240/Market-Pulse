@@ -31,6 +31,7 @@ const VIEW_TITLES = {
   'earnings-calendar': 'Earnings',
   'practice-mode': 'Practice',
   'social-reddit': 'Social · Reddit',
+  'social-hackernews': 'Social · Hacker News',
   'admin-reports': 'Admin · Reports'
 };
 
@@ -77,6 +78,8 @@ function showView(view){
   }
 }else if(view === 'social-reddit'){
     refreshRedditFeed();
+}else if(view === 'social-hackernews'){
+    refreshHackerNews();
 }else if(view === 'admin-reports'){
   refreshAdminReports();
 }
