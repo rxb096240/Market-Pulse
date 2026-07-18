@@ -94,6 +94,7 @@
       <button class="nav-group-label" data-group-toggle="social">Social <span class="nav-chevron">▾</span></button>
       <div class="nav-group-items">
       <button class="nav-item" data-view="social-reddit">Reddit</button>
+<button class="nav-item" data-view="social-hackernews">Hacker News</button>
       </div>
     </div>
   </nav>
@@ -708,6 +709,27 @@
 
         <div class="reddit-list" id="redditPostList">
           <div class="news-loading">Loading Reddit feed…</div>
+        </div>
+      </section>
+
+<!-- Social: Hacker News -->
+      <section class="view-panel" data-view-panel="social-hackernews">
+        <div class="trending-intro">Search Hacker News for market-related discussion. Pick a quick term or search your own.</div>
+
+        <div class="search-section">
+          <div class="search-input-wrap" style="flex:1;">
+            <input id="hnInput" type="text" placeholder="stock market" autocomplete="off" value="stock market">
+          </div>
+          <button class="add-btn" id="hnGoBtn">Search</button>
+        </div>
+
+        <div class="quick-row" id="hnQuickRow" style="display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px;"></div>
+        <div class="sort-row" id="hnSortRow" style="display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap;"></div>
+
+        <div class="trending-intro" id="hnResultsHeading" style="margin-bottom:8px;"></div>
+
+        <div class="reddit-list" id="hnCardContainer">
+          <div class="news-loading">Loading Hacker News results…</div>
         </div>
       </section>
       
