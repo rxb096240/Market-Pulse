@@ -29,28 +29,34 @@
       <button class="nav-item active" data-view="home">Home</button>
     </div>
 
-      <div class="nav-group">
-      <div class="nav-group-label">Stocks</div>
+      <div class="nav-group" data-group="stocks">
+      <button class="nav-group-label" data-group-toggle="stocks">Stocks <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
       <button class="nav-item" data-view="stocks-overview">Overview</button>
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
+      </div>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-group-label">Crypto</div>
+   <div class="nav-group" data-group="crypto">
+      <button class="nav-group-label" data-group-toggle="crypto">Crypto <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
       <button class="nav-item" data-view="crypto-overview">Overview</button>
       <button class="nav-item" data-view="crypto-watchlist">Watchlist</button>
       <button class="nav-item" data-view="crypto-trending">Trending</button>
       <button class="nav-item" data-view="crypto-portfolio">Portfolio</button>
       <button class="nav-item" data-view="crypto-news">News</button>
+      </div>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-group-label">News</div>
+    <div class="nav-group" data-group="news">
+      <button class="nav-group-label" data-group-toggle="news">News <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
       <button class="nav-item" data-view="news-us">US</button>
       <button class="nav-item" data-view="news-world">World</button>
        <button class="nav-item" data-view="news-india">India</button>
+      </div>
     </div>
 
 
@@ -74,12 +80,22 @@
   <button class="nav-item" data-view="admin-reports">Admin Reports</button>
 </div>
 
-    <div class="nav-group">
-      <div class="nav-group-label">Learn</div>
+    <div class="nav-group" data-group="learn">
+      <button class="nav-group-label" data-group-toggle="learn">Learn <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
       <button class="nav-item" data-view="learn-stocks">Stocks Basics</button>
       <button class="nav-item" data-view="learn-index-funds">Index Funds</button>
       <button class="nav-item" data-view="learn-crypto">Crypto Basics</button>
+      </div>
    </div>
+
+
+    <div class="nav-group" data-group="social">
+      <button class="nav-group-label" data-group-toggle="social">Social <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
+      <button class="nav-item" data-view="social-reddit">Reddit</button>
+      </div>
+    </div>
   </nav>
 
   <div class="app-main">
@@ -671,6 +687,14 @@
   </div>
   <div class="search-hint" style="text-align:center; margin-top:10px;">Estimates provided by Finnhub · actuals populate after companies report</div>
 </section>
+
+       <!-- Social: Reddit -->
+      <section class="view-panel" data-view-panel="social-reddit">
+        <div class="trending-intro">Live sentiment from any subreddit. Pick a quick tab or search your own.</div>
+        <div id="redditContainer">
+          <div class="news-loading">Loading Reddit feed…</div>
+        </div>
+      </section>
       
 
       <!-- Stocks Watchlist -->
