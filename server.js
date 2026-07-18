@@ -56,15 +56,19 @@ async function fetchText(url, timeoutMs = 8000) {
 
 async function resolveCity(ip){
   if (!ip || ip === '::1' || ip.startsWith('127.') || ip.startsWith('192.168.')) {
-    return { city: 'Local', country: 'Local' };
+    return { city: 'Local', country: 'Local', state: null };
   }
   try {
-    const { data } = await fetchJson(`http://ip-api.com/json/${ip}?fields=city,country,status`, 4000);
-    if (data.status !== 'success') return { city: null, country: null };
-    return { city: data.city || null, country: data.country || null };
+    const { data } = await fetchJson(`http://ip-api.com/json/${ip}?fields=city,country,countryCode,regionName,status`, 4000);
+    if (data.status !== 'success') return { city: null, country: null, state: null };
+    return {
+      city: data.city || null,
+      country: data.country || null,
+      state: data.countryCode === 'US' ? (data.regionName || null) : null
+    };
   } catch (e) {
     console.error('geolocation lookup failed:', e.message);
-    return { city: null, country: null };
+    return { city: null, country: null, state: null };
   }
 }
 
@@ -76,14 +80,16 @@ app.post('/api/track/nav', async (req, res) => {
 
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
       .split(',')[0].trim();
-    const { city, country } = await resolveCity(ip);
+    
+   const { city, country, state } = await resolveCity(ip);
 
     const { error } = await supabaseAdmin.from('user_activity_log').insert({
       user_id: userId || null,
       nav_section: section,
       ip_address: ip,
       city,
-      country
+      country,
+      state
     });
 
     if (error) throw error;
@@ -616,6 +622,8 @@ app.get('/api/admin/stats', async (req, res) => {
       totalHits,
       uniqueUsers,
       citiesReached: new Set(rows.map(r => r.city).filter(Boolean)).size,
+      statesReached: new Set(rows.map(r => r.state).filter(Boolean)).size,
+      countriesReached: new Set(rows.map(r => r.country).filter(Boolean)).size,
       topView: topView ? { section: topView[0], count: topView[1] } : null,
       topCities,
       recent
