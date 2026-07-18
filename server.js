@@ -481,18 +481,23 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
 
   function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-  async function fetchRedditRssOnce(){
+ async function fetchRedditRssOnce(){
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      const rssRes = await fetch(url, {
-        signal: controller.signal,
-        headers: { 'User-Agent': 'web:market-pulse:v1.0 (by /u/market_pulse_bot)' }
-      });
+      // Relayed through a Cloudflare Worker rather than calling Reddit
+      // directly — Render's IP + a plain descriptive UA was getting 429/403'd
+      // by Reddit's bot detection. The Worker sends browser-like headers
+      // from Cloudflare's edge instead.
+      const workerParams = new URLSearchParams({ subreddit, sort });
+      if (needsTime) workerParams.set('t', t);
+      const relayUrl = `https://reddit-rss-relay.<your-subdomain>.workers.dev/?${workerParams.toString()}`;
+
+      const rssRes = await fetch(relayUrl, { signal: controller.signal });
       if (!rssRes.ok) {
         const body = await rssRes.text().catch(() => '');
-        console.error('Reddit RSS error body:', rssRes.status, body.slice(0, 300));
-        const err = new Error(`Reddit upstream error ${rssRes.status}`);
+        console.error('Reddit relay error body:', rssRes.status, body.slice(0, 300));
+        const err = new Error(`Reddit relay error ${rssRes.status}`);
         err.status = rssRes.status;
         throw err;
       }
