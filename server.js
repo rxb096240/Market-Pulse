@@ -478,7 +478,9 @@ app.get('/api/reddit/feed', async (req, res) => {
 
 const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
 
-  async function fetchRedditRss(){
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function fetchRedditRssOnce(){
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
@@ -489,7 +491,9 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
       if (!rssRes.ok) {
         const body = await rssRes.text().catch(() => '');
         console.error('Reddit RSS error body:', rssRes.status, body.slice(0, 300));
-        throw new Error(`Reddit upstream error ${rssRes.status}`);
+        const err = new Error(`Reddit upstream error ${rssRes.status}`);
+        err.status = rssRes.status;
+        throw err;
       }
       const text = await rssRes.text();
       return { data: text, contentType: 'application/xml' };
@@ -498,12 +502,34 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
     }
   }
 
+  async function fetchRedditRss(){
+    try {
+      return await fetchRedditRssOnce();
+    } catch (e) {
+      // One retry with a short backoff specifically for rate limiting —
+      // Reddit's 429s are often transient bursts, not a hard block.
+      if (e.status === 429) {
+        await sleep(1500);
+        return await fetchRedditRssOnce();
+      }
+      throw e;
+    }
+  }
+
   try {
     const { data } = await cachedFetch(cacheKey, 10 * 60_000, fetchRedditRss);
+    redditStaleCache.set(cacheKey, data); // keep last-known-good indefinitely
     res.set('Content-Type', 'application/xml');
     res.send(data);
   } catch (e) {
     console.error('reddit feed fetch failed:', subreddit, sort, e.message);
+    const stale = redditStaleCache.get(cacheKey);
+    if (stale) {
+      console.warn('serving stale reddit data for', cacheKey);
+      res.set('Content-Type', 'application/xml');
+      res.set('X-Data-Stale', 'true');
+      return res.send(stale);
+    }
     res.status(502).json({ error: `Failed to fetch r/${subreddit}` });
   }
 });
