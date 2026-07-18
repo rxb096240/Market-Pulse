@@ -12,6 +12,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Simple in-memory cache to avoid hammering upstream APIs when many
 // browser tabs/clients poll this server at once.
 const cache = new Map(); // key -> { expires, data, contentType }
+const redditStaleCache = new Map(); // key -> last-known-good RSS text, never expires, used as 429 fallback
 
 
 async function cachedFetch(cacheKey, ttlMs, fetcher) {
