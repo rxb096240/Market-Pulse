@@ -401,6 +401,66 @@
   border:1px solid rgba(255,69,0,0.25);
 }
 
+/* ---- Reddit view: subreddit chips, sort buttons, time filter ---- */
+.quick-chip{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  color:var(--muted);
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:20px;
+  padding:6px 12px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.quick-chip:hover{ border-color:var(--amber); color:var(--text); }
+.quick-chip.active{
+  color:#FFB289;
+  border-color:#FF4500;
+  background:rgba(255,69,0,0.12);
+}
+
+.sort-btn{
+  flex:1;
+  min-width:64px;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  color:var(--muted);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  font-weight:600;
+  padding:8px 4px;
+  border-radius:7px;
+  cursor:pointer;
+  text-align:center;
+}
+.sort-btn:hover{ border-color:var(--amber); color:var(--text); }
+.sort-btn.active{
+  background:rgba(255,69,0,0.14);
+  border-color:#FF4500;
+  color:#FFB289;
+}
+
+.time-chip{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--muted);
+  background:#161B22;
+  border:1px solid var(--panel-border);
+  border-radius:20px;
+  padding:5px 12px;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.time-chip:hover{ border-color:var(--amber); color:var(--text); }
+.time-chip.active{
+  color:var(--text);
+  border-color:#45607a;
+  background:#1c2735;
+}
+.time-row.show{ display:flex !important; }
+
 /* ---- Practice Mode ---- */
 .practice-banner{
   background:linear-gradient(135deg, #1a2e1f, #12161B);
