@@ -30,7 +30,7 @@ const VIEW_TITLES = {
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
   'practice-mode': 'Practice',
-  'news-reddit': 'News · Reddit',
+  'social-reddit': 'Social · Reddit',
   'admin-reports': 'Admin · Reports'
 };
 
@@ -45,6 +45,7 @@ function showView(view){
   document.querySelectorAll('.view-panel').forEach(panel => {
     panel.classList.toggle('active', panel.dataset.viewPanel === view);
   });
+  expandGroupForView(view);
   const titleEl = document.getElementById('viewTitle');
   if(titleEl) titleEl.textContent = VIEW_TITLES[view] || '';
 
@@ -74,7 +75,7 @@ function showView(view){
   }else{
     loadPracticeAccount();
   }
-}else if(view === 'news-reddit'){
+}else if(view === 'social-reddit'){
     refreshRedditNews();
 }else if(view === 'admin-reports'){
   refreshAdminReports();
@@ -107,3 +108,33 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     if(window.innerWidth <= 820) closeDrawer();
   });
 });
+
+/* ---- Collapsible nav groups ---- */
+function initNavCollapse(){
+  document.querySelectorAll('[data-group-toggle]').forEach(btn => {
+    const groupName = btn.dataset.groupToggle;
+    const groupEl = btn.closest('.nav-group');
+    const stored = localStorage.getItem(`navGroup:${groupName}`);
+    if(stored === 'collapsed') groupEl.classList.add('collapsed');
+
+    btn.addEventListener('click', () => {
+      groupEl.classList.toggle('collapsed');
+      localStorage.setItem(
+        `navGroup:${groupName}`,
+        groupEl.classList.contains('collapsed') ? 'collapsed' : 'expanded'
+      );
+    });
+  });
+}
+
+function expandGroupForView(view){
+  const activeBtn = document.querySelector(`.nav-item[data-view="${view}"]`);
+  const groupEl = activeBtn?.closest('.nav-group');
+  if(groupEl){
+    groupEl.classList.remove('collapsed');
+    const gName = groupEl.dataset.group;
+    if(gName) localStorage.setItem(`navGroup:${gName}`, 'expanded');
+  }
+}
+
+initNavCollapse();
