@@ -76,7 +76,7 @@ function showView(view){
     loadPracticeAccount();
   }
 }else if(view === 'social-reddit'){
-    refreshRedditNews();
+    refreshRedditFeed();
 }else if(view === 'admin-reports'){
   refreshAdminReports();
 }
