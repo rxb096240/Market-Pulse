@@ -151,14 +151,18 @@ async function refreshRedditFeed() {
     headingEl.textContent = `r/${redditState.subreddit} · ${sortLabel}${timeLabel}`;
   }
 
-  try {
-    const url = buildRedditFeedUrl(redditState.subreddit, redditState.sort, redditState.time);
-    const xmlText = await fetchTextWithTimeout(url, 8000);
+try {
+    const directUrl = `https://www.reddit.com/r/${encodeURIComponent(redditState.subreddit)}${redditState.sort === 'hot' ? '' : '/' + redditState.sort}/.rss?limit=15` +
+      ((redditState.sort === 'top' || redditState.sort === 'controversial') ? `&t=${redditState.time}` : '');
+    const res = await fetch(directUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const xmlText = await res.text();
     const posts = parseRedditAtom(xmlText);
     renderRedditPosts(posts);
   } catch (e) {
-    console.error('Reddit feed fetch failed:', redditState.subreddit, e);
-    if (container) container.innerHTML = `<div class="err">Couldn't load r/${escapeHtml(redditState.subreddit)} — check the name and try again.</div>`;
+    // TEMP DIAGNOSTIC — showing raw error on screen since tablet has no console access.
+    // Revert to the friendly message once we know whether this is CORS or something else.
+    if (container) container.innerHTML = `<div class="err">DEBUG: ${escapeHtml(e.message || String(e))}</div>`;
   }
 }
 
