@@ -54,7 +54,8 @@
     font-weight:700;
     letter-spacing:1px;
   }
-  .nav-group{ margin-bottom:20px; }
+
+.nav-group{ margin-bottom:20px; }
   .nav-group-label{
     font-family:'IBM Plex Mono',monospace;
     font-size:10px;
@@ -64,7 +65,30 @@
     color:var(--text);
     padding:4px 8px;
     margin-bottom:4px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-align:left;
+    -webkit-appearance:none;
+    appearance:none;
   }
+  .nav-chevron{
+    font-size:9px;
+    color:var(--muted);
+    transition:transform .15s ease;
+    flex-shrink:0;
+  }
+  .nav-group.collapsed .nav-chevron{ transform:rotate(-90deg); }
+  .nav-group-items{
+    overflow:hidden;
+    max-height:600px;
+    transition:max-height .2s ease;
+  }
+  .nav-group.collapsed .nav-group-items{ max-height:0; }
   .nav-item{
     display:block;
     width:100%;
