@@ -8,7 +8,7 @@
 // No score/comment counts available (Reddit's RSS doesn't expose them).
 
 const REDDIT_QUICK_SUBS = [
-  'stocks', 'investing', 'wallstreetbets', 'StockMarket', 'options', 'CryptoCurrency', 'personalfinance'
+  'stocks', 'investing', 'wallstreetbets', 'StockMarket', 'CryptoCurrency'
 ];
 
 let redditState = {
