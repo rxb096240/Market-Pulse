@@ -523,7 +523,7 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
   }
 
   try {
-    const { data } = await cachedFetch(cacheKey, 10 * 60_000, fetchRedditRss);
+    const { data } = await cachedFetch(cacheKey, 60 * 60_000, fetchRedditRss);
     redditStaleCache.set(cacheKey, data); // keep last-known-good indefinitely
     res.set('Content-Type', 'application/xml');
     res.send(data);
