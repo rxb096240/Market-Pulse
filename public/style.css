@@ -188,9 +188,11 @@
   }
   .sidenav.open{ transform:translateX(0); }
 
-  .nav-group{ display:block; }
+.nav-group{ display:block; }
   .nav-group-label{ padding:4px 8px; white-space:normal; }
   .nav-item{ white-space:normal; }
+  .nav-group-items{ max-height:none; }
+  .nav-group.collapsed .nav-group-items{ max-height:0; }
 }
 
   /* ---- Header ---- */
