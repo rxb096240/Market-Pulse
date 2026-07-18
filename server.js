@@ -491,7 +491,7 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
       // from Cloudflare's edge instead.
       const workerParams = new URLSearchParams({ subreddit, sort });
       if (needsTime) workerParams.set('t', t);
-      const relayUrl = `https://reddit-rss-relay.<your-subdomain>.workers.dev/?${workerParams.toString()}`;
+      const relayUrl = `https://reddit-rss-relay.a005-ram.workers.dev/?${workerParams.toString()}`;
 
       const rssRes = await fetch(relayUrl, { signal: controller.signal });
       if (!rssRes.ok) {
