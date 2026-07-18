@@ -443,76 +443,54 @@ app.get('/api/news/google', async (req, res) => {
   }
 });
 
-// ---- Reddit passthrough (top posts, r/wallstreetbets, last 24h) ----
-// Cached for 24h and force-refreshed once daily by a GitHub Actions cron
-// job at 8AM EST — see /api/news/reddit/refresh.
+// ---- Reddit RSS passthrough (any subreddit, any sort) ----
+// Follows the same pattern as /api/news/google: proxy the raw feed with the
+// right content-type and let the frontend parse it with DOMParser. No OAuth
+// needed — Reddit's official API now requires app approval, and unauthenticated
+// .json scraping (the old approach here) started 403ing, so RSS is the
+// stable path for public read-only access.
 
-const REDDIT_SUBREDDIT = 'wallstreetbets';
-const REDDIT_CACHE_KEY = `reddit:${REDDIT_SUBREDDIT}`;
-const REDDIT_CACHE_TTL = 24 * 60 * 60_000;
+const REDDIT_VALID_SORTS = new Set(['hot', 'new', 'top', 'rising', 'controversial']);
+const REDDIT_VALID_TIMES = new Set(['hour', 'day', 'week', 'month', 'year', 'all']);
+const REDDIT_LIMITS = { hot: 15, new: 15, rising: 15, top: 25, controversial: 20 };
+const REDDIT_SUBREDDIT_RE = /^[A-Za-z0-9_]{2,21}$/;
 
-async function fetchRedditTop(){
-  const url = `https://www.reddit.com/r/${REDDIT_SUBREDDIT}/top.json?t=day&limit=10`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
-  let data;
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'web:market-pulse:v1.0 (by /u/market_pulse_bot)' }
-    });
-if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.error('Reddit 403 body:', body.slice(0, 300));
-      throw new Error(`Reddit upstream error ${res.status}`);
-    }
-    data = await res.json();
-  } finally {
-    clearTimeout(timer);
+app.get('/api/reddit/feed', async (req, res) => {
+  const subreddit = (req.query.subreddit || '').toString();
+  const sort = (req.query.sort || 'hot').toString();
+  const t = (req.query.t || 'week').toString();
+
+  if (!REDDIT_SUBREDDIT_RE.test(subreddit)) {
+    return res.status(400).json({ error: 'Invalid subreddit name' });
   }
-  return (data?.data?.children || []).map(c => c.data).map(p => ({
-    title: p.title,
-    url: `https://www.reddit.com${p.permalink}`,
-    score: p.score,
-    numComments: p.num_comments,
-    flair: p.link_flair_text || null,
-    createdUtc: (p.created_utc || 0) * 1000
-  }));
-}
+  if (!REDDIT_VALID_SORTS.has(sort)) {
+    return res.status(400).json({ error: 'Invalid sort' });
+  }
+  if ((sort === 'top' || sort === 'controversial') && !REDDIT_VALID_TIMES.has(t)) {
+    return res.status(400).json({ error: 'Invalid time filter' });
+  }
 
-app.get('/api/news/reddit', async (req, res) => {
+  const limit = REDDIT_LIMITS[sort] || 15;
+  const needsTime = sort === 'top' || sort === 'controversial';
+  const sortPath = sort === 'hot' ? '' : `/${sort}`;
+  const url = `https://www.reddit.com/r/${subreddit}${sortPath}/.rss?limit=${limit}` +
+    (needsTime ? `&t=${t}` : '');
+
+  const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
+
   try {
-    const { data } = await cachedFetch(REDDIT_CACHE_KEY, REDDIT_CACHE_TTL, async () => {
-      const posts = await fetchRedditTop();
-      return {
-        data: { subreddit: REDDIT_SUBREDDIT, updatedAt: Date.now(), posts },
-        contentType: 'application/json'
-      };
-    });
-    res.json(data);
+    const { data } = await cachedFetch(cacheKey, 10 * 60_000, () => fetchText(url, 8000));
+    res.set('Content-Type', 'application/xml');
+    res.send(data);
   } catch (e) {
-    console.error('reddit news fetch failed:', e.message);
-    res.status(502).json({ error: 'Failed to fetch Reddit posts' });
+    console.error('reddit feed fetch failed:', subreddit, sort, e.message);
+    res.status(502).json({ error: `Failed to fetch r/${subreddit}` });
   }
 });
 
-// Called once a day by GitHub Actions at 8AM EST to force a fresh cache
-// entry, so the very first user of the day isn't the one paying for the
-// Reddit round-trip.
-app.post('/api/news/reddit/refresh', async (req, res) => {
-  try {
-    const posts = await fetchRedditTop();
-    cache.set(REDDIT_CACHE_KEY, {
-      data: { subreddit: REDDIT_SUBREDDIT, updatedAt: Date.now(), posts },
-      contentType: 'application/json',
-      expires: Date.now() + REDDIT_CACHE_TTL
-    });
-    res.json({ ok: true, count: posts.length });
-  } catch (e) {
-    console.error('reddit refresh failed:', e.message);
-    res.status(502).json({ error: 'Failed to refresh Reddit posts' });
-  }
-});
+ 
+
+
 
 const FOREX_CURRENCIES = {
   EUR: 'Euro',
