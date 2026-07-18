@@ -476,10 +476,30 @@ app.get('/api/reddit/feed', async (req, res) => {
   const url = `https://www.reddit.com/r/${subreddit}${sortPath}/.rss?limit=${limit}` +
     (needsTime ? `&t=${t}` : '');
 
-  const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
+const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
+
+  async function fetchRedditRss(){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const rssRes = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'web:market-pulse:v1.0 (by /u/market_pulse_bot)' }
+      });
+      if (!rssRes.ok) {
+        const body = await rssRes.text().catch(() => '');
+        console.error('Reddit RSS error body:', rssRes.status, body.slice(0, 300));
+        throw new Error(`Reddit upstream error ${rssRes.status}`);
+      }
+      const text = await rssRes.text();
+      return { data: text, contentType: 'application/xml' };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   try {
-    const { data } = await cachedFetch(cacheKey, 10 * 60_000, () => fetchText(url, 8000));
+    const { data } = await cachedFetch(cacheKey, 10 * 60_000, fetchRedditRss);
     res.set('Content-Type', 'application/xml');
     res.send(data);
   } catch (e) {
