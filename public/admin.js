@@ -27,6 +27,8 @@ function renderAdminStats(s){
   document.getElementById('adminTotalHits').textContent = s.totalHits;
   document.getElementById('adminUniqueUsers').textContent = s.uniqueUsers;
   document.getElementById('adminCities').textContent = s.citiesReached;
+  document.getElementById('adminStates').textContent = s.statesReached;
+  document.getElementById('adminCountries').textContent = s.countriesReached;
   document.getElementById('adminTopView').textContent = s.topView ? s.topView.section : '—';
 
   const citiesBody = document.getElementById('adminCitiesTableBody');
