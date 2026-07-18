@@ -1,7 +1,8 @@
 // reddit.js
 // Social · Reddit view. Follows the same RSS-proxy + DOMParser pattern as
 // news.js's Google News handling: the backend proxies the raw feed with
-// application/xml, and this file parses it client-side.
+// application/xml, and this file parses it client-side using the same
+// fetchTextWithTimeout / escapeHtml helpers already defined in news.js.
 //
 // Feed shape: Atom (not RSS 2.0) — <feed><entry><title>/<author>/<content>/<link>/<published>.
 // No score/comment counts available (Reddit's RSS doesn't expose them).
@@ -9,8 +10,6 @@
 const REDDIT_QUICK_SUBS = [
   'stocks', 'investing', 'wallstreetbets', 'StockMarket', 'options', 'CryptoCurrency', 'personalfinance'
 ];
-
-const REDDIT_LIMITS = { hot: 15, new: 15, rising: 15, top: 25, controversial: 20 };
 
 let redditState = {
   subreddit: 'stocks',
@@ -24,31 +23,27 @@ function stripHtml(html) {
   return (tmp.textContent || tmp.innerText || '').trim();
 }
 
-function timeAgo(isoString) {
-  const diffMs = Date.now() - new Date(isoString).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
 function parseRedditAtom(xmlText) {
-  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
-  if (doc.querySelector('parsererror')) return [];
+  try {
+    const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('bad xml');
 
-  const entries = Array.from(doc.getElementsByTagName('entry'));
-  return entries.map(entry => {
-    const title = entry.getElementsByTagName('title')[0]?.textContent || '(untitled)';
-    const authorName = entry.querySelector('author > name')?.textContent || 'unknown';
-    const author = authorName.replace(/^\/u\//, '');
-    const link = entry.getElementsByTagName('link')[0]?.getAttribute('href') || '#';
-    const published = entry.getElementsByTagName('published')[0]?.textContent || null;
-    const contentHtml = entry.getElementsByTagName('content')[0]?.textContent || '';
-    const excerpt = stripHtml(contentHtml).slice(0, 180);
-    return { title, author, link, published, excerpt };
-  });
+    const entries = Array.from(doc.getElementsByTagName('entry'));
+    return entries.map(entry => {
+      const title = entry.getElementsByTagName('title')[0]?.textContent || '(untitled)';
+      const authorName = entry.querySelector('author > name')?.textContent || 'unknown';
+      const author = authorName.replace(/^\/u\//, '');
+      const link = entry.getElementsByTagName('link')[0]?.getAttribute('href') || '#';
+      const published = entry.getElementsByTagName('published')[0]?.textContent || null;
+      const contentHtml = entry.getElementsByTagName('content')[0]?.textContent || '';
+      const excerpt = stripHtml(contentHtml).slice(0, 180);
+      const time = published ? Date.parse(published) : 0;
+      return { title, author, link, time: isNaN(time) ? 0 : time, excerpt };
+    });
+  } catch (e) {
+    console.error('Failed to parse Reddit RSS:', e);
+    return [];
+  }
 }
 
 function buildRedditFeedUrl(subreddit, sort, time) {
@@ -61,7 +56,7 @@ function renderRedditChips() {
   const row = document.getElementById('redditQuickRow');
   if (!row) return;
   row.innerHTML = REDDIT_QUICK_SUBS.map(sub => `
-    <div class="quick-chip${sub.toLowerCase() === redditState.subreddit.toLowerCase() ? ' active' : ''}" data-sub="${sub}">${sub}</div>
+    <div class="quick-chip${sub.toLowerCase() === redditState.subreddit.toLowerCase() ? ' active' : ''}" data-sub="${sub}">${escapeHtml(sub)}</div>
   `).join('');
 
   row.querySelectorAll('.quick-chip').forEach(chip => {
@@ -120,19 +115,19 @@ function renderRedditPosts(posts) {
   if (!container) return;
 
   if (!posts.length) {
-    container.innerHTML = `<div class="news-empty">No posts found for r/${redditState.subreddit}.</div>`;
+    container.innerHTML = `<div class="news-empty">No posts found for r/${escapeHtml(redditState.subreddit)}.</div>`;
     return;
   }
 
   container.innerHTML = posts.map((p, i) => `
-    <a class="reddit-post" href="${p.link}" target="_blank" rel="noopener">
-      <div class="reddit-rank">${i + 1}</div>
+    <a class="reddit-post" href="${p.link}" target="_blank" rel="noopener noreferrer">
+      <span class="reddit-rank">${String(i + 1).padStart(2, '0')}</span>
       <div class="reddit-post-body">
-        <div class="reddit-post-title">${p.title}</div>
-        <div class="news-meta" style="margin-bottom:6px;">${p.excerpt}</div>
+        <div class="reddit-post-title">${escapeHtml(p.title)}</div>
+        <div class="news-meta" style="margin-bottom:6px;">${escapeHtml(p.excerpt)}</div>
         <div class="reddit-post-meta">
-          <span>u/${p.author}</span>
-          <span>${p.published ? timeAgo(p.published) : ''}</span>
+          <span>u/${escapeHtml(p.author)}</span>
+          <span>${p.time ? timeAgo(p.time) : ''}</span>
         </div>
       </div>
     </a>
@@ -142,7 +137,7 @@ function renderRedditPosts(posts) {
 async function refreshRedditFeed() {
   const container = document.getElementById('redditPostList');
   const headingEl = document.getElementById('redditResultsHeading');
-  if (container) container.innerHTML = '<div class="news-loading">Loading r/' + redditState.subreddit + '…</div>';
+  if (container) container.innerHTML = `<div class="news-loading">Loading r/${escapeHtml(redditState.subreddit)}…</div>`;
 
   renderRedditChips();
   renderRedditSortRow();
@@ -158,18 +153,16 @@ async function refreshRedditFeed() {
 
   try {
     const url = buildRedditFeedUrl(redditState.subreddit, redditState.sort, redditState.time);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Feed request failed: ${res.status}`);
-    const xmlText = await res.text();
+    const xmlText = await fetchTextWithTimeout(url, 8000);
     const posts = parseRedditAtom(xmlText);
     renderRedditPosts(posts);
   } catch (e) {
-    console.error('reddit feed load failed:', e.message);
-    if (container) container.innerHTML = `<div class="err">Couldn't load r/${redditState.subreddit} — check the name and try again.</div>`;
+    console.error('Reddit feed fetch failed:', redditState.subreddit, e);
+    if (container) container.innerHTML = `<div class="err">Couldn't load r/${escapeHtml(redditState.subreddit)} — check the name and try again.</div>`;
   }
 }
 
-// Wire the subreddit text input (Enter key or blur triggers load)
+// Wire the subreddit text input (Enter key or button click triggers load)
 document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('redditSubInput');
   const goBtn = document.getElementById('redditGoBtn');
