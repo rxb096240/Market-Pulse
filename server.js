@@ -540,6 +540,38 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
   }
 });
 
+// ---- Hacker News passthrough (Algolia Search API — free, keyless, no CORS/rate-limit drama) ----
+
+app.get('/api/hackernews/search', async (req, res) => {
+  const query = (req.query.q || '').toString();
+  const sort = (req.query.sort || 'relevance').toString();
+  if (!query) return res.status(400).json({ error: 'q param required' });
+  if (sort !== 'relevance' && sort !== 'date') {
+    return res.status(400).json({ error: 'Invalid sort' });
+  }
+
+  const endpoint = sort === 'date' ? 'search_by_date' : 'search';
+  const url = `https://hn.algolia.com/api/v1/${endpoint}?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=15`;
+  const cacheKey = `hn:${sort}:${query.toLowerCase()}`;
+
+  try {
+    const { data } = await cachedFetch(cacheKey, 15 * 60_000, () => fetchJson(url, 8000));
+    const hits = (data.hits || []).map(h => ({
+      objectID: h.objectID,
+      title: h.title || '(untitled)',
+      url: h.url || null,
+      points: h.points ?? 0,
+      numComments: h.num_comments ?? 0,
+      author: h.author || 'unknown',
+      createdAt: h.created_at || null
+    }));
+    res.json({ query, sort, hits });
+  } catch (e) {
+    console.error('hackernews search failed:', query, e.message);
+    res.status(502).json({ error: 'Failed to fetch Hacker News results' });
+  }
+});
+
  
 
 
@@ -680,3 +712,5 @@ app.listen(PORT, () => {
 app.get('/api/ping', (req, res) => {
   res.status(200).json({ status: 'ok', time: new Date().toISOString() });
 });
+
+
