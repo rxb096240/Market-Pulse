@@ -44,8 +44,13 @@ async function updateAuthUI(){
 
 authModalClose?.addEventListener('click', closeAuthModal);
 
-authBtn?.addEventListener('click', () => {
+authBtn?.addEventListener('click', async () => {
   if(currentUser){
+    const confirmed = confirm('Sign out?');
+    if(!confirmed) return;
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    updateAuthUI();
     return;
   }
   authMode = 'signin';
