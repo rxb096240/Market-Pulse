@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ram Balachandran — Builder of Market Pulse</title>
+<meta name="description" content="Ram Balachandran — 14+ year software engineer in the finance industry, trader, investor, crypto enthusiast, and builder of Market Pulse.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --surface: #121B2E;
+    --surface-2: #182236;
+    --text: #E7ECF3;
+    --text-dim: #9AA7BD;
+    --accent: #C9A227;
+    --up: #4CAF7D;
+    --rule: rgba(231,236,243,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  .ticker-bar{
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 10px 0;
+  }
+  .ticker-track{
+    display: inline-block;
+    padding-left: 100%;
+    animation: scroll 30s linear infinite;
+  }
+  .ticker-track span{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-right: 2.5rem;
+  }
+  .ticker-track span.up { color: var(--up); }
+  .ticker-track span.hi { color: var(--accent); }
+
+  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; padding-left: 0; } }
+
+  .wrap{ max-width: 780px; margin: 0 auto; padding: 0 24px; }
+
+  header.hero{ padding: 72px 0 48px; }
+
+  .avatar-row{
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 30px;
+  }
+
+  .avatar{
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Newsreader', serif;
+    font-size: 1.6rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    overflow: hidden;
+    background: var(--surface);
+    object-fit: cover;
+  }
+
+  h1{
+    font-family: 'Newsreader', serif;
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5vw, 3rem);
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .roles{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .roles span:not(:last-child)::after{ content: "  ·  "; color: var(--text-dim); }
+
+  .lede{
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    max-width: 58ch;
+  }
+  .lede strong { color: var(--text); font-weight: 500; }
+
+  section.board{ padding: 8px 0 0; }
+
+  .board-eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .board-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 560px){ .board-grid{ grid-template-columns: 1fr; } }
+
+  .quote-card{
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 20px 22px;
+  }
+
+  .quote-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .symbol{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }
+
+  .delta{ font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; }
+  .delta.up { color: var(--up); }
+  .delta.hold { color: var(--accent); }
+
+  .value{
+    font-family: 'Newsreader', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+
+  .label{ font-size: 0.9rem; color: var(--text-dim); }
+
+  section.building{ padding: 56px 0 72px; }
+
+  .callout{
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 28px 28px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .callout-top{ display: flex; align-items: center; gap: 10px; }
+
+  .live-dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--up); flex-shrink: 0;
+  }
+  @media (prefers-reduced-motion: no-preference){ .live-dot { animation: pulse 2.4s ease-in-out infinite; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .callout-eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .callout h3{
+    font-family: 'Newsreader', serif;
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .callout p{ color: var(--text-dim); max-width: 58ch; margin: 0; }
+
+  .callout-link{ font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; margin-top: 6px; }
+
+  footer{ border-top: 1px solid var(--rule); padding: 28px 0 40px; }
+  footer .wrap{ display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  footer p{ font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--text-dim); margin: 0; }
+</style>
+</head>
+<body>
+
+  <div class="ticker-bar" aria-hidden="true">
+    <div class="ticker-track mono">
+      <span class="hi">RAM BALACHANDRAN</span>
+      <span class="up">14+ YRS</span>
+      <span>SOFTWARE ENGINEER — FINANCE INDUSTRY</span>
+      <span class="up">MS CS</span>
+      <span>UNIVERSITY OF TEXAS AT DALLAS</span>
+      <span>EQUITIES</span>
+      <span>OPTIONS</span>
+      <span class="up">CRYPTO</span>
+      <span>INVESTOR</span>
+      <span class="hi">BUILDER OF MARKET PULSE</span>
+      <span class="hi">RAM BALACHANDRAN</span>
+      <span class="up">14+ YRS</span>
+      <span>SOFTWARE ENGINEER — FINANCE INDUSTRY</span>
+      <span class="up">MS CS</span>
+      <span>UNIVERSITY OF TEXAS AT DALLAS</span>
+      <span>EQUITIES</span>
+      <span>OPTIONS</span>
+      <span class="up">CRYPTO</span>
+      <span>INVESTOR</span>
+      <span class="hi">BUILDER OF MARKET PULSE</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header class="hero">
+      <div class="avatar-row">
+        <picture>
+          <source srcset="assets/avatar.webp" type="image/webp">
+          <img class="avatar" src="assets/avatar.jpg" alt="Ram Balachandran">
+        </picture>
+        <div>
+          <h1>Ram Balachandran</h1>
+          <p class="roles">
+            <span>Software Engineer</span><span>Trader</span><span>Investor</span><span>Crypto Enthusiast</span>
+          </p>
+        </div>
+      </div>
+      <p class="lede">
+        <strong>14+ years</strong> building software in the finance industry — alongside
+        trading equities &amp; options, investing, and following crypto.
+      </p>
+    </header>
+
+    <section class="board" aria-label="Background at a glance">
+      <p class="board-eyebrow">At a glance</p>
+      <div class="board-grid">
+        <div class="quote-card">
+          <div class="quote-top">
+            <span class="symbol">EXP</span>
+            <span class="delta up">▲ ONGOING</span>
+          </div>
+          <div class="value">14+ yrs</div>
+          <div class="label">Software engineering in the finance industry</div>
+        </div>
+
+        <div class="quote-card">
+          <div class="quote-top">
+            <span class="symbol">EDU</span>
+            <span class="delta hold">MSCS</span>
+          </div>
+          <div class="value">UT Dallas</div>
+          <div class="label">Master's in Computer Science</div>
+        </div>
+
+        <div class="quote-card">
+          <div class="quote-top">
+            <span class="symbol">MKT</span>
+            <span class="delta up">ACTIVE</span>
+          </div>
+          <div class="value">Equities &amp;<br>Options</div>
+          <div class="label">Self-directed trader</div>
+        </div>
+
+        <div class="quote-card">
+          <div class="quote-top">
+            <span class="symbol">BTC</span>
+            <span class="delta up">HODL</span>
+          </div>
+          <div class="value">Crypto</div>
+          <div class="label">Investor &amp; enthusiast</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="building">
+      <div class="callout">
+        <div class="callout-top">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span class="callout-eyebrow">Currently building</span>
+        </div>
+        <h3>Market Pulse</h3>
+        <p>
+          A free, live dashboard for stocks, crypto, forex, and earnings — with a risk-free $10,000
+          practice account for anyone who wants to trade before they trade.
+        </p>
+        <a class="callout-link" href="https://market-pulse.fyi">market-pulse.fyi →</a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <p class="mono">© 2026 RAM BALACHANDRAN</p>
+      <p class="mono">MARKET-PULSE.FYI</p>
+    </div>
+  </footer>
+
+</body>
+</html>
