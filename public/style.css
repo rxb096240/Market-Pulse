@@ -103,6 +103,7 @@
     cursor:pointer;
     margin-bottom:2px;
     transition:background .15s ease, color .15s ease;
+    text-decoration:none;
   }
   .nav-item:hover:not(.active){ background:#1C222B; color:var(--text); }
   .nav-item.active{ background:var(--amber); color:#12161B; font-weight:700; }
