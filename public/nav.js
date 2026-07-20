@@ -18,6 +18,7 @@ const VIEW_TITLES = {
   'crypto-portfolio': 'Crypto · Portfolio',
   'crypto-news': 'Crypto · News',
   'stocks-overview': 'Stocks · Overview',
+  'stocks-ai': 'Stocks · AI Stocks',
   'stocks-watchlist': 'Stocks Watchlist',
   'stocks-portfolio': 'Stocks · Portfolio',
   'stocks-news': 'Stocks · News',
@@ -67,6 +68,8 @@ function showView(view){
     refreshIndiaNews();
   }else if(view === 'stocks-overview'){
   refreshStocksMarketsOverview();
+  }else if(view === 'stocks-ai'){
+  refreshAiStocksOverview();
   }else if(view === 'forex-rates'){
   refreshForexRates();
 }else if(view === 'earnings-calendar'){
