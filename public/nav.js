@@ -52,6 +52,7 @@ function showView(view){
 
   if(view === 'home'){
     refreshHomeView();
+    refreshVixIndex();
   }else if(view === 'crypto-trending'){
     refreshTrending();
   }else if(view === 'crypto-overview'){
