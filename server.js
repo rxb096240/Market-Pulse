@@ -140,7 +140,8 @@ async function fetchQuote(sym){
     symbol: sym,
     price: quote.c,
     changePct: quote.dp,
-    volume: null // not available on Finnhub's free /quote endpoint
+    dayHigh: quote.h ?? null,
+    dayLow: quote.l ?? null
   };
 }
 
