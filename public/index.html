@@ -148,14 +148,14 @@
 
           
 
-          <!-- Static placeholder — not wired to a real composite index yet -->
+      <!-- VIX — CBOE Volatility Index, wired to real data via /api/markets/vix -->
           <div class="home-pulse-card">
             <div class="home-pulse-head">
-              <span class="home-pulse-title">Market Pulse Index</span>
-              <span class="home-pulse-live"><span class="led"></span>LIVE</span>
+              <span class="home-pulse-title">VIX · Volatility Index</span>
+              <span class="home-pulse-live" id="vixLiveBadge"><span class="led"></span>LIVE</span>
             </div>
-            <div class="home-pulse-number">62.4</div>
-            <div class="home-pulse-delta">▲ 3.1 vs. yesterday — broadly risk-on</div>
+            <div class="home-pulse-number" id="vixNumber">—</div>
+            <div class="home-pulse-delta" id="vixDelta">Loading VIX…</div>
             <svg class="home-pulse-svg" viewBox="0 0 400 110" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="pfill" x1="0" y1="0" x2="0" y2="1">
@@ -163,14 +163,12 @@
                   <stop offset="100%" stop-color="#00E39A" stop-opacity="0"/>
                 </linearGradient>
               </defs>
-              <path class="home-pulse-fill" fill="url(#pfill)"
-                d="M0,70 L30,68 L55,72 L80,60 L100,64 L118,20 L128,95 L140,55 L165,58 L190,40 L215,46 L240,30 L265,38 L290,22 L320,34 L345,18 L370,26 L400,10 L400,110 L0,110 Z"/>
-              <path class="home-pulse-line"
-                d="M0,70 L30,68 L55,72 L80,60 L100,64 L118,20 L128,95 L140,55 L165,58 L190,40 L215,46 L240,30 L265,38 L290,22 L320,34 L345,18 L370,26 L400,10"/>
+              <path class="home-pulse-fill" fill="url(#pfill)" id="vixFillPath" d=""/>
+              <path class="home-pulse-line" id="vixLinePath" d=""/>
             </svg>
-            <div class="home-pulse-axis"><span>9:30</span><span>11:00</span><span>1:00</span><span>2:30</span><span>4:00</span></div>
+            <div class="home-pulse-axis" id="vixAxis"><span>9:30</span><span>11:00</span><span>1:00</span><span>2:30</span><span>4:00</span></div>
           </div>
-        </div>
+          
 
         <!-- Real data: reuses the same /api/markets/summary the Stocks Overview banner already calls -->
         <div class="home-snap-strip" id="homeSnapshot">
