@@ -33,6 +33,7 @@
       <button class="nav-group-label" data-group-toggle="stocks">Stocks <span class="nav-chevron">▾</span></button>
       <div class="nav-group-items">
       <button class="nav-item" data-view="stocks-overview">Overview</button>
+      <button class="nav-item" data-view="stocks-ai">AI Stocks</button>
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
@@ -393,9 +394,9 @@
         </div>
       </section>
 
-      <!-- Stocks Overview -->
+   <!-- Stocks Overview -->
 <section class="view-panel" data-view-panel="stocks-overview">
-  <div class="trending-intro">Top 10 AI-focused stocks. Tap a column to sort.</div>
+  <div class="trending-intro">Top 25 stocks by market cap. Tap a column to sort.</div>
   <div class="markets-table-wrap">
     <table class="markets-table" id="stocksMarketsTable">
       <thead>
@@ -409,6 +410,28 @@
         </tr>
       </thead>
       <tbody id="stocksMarketsTableBody">
+        <tr><td colspan="7" class="news-loading">Loading market data…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+      <!-- Stocks: AI Stocks -->
+<section class="view-panel" data-view-panel="stocks-ai">
+  <div class="trending-intro">Curated AI-related stocks. Tap a column to sort.</div>
+  <div class="markets-table-wrap">
+    <table class="markets-table" id="aiStocksMarketsTable">
+      <thead>
+        <tr>
+          <th data-sort="symbol" class="sort-active sort-asc">Symbol</th>
+          <th data-sort="name">Name</th>
+          <th data-sort="price">Price</th>
+          <th data-sort="changePct">Change %</th>
+          <th data-sort="volume">Volume</th>
+          <th class="no-sort"></th>
+        </tr>
+      </thead>
+      <tbody id="aiStocksMarketsTableBody">
         <tr><td colspan="7" class="news-loading">Loading market data…</td></tr>
       </tbody>
     </table>
