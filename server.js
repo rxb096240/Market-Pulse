@@ -102,39 +102,97 @@ app.post('/api/track/nav', async (req, res) => {
 });
 
 
-const TOP_10_AI_STOCKS = {
-  NVDA: 'Nvidia',
-  MSFT: 'Microsoft',
-  GOOGL: 'Alphabet',
-  META: 'Meta Platforms',
-  AMZN: 'Amazon',
-  AVGO: 'Broadcom',
-  AMD: 'AMD',
-  PLTR: 'Palantir',
-  ORCL: 'Oracle',
-  CRM: 'Salesforce'
+// Curated pool of 25 large-cap tickers, listed in rough real-world market-cap
+// order. Overview trusts this order rather than fetching live market cap
+// (that was cut to save API calls) — see note below on keeping it current.
+const LARGE_CAP_POOL = {
+  AAPL: 'Apple', MSFT: 'Microsoft', NVDA: 'Nvidia', GOOGL: 'Alphabet', AMZN: 'Amazon',
+  META: 'Meta Platforms', AVGO: 'Broadcom', TSLA: 'Tesla', 'BRK.B': 'Berkshire Hathaway', LLY: 'Eli Lilly',
+  JPM: 'JPMorgan Chase', WMT: 'Walmart', V: 'Visa', MA: 'Mastercard', ORCL: 'Oracle',
+  NFLX: 'Netflix', XOM: 'Exxon Mobil', COST: 'Costco', PG: 'Procter & Gamble', JNJ: 'Johnson & Johnson',
+  HD: 'Home Depot', ABBV: 'AbbVie', BAC: 'Bank of America', KO: 'Coca-Cola', PLTR: 'Palantir'
 };
+
+// Separate curated list for the AI Stocks tab — allowed to overlap with the
+// large-cap pool above (e.g. NVDA is legitimately both), but tracked and
+// returned independently.
+const AI_STOCKS = {
+  NVDA: 'Nvidia', MSFT: 'Microsoft', GOOGL: 'Alphabet', AMD: 'AMD', PLTR: 'Palantir',
+  META: 'Meta Platforms', AVGO: 'Broadcom', ORCL: 'Oracle', CRM: 'Salesforce', SNOW: 'Snowflake',
+  SMCI: 'Super Micro Computer', ARM: 'Arm Holdings', MRVL: 'Marvell Technology', NOW: 'ServiceNow',
+  PANW: 'Palo Alto Networks', AI: 'C3.ai', TSM: 'Taiwan Semiconductor', ASML: 'ASML Holding',
+  DELL: 'Dell Technologies', IBM: 'IBM'
+};
+
+// Union of both ticker lists, deduped — symbols appearing in both
+// LARGE_CAP_POOL and AI_STOCKS (NVDA, MSFT, GOOGL, META, AVGO, ORCL) only
+// get fetched once per cache cycle instead of twice.
+const ALL_SYMBOLS = Array.from(new Set([...Object.keys(LARGE_CAP_POOL), ...Object.keys(AI_STOCKS)]));
+
+async function fetchQuote(sym){
+  const { data: quote } = await fetchJson(
+    `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${process.env.FINNHUB_API_KEY}`, 8000
+  );
+  if (quote.c === undefined || quote.c === null || quote.c === 0) {
+    throw new Error('no quote data for ' + sym);
+  }
+  return {
+    symbol: sym,
+    price: quote.c,
+    changePct: quote.dp,
+    dayHigh: quote.h ?? null,
+    dayLow: quote.l ?? null
+  };
+}
+
+async function fetchAllQuotes(){
+  const { data } = await cachedFetch('stocks:allquotes', 5 * 60_000, async () => {
+    const results = await Promise.allSettled(ALL_SYMBOLS.map(fetchQuote));
+    const map = {};
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') map[ALL_SYMBOLS[i]] = r.value;
+    });
+    return { data: map, contentType: 'application/json' };
+  });
+  return data;
+}
 
 app.get('/api/stocks/markets', async (req, res) => {
   try {
-    const { data } = await cachedFetch('stocks:top10ai', 5 * 60_000, async () => {
-      const symbols = Object.keys(TOP_10_AI_STOCKS);
+    const quotes = await fetchAllQuotes();
+    const mapped = Object.keys(LARGE_CAP_POOL)
+      .filter(sym => quotes[sym])
+      .map(sym => ({ ...quotes[sym], name: LARGE_CAP_POOL[sym] }));
+
+    res.json(mapped);
+  } catch (e) {
+    console.error('stocks overview fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch stocks overview' });
+  }
+});
+
+app.get('/api/stocks/markets/ai', async (req, res) => {
+  try {
+    const quotes = await fetchAllQuotes();
+    const mapped = Object.keys(AI_STOCKS)
+      .filter(sym => quotes[sym])
+      .map(sym => ({ ...quotes[sym], name: AI_STOCKS[sym] }));
+
+    res.json(mapped);
+  } catch (e) {
+    console.error('AI stocks overview fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch AI stocks overview' });
+  }
+});
+
+app.get('/api/stocks/markets/ai', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('stocks:ai', 5 * 60_000, async () => {
+      const symbols = Object.keys(AI_STOCKS);
       const results = await Promise.allSettled(
         symbols.map(async (sym) => {
-          const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${process.env.FINNHUB_API_KEY}`;
-          const { data } = await fetchJson(url, 8000);
-          if (data.c === undefined || data.c === null || data.c === 0) {
-            throw new Error('no data for ' + sym);
-          }
-          const price = data.c;          // current price
-          const changePct = data.dp;     // % change already provided by Finnhub
-          return {
-            symbol: sym,
-            name: TOP_10_AI_STOCKS[sym],
-            price,
-            changePct,
-            volume: null // not available on Finnhub's free /quote endpoint
-          };
+          const q = await fetchQuoteAndCap(sym);
+          return { ...q, name: AI_STOCKS[sym] };
         })
       );
 
@@ -147,8 +205,8 @@ app.get('/api/stocks/markets', async (req, res) => {
 
     res.json(data);
   } catch (e) {
-    console.error('stocks overview fetch failed:', e.message);
-    res.status(502).json({ error: 'Failed to fetch stocks overview' });
+    console.error('AI stocks overview fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch AI stocks overview' });
   }
 });
 
