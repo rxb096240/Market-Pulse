@@ -102,7 +102,11 @@
     <div class="nav-group">
       <a class="nav-item" href="bio.html" data-view="bio">Bio</a>
     </div>
-  
+
+    <div class="nav-group">
+      <button class="nav-item" id="donateNavBtn" type="button">Donate</button>
+    </div>
+
   </nav>
 
   <div class="app-main">
@@ -955,9 +959,29 @@
     </div>
   </div>
 </div>
+  <div class="news-modal-backdrop" id="donateModalBackdrop">
+  <div class="news-modal" style="max-width:380px; height:auto;">
+    <div class="news-modal-header">
+      <div class="news-modal-title">Support Market Pulse</div>
+      <button class="news-modal-close" id="donateModalClose">×</button>
+    </div>
+    <div style="padding:18px; display:flex; flex-direction:column; gap:16px;">
+      <a href="https://paypal.me/ramakrishnanb" target="_blank" rel="noopener noreferrer" class="add-btn" style="width:100%; text-align:center; text-decoration:none; display:block; box-sizing:border-box;">Donate via PayPal</a>
+
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--muted); margin-bottom:6px;">Or send BTC</div>
+        <div class="donate-btc-row">
+          <span id="donateBtcAddress" class="donate-btc-address">32GFoXSEKCoj3sCiw2fefPydQ7sLuLgYfY</span>
+          <button id="donateBtcCopyBtn" class="donate-btc-copy-btn" type="button">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="state.js"></script>
 <script src="auth.js"></script>
+<script src="donate.js"></script>
 <script src="watchlist.js"></script>
 <script src="prices.js"></script>
 <script src="trending.js"></script>

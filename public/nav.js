@@ -88,7 +88,7 @@ function showView(view){
   refreshAdminReports();
 }
 }
-document.querySelectorAll('.nav-item').forEach(btn => {
+document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 });
 
@@ -122,7 +122,9 @@ function initNavCollapse(){
     const groupName = btn.dataset.groupToggle;
     const groupEl = btn.closest('.nav-group');
     const stored = localStorage.getItem(`navGroup:${groupName}`);
-    if(stored === 'collapsed') groupEl.classList.add('collapsed');
+    // Collapsed by default until the user explicitly expands a group (or
+    // navigates into one of its items, which also marks it 'expanded').
+    if(stored !== 'expanded') groupEl.classList.add('collapsed');
 
     btn.addEventListener('click', () => {
       groupEl.classList.toggle('collapsed');
