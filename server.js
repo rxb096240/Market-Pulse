@@ -192,6 +192,36 @@ app.get('/api/crypto/markets', async (req, res) => {
   }
 });
 
+// GET /api/markets/vix — real CBOE VIX quote + intraday sparkline via Yahoo Finance
+app.get('/api/markets/vix', async (req, res) => {
+  try {
+    const chartRes = await fetch(
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=5m&range=1d'
+    );
+    const chartData = await chartRes.json();
+    const result = chartData.chart.result[0];
+    const meta = result.meta;
+    const timestamps = result.timestamp;
+    const closes = result.indicators.quote[0].close;
+
+    const points = timestamps
+      .map((ts, i) => ({
+        time: new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        close: closes[i]
+      }))
+      .filter(p => p.close !== null);
+
+    const price = meta.regularMarketPrice;
+    const prevClose = meta.previousClose || meta.chartPreviousClose;
+    const change = price - prevClose;
+    const changePercent = (change / prevClose) * 100;
+
+    res.json({ price, change, changePercent, points });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch VIX data' });
+  }
+});
+
 app.get('/api/crypto/search', async (req, res) => {
   const query = (req.query.query || '').toString();
   if (!query) return res.status(400).json({ error: 'query param required' });
