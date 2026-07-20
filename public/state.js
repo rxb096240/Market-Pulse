@@ -15,7 +15,6 @@ const STOCKS = [
   { sym:'GOOGL', name:'Alphabet',   color:'#4285F4' },
   { sym:'AMZN',  name:'Amazon',     color:'#FF9900' },
   { sym:'TSLA',  name:'Tesla',      color:'#E31937' },
-  { sym:'FIG',   name:'Figma',      color:'#A259FF' },
 ];
 
 const DEFAULT_COINS = COINS.map(c => ({...c}));
