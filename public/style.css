@@ -959,6 +959,8 @@
     position:absolute; left:0; top:0; bottom:0; width:3px;
     background:var(--coin-color, var(--amber));
   }
+  .card-clickable{ cursor:pointer; }
+  .card-clickable:hover{ border-color:var(--amber); }
   .card-top{
     display:flex; justify-content:space-between; align-items:flex-start;
     margin-bottom:14px;
