@@ -141,8 +141,25 @@ async function fetchQuote(sym){
     price: quote.c,
     changePct: quote.dp,
     dayHigh: quote.h ?? null,
-    dayLow: quote.l ?? null
+    dayLow: quote.l ?? null,
+    open: quote.o ?? null,
+    previousClose: quote.pc ?? null
   };
+}
+
+// Basic-financials snapshot (52-week range, beta, PE, EPS, avg volume, market
+// cap, dividend yield) — one Finnhub call, cached an hour since these barely
+// move intraday. Bid/ask, today's volume, earnings date, ex-dividend date,
+// and analyst target price aren't in this endpoint (would need separate paid
+// or extra calls), so the detail response leaves those null.
+async function fetchStockMetrics(sym){
+  const { data } = await cachedFetch(`stock:metric:${sym}`, 60 * 60_000, async () => {
+    const { data: metricRes } = await fetchJson(
+      `https://finnhub.io/api/v1/stock/metric?symbol=${encodeURIComponent(sym)}&metric=all&token=${process.env.FINNHUB_API_KEY}`, 8000
+    );
+    return { data: metricRes.metric || {}, contentType: 'application/json' };
+  });
+  return data;
 }
 
 async function fetchAllQuotes(){
@@ -207,6 +224,48 @@ app.get('/api/stocks/markets/ai', async (req, res) => {
   } catch (e) {
     console.error('AI stocks overview fetch failed:', e.message);
     res.status(502).json({ error: 'Failed to fetch AI stocks overview' });
+  }
+});
+
+// Ticker detail popup (stocks overview + AI stocks tables). Reuses the
+// already-cached quote (no extra call) and adds one Finnhub basic-financials
+// call for the fundamentals. Only covers symbols in ALL_SYMBOLS since that's
+// all either table ever renders.
+app.get('/api/stocks/detail/:symbol', async (req, res) => {
+  const sym = req.params.symbol.toUpperCase();
+  try {
+    const [quotes, metric] = await Promise.all([fetchAllQuotes(), fetchStockMetrics(sym)]);
+    const q = quotes[sym];
+    if (!q) return res.status(404).json({ error: 'Unknown symbol' });
+
+    const avgVolumeM = metric['3MonthAverageTradingVolume'];
+    const marketCapM = metric['marketCapitalization'];
+    const pe = metric['peTTM'] ?? metric['peBasicExclExtraTTM'] ?? null;
+
+    res.json({
+      symbol: sym,
+      previousClose: q.previousClose ?? null,
+      open: q.open ?? null,
+      bid: null,
+      ask: null,
+      dayLow: q.dayLow ?? null,
+      dayHigh: q.dayHigh ?? null,
+      week52Low: metric['52WeekLow'] ?? null,
+      week52High: metric['52WeekHigh'] ?? null,
+      volume: null,
+      avgVolume: avgVolumeM != null ? avgVolumeM * 1e6 : null,
+      marketCap: marketCapM != null ? marketCapM * 1e6 : null,
+      beta: metric['beta'] ?? null,
+      peRatio: pe,
+      eps: metric['epsTTM'] ?? null,
+      earningsDate: null,
+      dividendYield: metric['dividendYieldIndicatedAnnual'] ?? null,
+      exDividendDate: null,
+      targetEst: null
+    });
+  } catch (e) {
+    console.error('stock detail fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch stock detail' });
   }
 });
 

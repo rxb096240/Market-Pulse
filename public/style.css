@@ -807,6 +807,19 @@
   }
   .mt-add-btn:hover:not(:disabled){ border-color:var(--amber); color:var(--amber); }
   .mt-add-btn:disabled{ opacity:0.5; cursor:default; }
+  .mt-ticker-link{
+    background:none;
+    border:none;
+    padding:0;
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:inherit;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:underline;
+    text-decoration-color:transparent;
+  }
+  .mt-ticker-link:hover{ color:var(--amber); text-decoration-color:var(--amber); }
 
 /* Forex table: override the crypto/stock table's wide fixed column widths */
 #forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:160px; }
@@ -1230,6 +1243,32 @@
   @media (max-width:600px){
     .news-modal-backdrop{ padding:0; }
     .news-modal{ max-width:100%; height:100%; border-radius:0; }
+  }
+
+  /* ---- Stock ticker detail modal ---- */
+  .stock-detail-body{
+    padding:16px 18px;
+    overflow-y:auto;
+  }
+  .stock-detail-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 20px;
+  }
+  .stock-detail-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    padding:9px 0;
+    border-bottom:1px solid var(--panel-border);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+  }
+  .stock-detail-label{ color:var(--muted); }
+  .stock-detail-value{ color:var(--text); font-weight:600; text-align:right; }
+  @media (max-width:480px){
+    .stock-detail-grid{ grid-template-columns:1fr; }
   }
 
   /* ---- Donate modal ---- */

@@ -50,7 +50,7 @@ function renderStocksMarketsTable(){
     const alreadyTracked = STOCKS.some(x => x.sym === s.symbol);
     return `
       <tr>
-        <td>${escapeHtml(s.symbol)}</td>
+        <td><button class="mt-ticker-link" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}">${escapeHtml(s.symbol)}</button></td>
         <td>${escapeHtml(s.name)}</td>
         <td>$${fmtPrice(s.price)}</td>
         <td class="mt-chg ${chgCls}">${chg !== null && chg !== undefined ? chgArrow + Math.abs(chg).toFixed(2) + '%' : '--'}</td>
@@ -59,6 +59,10 @@ function renderStocksMarketsTable(){
       </tr>
     `;
   }).join('');
+
+  tbody.querySelectorAll('.mt-ticker-link').forEach(btn => {
+    btn.addEventListener('click', () => openStockDetailModal(btn.dataset.symbol, btn.dataset.name));
+  });
 
   tbody.querySelectorAll('.mt-add-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -310,7 +314,7 @@ function renderAiStocksMarketsTable(){
     const alreadyTracked = STOCKS.some(x => x.sym === s.symbol);
     return `
       <tr>
-        <td>${escapeHtml(s.symbol)}</td>
+        <td><button class="mt-ticker-link" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}">${escapeHtml(s.symbol)}</button></td>
         <td>${escapeHtml(s.name)}</td>
         <td>$${fmtPrice(s.price)}</td>
         <td class="mt-chg ${chgCls}">${chg !== null && chg !== undefined ? chgArrow + Math.abs(chg).toFixed(2) + '%' : '--'}</td>
@@ -319,6 +323,10 @@ function renderAiStocksMarketsTable(){
       </tr>
     `;
   }).join('');
+
+  tbody.querySelectorAll('.mt-ticker-link').forEach(btn => {
+    btn.addEventListener('click', () => openStockDetailModal(btn.dataset.symbol, btn.dataset.name));
+  });
 
   tbody.querySelectorAll('.mt-add-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -363,4 +371,73 @@ document.querySelectorAll('#aiStocksMarketsTable thead th[data-sort]').forEach(t
     sortAiStocksMarkets();
     renderAiStocksMarketsTable();
   });
+});
+
+/* ---- Stock ticker detail modal ---- */
+const stockDetailModalBackdrop = document.getElementById('stockDetailModalBackdrop');
+const stockDetailModalClose = document.getElementById('stockDetailModalClose');
+const stockDetailTitle = document.getElementById('stockDetailTitle');
+const stockDetailMeta = document.getElementById('stockDetailMeta');
+const stockDetailBody = document.getElementById('stockDetailBody');
+let stockDetailToken = 0;
+
+function fmtStat(v, format){
+  if(v === null || v === undefined || (typeof v === 'number' && isNaN(v))) return '--';
+  return format ? format(v) : v;
+}
+
+function closeStockDetailModal(){ stockDetailModalBackdrop.classList.remove('open'); }
+
+async function openStockDetailModal(symbol, name){
+  if(!stockDetailModalBackdrop) return;
+  const myToken = ++stockDetailToken;
+  stockDetailTitle.textContent = symbol;
+  stockDetailMeta.textContent = name || '';
+  stockDetailBody.innerHTML = '<div class="news-loading">Loading…</div>';
+  stockDetailModalBackdrop.classList.add('open');
+
+  let d;
+  try{
+    d = await fetchJsonWithTimeout(`${API_BASE}/api/stocks/detail/${encodeURIComponent(symbol)}`, 10000);
+  }catch(e){
+    if(myToken !== stockDetailToken) return;
+    stockDetailBody.innerHTML = '<div class="news-loading">Couldn\'t load stock details — try again shortly.</div>';
+    return;
+  }
+  if(myToken !== stockDetailToken) return;
+
+  const stats = [
+    ['Previous Close', fmtStat(d.previousClose, v => '$'+fmtPrice(v))],
+    ['Open', fmtStat(d.open, v => '$'+fmtPrice(v))],
+    ['Bid', fmtStat(d.bid)],
+    ['Ask', fmtStat(d.ask)],
+    ['Day\'s Range', d.dayLow && d.dayHigh ? `$${fmtPrice(d.dayLow)} – $${fmtPrice(d.dayHigh)}` : '--'],
+    ['52 Week Range', d.week52Low && d.week52High ? `$${fmtPrice(d.week52Low)} – $${fmtPrice(d.week52High)}` : '--'],
+    ['Volume', fmtStat(d.volume, v => v.toLocaleString('en-US'))],
+    ['Avg. Volume', fmtStat(d.avgVolume, v => Math.round(v).toLocaleString('en-US'))],
+    ['Market Cap (intraday)', fmtStat(d.marketCap, fmtCap)],
+    ['Beta (5Y Monthly)', fmtStat(d.beta, v => v.toFixed(2))],
+    ['PE Ratio (TTM)', fmtStat(d.peRatio, v => v.toFixed(2))],
+    ['EPS (TTM)', fmtStat(d.eps, v => v.toFixed(2))],
+    ['Earnings Date (est.)', fmtStat(d.earningsDate)],
+    ['Forward Dividend & Yield', fmtStat(d.dividendYield, v => v.toFixed(2)+'%')],
+    ['Ex-Dividend Date', fmtStat(d.exDividendDate)],
+    ['1y Target Est', fmtStat(d.targetEst, v => '$'+fmtPrice(v))]
+  ];
+
+  stockDetailBody.innerHTML = `
+    <div class="stock-detail-grid">
+      ${stats.map(([label, value]) => `
+        <div class="stock-detail-item">
+          <span class="stock-detail-label">${escapeHtml(label)}</span>
+          <span class="stock-detail-value">${escapeHtml(String(value))}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+stockDetailModalClose?.addEventListener('click', closeStockDetailModal);
+stockDetailModalBackdrop?.addEventListener('click', (e) => {
+  if(e.target === stockDetailModalBackdrop) closeStockDetailModal();
 });
