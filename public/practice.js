@@ -16,7 +16,7 @@ async function loadPracticeAccount(){
   if(!account){
     const { data: created, error } = await supabaseClient
       .from('practice_accounts')
-      .insert({ user_id: currentUser.id, cash_balance: 10000 })
+      .insert({ user_id: currentUser.id, email: currentUser.email, cash_balance: 10000 })
       .select()
       .single();
     if(error){ console.error('Failed to create practice account:', error); return; }
@@ -59,7 +59,7 @@ async function buyPractice(assetType, key, sym, name, amountUsd, currentPrice){
     const { error } = await supabaseClient
       .from('practice_holdings')
       .insert({
-        user_id: currentUser.id,
+        user_id: currentUser.id, email: currentUser.email,
         asset_type: assetType, asset_key: key,
         sym, name, qty: qtyBought, avg_price: currentPrice
       });
@@ -72,7 +72,7 @@ async function buyPractice(assetType, key, sym, name, amountUsd, currentPrice){
     .eq('user_id', currentUser.id);
 
   await supabaseClient.from('practice_transactions').insert({
-    user_id: currentUser.id, type: 'buy',
+    user_id: currentUser.id, email: currentUser.email, type: 'buy',
     asset_type: assetType, asset_key: key, sym, name,
     qty: qtyBought, price: currentPrice, amount: amountUsd
   });
@@ -98,7 +98,7 @@ async function sellAllPractice(holdingId){
     .eq('user_id', currentUser.id);
 
   await supabaseClient.from('practice_transactions').insert({
-    user_id: currentUser.id, type: 'sell',
+    user_id: currentUser.id, email: currentUser.email, type: 'sell',
     asset_type: holding.asset_type, asset_key: holding.asset_key,
     sym: holding.sym, name: holding.name,
     qty: holding.qty, price: currentPrice, amount: saleAmount
