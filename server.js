@@ -227,15 +227,27 @@ app.get('/api/stocks/markets/ai', async (req, res) => {
   }
 });
 
-// Ticker detail popup (stocks overview + AI stocks tables). Reuses the
-// already-cached quote (no extra call) and adds one Finnhub basic-financials
-// call for the fundamentals. Only covers symbols in ALL_SYMBOLS since that's
-// all either table ever renders.
+// Looks up a quote for the detail popup: reuses the already-cached
+// ALL_SYMBOLS quote when possible (no extra call), and falls back to a
+// fresh, individually-cached Finnhub call for tickers outside that curated
+// pool (e.g. anything a user has added to their own watchlist).
+async function fetchQuoteFor(sym){
+  const quotes = await fetchAllQuotes();
+  if (quotes[sym]) return quotes[sym];
+  const { data } = await cachedFetch(`stock:quote:${sym}`, 5 * 60_000, async () => {
+    const q = await fetchQuote(sym);
+    return { data: q, contentType: 'application/json' };
+  });
+  return data;
+}
+
+// Ticker detail popup (stocks overview + AI stocks tables, and the stock
+// watchlist). Reuses the already-cached quote when available (no extra
+// call) and adds one Finnhub basic-financials call for the fundamentals.
 app.get('/api/stocks/detail/:symbol', async (req, res) => {
   const sym = req.params.symbol.toUpperCase();
   try {
-    const [quotes, metric] = await Promise.all([fetchAllQuotes(), fetchStockMetrics(sym)]);
-    const q = quotes[sym];
+    const [q, metric] = await Promise.all([fetchQuoteFor(sym), fetchStockMetrics(sym)]);
     if (!q) return res.status(404).json({ error: 'Unknown symbol' });
 
     const avgVolumeM = metric['3MonthAverageTradingVolume'];

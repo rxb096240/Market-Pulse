@@ -10,7 +10,7 @@ function buildCard(item, key, type){
   card.innerHTML = `
     <div class="card-top">
       <div class="coin-id">
-        <div class="coin-sym">${item.sym}</div>
+        <div class="coin-sym">${type === 'stock' ? `<button class="mt-ticker-link">${item.sym}</button>` : item.sym}</div>
         <div class="coin-name">${item.name}</div>
       </div>
       <div class="card-top-right">
@@ -25,6 +25,9 @@ function buildCard(item, key, type){
     </div>
   `;
   card.querySelector('.remove-btn').addEventListener('click', () => removeItem(type, key));
+  if(type === 'stock'){
+    card.querySelector('.mt-ticker-link').addEventListener('click', () => openStockDetailModal(item.sym, item.name));
+  }
   return card;
 }
 
