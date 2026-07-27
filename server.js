@@ -605,7 +605,10 @@ const FRED_SERIES = [
   {
     id: 'MPRIME', label: 'Bank prime rate', group: 'loans',
     note: 'Reference rate for variable-rate loans — not a personal-loan average.'
-  }
+  },
+  { id: 'TERMCBAUTO48NS', label: 'Auto loan (48-mo)', group: 'loans' },
+  { id: 'RIFLPBCIANM60NM', label: 'Auto loan (60-mo)', group: 'loans' },
+  { id: 'RIFLPBCIANM72NM', label: 'Auto loan (72-mo)', group: 'loans' }
 ];
 
 async function fetchFredSeries(seriesId){
