@@ -135,14 +135,15 @@ const ALL_SYMBOLS = Array.from(new Set([...Object.keys(LARGE_CAP_POOL), ...Objec
 // free tier doesn't cover NSE, but Yahoo's chart endpoint works for
 // `.NS`-suffixed symbols with no key required.
 const INDIA_LARGE_CAP_POOL = {
-  'RELIANCE.NS': 'Reliance Industries', 'TCS.NS': 'Tata Consultancy Services', 'HDFCBANK.NS': 'HDFC Bank',
-  'BHARTIARTL.NS': 'Bharti Airtel', 'ICICIBANK.NS': 'ICICI Bank', 'SBIN.NS': 'State Bank of India',
-  'INFY.NS': 'Infosys', 'HINDUNILVR.NS': 'Hindustan Unilever', 'ITC.NS': 'ITC',
-  'LT.NS': 'Larsen & Toubro', 'BAJFINANCE.NS': 'Bajaj Finance', 'HCLTECH.NS': 'HCL Technologies',
-  'MARUTI.NS': 'Maruti Suzuki', 'SUNPHARMA.NS': 'Sun Pharmaceutical', 'KOTAKBANK.NS': 'Kotak Mahindra Bank',
-  'ULTRACEMCO.NS': 'UltraTech Cement', 'AXISBANK.NS': 'Axis Bank', 'ADANIENT.NS': 'Adani Enterprises',
-  'NTPC.NS': 'NTPC', 'TITAN.NS': 'Titan Company', 'BAJAJFINSV.NS': 'Bajaj Finserv',
-  'ONGC.NS': 'Oil & Natural Gas Corporation', 'WIPRO.NS': 'Wipro', 'ADANIPORTS.NS': 'Adani Ports', 'TATAMOTORS.NS': 'Tata Motors'
+  'RELIANCE.NS': 'Reliance Industries', 'BHARTIARTL.NS': 'Bharti Airtel', 'HDFCBANK.NS': 'HDFC Bank',
+  'ICICIBANK.NS': 'ICICI Bank', 'SBIN.NS': 'State Bank of India', 'TCS.NS': 'Tata Consultancy Services',
+  'BAJFINANCE.NS': 'Bajaj Finance', 'LICI.NS': 'Life Insurance Corporation of India', 'LT.NS': 'Larsen & Toubro',
+  'HINDUNILVR.NS': 'Hindustan Unilever', 'SUNPHARMA.NS': 'Sun Pharmaceutical', 'ADANIENT.NS': 'Adani Enterprises',
+  'MARUTI.NS': 'Maruti Suzuki', 'INFY.NS': 'Infosys', 'TITAN.NS': 'Titan Company',
+  'ADANIPOWER.NS': 'Adani Power', 'ADANIPORTS.NS': 'Adani Ports', 'KOTAKBANK.NS': 'Kotak Mahindra Bank',
+  'AXISBANK.NS': 'Axis Bank', 'M&M.NS': 'Mahindra & Mahindra', 'ITC.NS': 'ITC',
+  'ULTRACEMCO.NS': 'UltraTech Cement', 'HCLTECH.NS': 'HCL Technologies', 'NTPC.NS': 'NTPC',
+  'ONGC.NS': 'Oil & Natural Gas Corporation'
 };
 
 async function fetchYahooChartQuote(sym){
