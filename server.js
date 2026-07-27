@@ -881,13 +881,25 @@ app.get('/api/admin/stats', async (req, res) => {
     }
 
     const since = (req.query.since || '').toString(); // ISO date string, optional
+
+    // Supabase's project-wide "Max Rows" setting (default 1000) silently
+    // caps how many rows any single request can return, regardless of
+    // .limit() here — so totalHits can't come from rows.length once past
+    // that. A head:true count query asks Postgres for the real total
+    // without transferring (or being capped on) actual row data.
+    let countQuery = supabaseAdmin.from('user_activity_log').select('*', { count: 'exact', head: true });
+    if (since) countQuery = countQuery.gte('created_at', since);
+
     let query = supabaseAdmin.from('user_activity_log').select('*').order('created_at', { ascending: false });
     if (since) query = query.gte('created_at', since);
 
-    const { data: rows, error } = await query.limit(5000);
+    const [{ count: totalHits, error: countError }, { data: rows, error }] = await Promise.all([
+      countQuery,
+      query.limit(5000)
+    ]);
+    if (countError) throw countError;
     if (error) throw error;
 
-    const totalHits = rows.length;
     const uniqueUsers = new Set(rows.map(r => r.user_id || r.ip_address)).size;
 
     const cityCounts = {};
