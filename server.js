@@ -597,7 +597,7 @@ app.get('/api/markets/summary', async (req, res) => {
 const FRED_SERIES = [
   { id: 'MORTGAGE30US', label: '30-year fixed', group: 'mortgage' },
   { id: 'MORTGAGE15US', label: '15-year fixed', group: 'mortgage' },
-  { id: 'SNDR', label: 'Savings', group: 'savings' },
+  { id: 'SNDR', label: 'Savings (national avg)', group: 'savings' },
   { id: 'NDR1MCD', label: '1-mo CD', group: 'savings' },
   { id: 'NDR3MCD', label: '3-mo CD', group: 'savings' },
   { id: 'NDR6MCD', label: '6-mo CD', group: 'savings' },
