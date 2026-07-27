@@ -129,6 +129,51 @@ const AI_STOCKS = {
 // get fetched once per cache cycle instead of twice.
 const ALL_SYMBOLS = Array.from(new Set([...Object.keys(LARGE_CAP_POOL), ...Object.keys(AI_STOCKS)]));
 
+// Curated pool of NSE large-caps for the Stocks Overview "India" market
+// option, in rough market-cap order. Fetched via Yahoo Finance (same
+// endpoint as the ticker tape/VIX below) rather than Finnhub — Finnhub's
+// free tier doesn't cover NSE, but Yahoo's chart endpoint works for
+// `.NS`-suffixed symbols with no key required.
+const INDIA_LARGE_CAP_POOL = {
+  'RELIANCE.NS': 'Reliance Industries', 'TCS.NS': 'Tata Consultancy Services', 'HDFCBANK.NS': 'HDFC Bank',
+  'BHARTIARTL.NS': 'Bharti Airtel', 'ICICIBANK.NS': 'ICICI Bank', 'SBIN.NS': 'State Bank of India',
+  'INFY.NS': 'Infosys', 'HINDUNILVR.NS': 'Hindustan Unilever', 'ITC.NS': 'ITC',
+  'LT.NS': 'Larsen & Toubro', 'BAJFINANCE.NS': 'Bajaj Finance', 'HCLTECH.NS': 'HCL Technologies',
+  'MARUTI.NS': 'Maruti Suzuki', 'SUNPHARMA.NS': 'Sun Pharmaceutical', 'KOTAKBANK.NS': 'Kotak Mahindra Bank',
+  'ULTRACEMCO.NS': 'UltraTech Cement', 'AXISBANK.NS': 'Axis Bank', 'ADANIENT.NS': 'Adani Enterprises',
+  'NTPC.NS': 'NTPC', 'TITAN.NS': 'Titan Company', 'BAJAJFINSV.NS': 'Bajaj Finserv',
+  'ONGC.NS': 'Oil & Natural Gas Corporation', 'WIPRO.NS': 'Wipro', 'ADANIPORTS.NS': 'Adani Ports', 'TATAMOTORS.NS': 'Tata Motors'
+};
+
+async function fetchYahooChartQuote(sym){
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`;
+  const { data } = await fetchJson(url, 8000);
+  const meta = data?.chart?.result?.[0]?.meta;
+  if (!meta || meta.regularMarketPrice === undefined) throw new Error('no data for ' + sym);
+  const prevClose = meta.previousClose ?? meta.chartPreviousClose;
+  const price = meta.regularMarketPrice;
+  return {
+    symbol: sym,
+    price,
+    changePct: prevClose ? ((price - prevClose) / prevClose) * 100 : null,
+    dayHigh: meta.regularMarketDayHigh ?? null,
+    dayLow: meta.regularMarketDayLow ?? null
+  };
+}
+
+async function fetchIndiaQuotes(){
+  const { data } = await cachedFetch('stocks:in:allquotes', 5 * 60_000, async () => {
+    const symbols = Object.keys(INDIA_LARGE_CAP_POOL);
+    const results = await Promise.allSettled(symbols.map(fetchYahooChartQuote));
+    const map = {};
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') map[symbols[i]] = r.value;
+    });
+    return { data: map, contentType: 'application/json' };
+  });
+  return data;
+}
+
 async function fetchQuote(sym){
   const { data: quote } = await fetchJson(
     `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${process.env.FINNHUB_API_KEY}`, 8000
@@ -185,6 +230,20 @@ app.get('/api/stocks/markets', async (req, res) => {
   } catch (e) {
     console.error('stocks overview fetch failed:', e.message);
     res.status(502).json({ error: 'Failed to fetch stocks overview' });
+  }
+});
+
+app.get('/api/stocks/markets/in', async (req, res) => {
+  try {
+    const quotes = await fetchIndiaQuotes();
+    const mapped = Object.keys(INDIA_LARGE_CAP_POOL)
+      .filter(sym => quotes[sym])
+      .map(sym => ({ ...quotes[sym], name: INDIA_LARGE_CAP_POOL[sym] }));
+
+    res.json(mapped);
+  } catch (e) {
+    console.error('India stocks overview fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch India stocks overview' });
   }
 });
 

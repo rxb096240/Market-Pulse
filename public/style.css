@@ -596,6 +596,25 @@
     margin-bottom:16px;
   }
   .trending-intro .as-of{ color:var(--amber); }
+  .markets-header-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .markets-header-row .trending-intro{ margin-bottom:0; }
+  .markets-market-select{
+    background:var(--panel);
+    color:var(--text);
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    padding:7px 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    cursor:pointer;
+  }
   .trending-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; align-items:start; }
   .trending-item{
     display:flex;
@@ -740,6 +759,11 @@
   .markets-table th:nth-child(5), .markets-table td:nth-child(5){ width:130px; }
   .markets-table th:nth-child(6), .markets-table td:nth-child(6){ width:130px; }
   .markets-table th:nth-child(7), .markets-table td:nth-child(7){ width:90px; }
+
+  /* Stock tables (unlike crypto's short rank column) show ticker symbols in
+     column 1, which run longer than 44px — widen it there. */
+  #stocksMarketsTable th:nth-child(1), #stocksMarketsTable td:nth-child(1),
+  #aiStocksMarketsTable th:nth-child(1), #aiStocksMarketsTable td:nth-child(1){ width:110px; }
   .markets-table thead th{
     position:sticky;
     top:0;

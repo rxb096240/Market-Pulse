@@ -6,10 +6,20 @@ let stocksMarketsData = [];
 let stocksMarketsLoaded = false;
 let stocksMarketsSortField = 'symbol';
 let stocksMarketsSortDir = 'asc';
+let stocksMarket = 'us';
+
+const STOCKS_MARKET_ENDPOINT = { us: '/api/stocks/markets', in: '/api/stocks/markets/in' };
+const STOCKS_MARKET_CURRENCY = { us: '$', in: '₹' };
+
+// Yahoo's NSE/BSE symbols carry an exchange suffix (.NS/.BO) that's only
+// meaningful to the API, not to a reader — strip it for display.
+function displaySymbol(sym){
+  return sym.replace(/\.(NS|BO)$/, '');
+}
 
 async function fetchStocksOverview(){
   try{
-    const data = await fetchJsonWithTimeout(`${API_BASE}/api/stocks/markets`, 12000);
+    const data = await fetchJsonWithTimeout(`${API_BASE}${STOCKS_MARKET_ENDPOINT[stocksMarket]}`, 12000);
     return Array.isArray(data) ? data : [];
   }catch(e){
     console.error('Stocks overview fetch failed:', e);
@@ -43,18 +53,22 @@ function renderStocksMarketsTable(){
     return;
   }
 
+  const cur = STOCKS_MARKET_CURRENCY[stocksMarket];
   tbody.innerHTML = stocksMarketsData.map(s => {
     const chg = s.changePct;
     const chgCls = chg === null || chg === undefined ? '' : (chg >= 0 ? 'up' : 'down');
     const chgArrow = chg === null || chg === undefined ? '' : (chg >= 0 ? '▲ ' : '▼ ');
     const alreadyTracked = STOCKS.some(x => x.sym === s.symbol);
+    const symCell = stocksMarket === 'us'
+      ? `<button class="mt-ticker-link" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}">${escapeHtml(s.symbol)}</button>`
+      : escapeHtml(displaySymbol(s.symbol));
     return `
       <tr>
-        <td><button class="mt-ticker-link" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}">${escapeHtml(s.symbol)}</button></td>
+        <td>${symCell}</td>
         <td>${escapeHtml(s.name)}</td>
-        <td>$${fmtPrice(s.price)}</td>
+        <td>${cur}${fmtPrice(s.price)}</td>
         <td class="mt-chg ${chgCls}">${chg !== null && chg !== undefined ? chgArrow + Math.abs(chg).toFixed(2) + '%' : '--'}</td>
-        <td>${s.dayHigh && s.dayLow ? `$${fmtPrice(s.dayLow)} – $${fmtPrice(s.dayHigh)}` : '--'}</td>
+        <td>${s.dayHigh && s.dayLow ? `${cur}${fmtPrice(s.dayLow)} – ${cur}${fmtPrice(s.dayHigh)}` : '--'}</td>
         <td><button class="mt-add-btn" data-symbol="${s.symbol}" data-name="${(s.name||'').replace(/"/g,'&quot;')}" ${alreadyTracked ? 'disabled' : ''}>${alreadyTracked ? 'Added' : '+ Add'}</button></td>
       </tr>
     `;
@@ -90,6 +104,14 @@ async function refreshStocksMarketsOverview(){
   sortStocksMarkets();
   renderStocksMarketsTable();
 }
+
+const stocksMarketSelect = document.getElementById('stocksMarketSelect');
+stocksMarketSelect?.addEventListener('change', () => {
+  stocksMarket = stocksMarketSelect.value;
+  stocksMarketsData = [];
+  stocksMarketsLoaded = false;
+  refreshStocksMarketsOverview();
+});
 
 
 document.querySelectorAll('#stocksMarketsTable thead th[data-sort]').forEach(th => {

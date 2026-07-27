@@ -400,7 +400,13 @@
 
    <!-- Stocks Overview -->
 <section class="view-panel" data-view-panel="stocks-overview">
-  <div class="trending-intro">Top 25 stocks by market cap. Tap a column to sort.</div>
+  <div class="markets-header-row">
+    <div class="trending-intro">Top stocks by market cap. Tap a column to sort.</div>
+    <select id="stocksMarketSelect" class="markets-market-select">
+      <option value="us">Market: United States</option>
+      <option value="in">Market: India (NSE)</option>
+    </select>
+  </div>
   <div class="markets-table-wrap">
     <table class="markets-table" id="stocksMarketsTable">
       <thead>
