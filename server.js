@@ -550,11 +550,24 @@ const MARKET_SUMMARY_SYMBOLS = [
   { symbol: 'CL=F',  label: 'Crude Oil' }
 ];
 
+const MARKET_SUMMARY_SYMBOLS_IN = [
+  { symbol: '^NSEI',   label: 'Nifty 50' },
+  { symbol: '^BSESN',  label: 'Sensex' },
+  { symbol: '^NSEBANK', label: 'Nifty Bank' },
+  { symbol: '^INDIAVIX', label: 'India VIX' },
+  { symbol: 'GC=F',    label: 'Gold' },
+  { symbol: 'BTC-USD', label: 'Bitcoin USD' },
+  { symbol: 'BZ=F',    label: 'Brent Crude' },
+  { symbol: 'INR=X',   label: 'USD/INR' }
+];
+
 app.get('/api/markets/summary', async (req, res) => {
+  const market = req.query.market === 'in' ? 'in' : 'us';
+  const symbolSet = market === 'in' ? MARKET_SUMMARY_SYMBOLS_IN : MARKET_SUMMARY_SYMBOLS;
   try {
-    const { data } = await cachedFetch('markets:summary', 30_000, async () => {
+    const { data } = await cachedFetch(`markets:summary:${market}`, 30_000, async () => {
       const results = await Promise.allSettled(
-        MARKET_SUMMARY_SYMBOLS.map(async ({ symbol, label }) => {
+        symbolSet.map(async ({ symbol, label }) => {
           const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
           const { data } = await fetchJson(url, 8000);
           const meta = data?.chart?.result?.[0]?.meta;

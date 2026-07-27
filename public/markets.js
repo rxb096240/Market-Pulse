@@ -111,6 +111,7 @@ stocksMarketSelect?.addEventListener('change', () => {
   stocksMarketsData = [];
   stocksMarketsLoaded = false;
   refreshStocksMarketsOverview();
+  refreshMarketsSummary();
 });
 
 
@@ -134,7 +135,7 @@ document.querySelectorAll('#stocksMarketsTable thead th[data-sort]').forEach(th 
 
 async function fetchMarketsSummary(){
   try{
-    const data = await fetchJsonWithTimeout(`${API_BASE}/api/markets/summary`, 10000);
+    const data = await fetchJsonWithTimeout(`${API_BASE}/api/markets/summary?market=${stocksMarket}`, 10000);
     return Array.isArray(data) ? data : [];
   }catch(e){
     console.error('Markets summary fetch failed:', e);
