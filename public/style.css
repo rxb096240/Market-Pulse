@@ -974,6 +974,7 @@
     display:flex;
     align-items:center;
     gap:10px;
+    grid-column:1 / -1;
   }
   .section-label::after{
     content:"";
@@ -1613,6 +1614,7 @@
 
 .home-snap-strip{
   display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;
+  grid-column:1 / -1;
 }
 .home-snap-card{
   border:1px solid var(--panel-border); border-radius:12px; background:var(--panel);
@@ -1624,7 +1626,7 @@
 .home-snap-chg.up{ color:var(--up); } .home-snap-chg.down{ color:var(--down); }
 .home-spark{ width:64px; height:30px; flex-shrink:0; }
 
-.home-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:26px; }
+.home-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:26px; grid-column:1 / -1; }
 .home-card{
   position:relative; background:var(--panel); border:1px solid var(--panel-border);
   border-radius:14px; padding:16px 16px 17px; cursor:pointer; overflow:hidden;
@@ -1655,7 +1657,7 @@
 .home-age-select:hover,
 .home-age-select:focus{ outline:none; border-color:var(--amber); }.home-card-sub{ font-size:11.5px; color:var(--muted); line-height:1.45; }
 
-.home-chart-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:14px; align-items:start; }
+.home-chart-row{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:14px; align-items:start; grid-column:1 / -1; }
 .home-chart-card{ border:1px solid var(--panel-border); border-radius:14px; background:var(--panel); padding:18px 18px 14px; }
 .home-chart-card-title{ font-size:11px; color:var(--muted); font-weight:600; margin-bottom:14px; text-transform:uppercase; letter-spacing:.05em; }
 .home-chart-note{ font-size:10.5px; color:var(--muted); margin-top:10px; font-family:'IBM Plex Mono',monospace; }
