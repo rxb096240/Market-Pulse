@@ -589,6 +589,57 @@ app.get('/api/markets/summary', async (req, res) => {
   }
 });
 
+// ---- Personal finance rates (FRED — Federal Reserve Economic Data) ----
+// National-average reference rates, not offers from any specific bank.
+// FRED updates these weekly (mortgage) or monthly (savings/CD/prime) at
+// most, so a long cache is safe and keeps us well under its free-tier
+// rate limits.
+const FRED_SERIES = [
+  { id: 'MORTGAGE30US', label: '30-year fixed', group: 'mortgage' },
+  { id: 'MORTGAGE15US', label: '15-year fixed', group: 'mortgage' },
+  { id: 'SNDR', label: 'Savings', group: 'savings' },
+  { id: 'NDR1MCD', label: '1-mo CD', group: 'savings' },
+  { id: 'NDR3MCD', label: '3-mo CD', group: 'savings' },
+  { id: 'NDR6MCD', label: '6-mo CD', group: 'savings' },
+  { id: 'NDR12MCD', label: '12-mo CD', group: 'savings' },
+  {
+    id: 'MPRIME', label: 'Bank prime rate', group: 'loans',
+    note: 'Reference rate for variable-rate loans — not a personal-loan average.'
+  }
+];
+
+async function fetchFredSeries(seriesId){
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${encodeURIComponent(seriesId)}&api_key=${process.env.FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
+  const { data } = await fetchJson(url, 8000);
+  const obs = data?.observations?.[0];
+  if (!obs || obs.value === '.') throw new Error('no observation for ' + seriesId);
+  return { date: obs.date, value: parseFloat(obs.value) };
+}
+
+app.get('/api/rates/summary', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('rates:summary', 6 * 60 * 60_000, async () => {
+      const results = await Promise.allSettled(FRED_SERIES.map(s => fetchFredSeries(s.id)));
+      const mapped = FRED_SERIES.map((s, i) => {
+        const r = results[i];
+        return {
+          id: s.id,
+          label: s.label,
+          group: s.group,
+          note: s.note || null,
+          value: r.status === 'fulfilled' ? r.value.value : null,
+          date: r.status === 'fulfilled' ? r.value.date : null
+        };
+      });
+      return { data: mapped, contentType: 'application/json' };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('rates summary fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch rates summary' });
+  }
+});
+
 // ---- Whole-market Top Movers (Yahoo Finance screener, all US-listed stocks) ----
 // Unlike /api/stocks/markets (your curated Top 10 AI Stocks), this pulls from
 // Yahoo's day_gainers / day_losers predefined screener, covering the entire

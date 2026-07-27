@@ -30,6 +30,7 @@ const VIEW_TITLES = {
   'learn-crypto': 'Learn · Crypto Basics',
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
+  'rates-summary': 'Rates',
   'practice-mode': 'Practice',
   'social-reddit': 'Social · Reddit',
   'social-hackernews': 'Social · Hacker News',
@@ -74,6 +75,8 @@ function showView(view){
   refreshForexRates();
 }else if(view === 'earnings-calendar'){
   refreshEarningsCalendar();
+}else if(view === 'rates-summary'){
+  refreshRatesSummary();
 }else if(view === 'practice-mode'){
   if(!currentUser){
     openAuthModal();

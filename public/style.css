@@ -111,6 +111,7 @@
 
 #sidenav [data-view="forex-rates"],
 #sidenav [data-view="earnings-calendar"],
+#sidenav [data-view="rates-summary"],
 #sidenav [data-view="practice-mode"],
 #sidenav [data-view="calculators"]{
   font-family:'IBM Plex Mono',monospace;
@@ -615,6 +616,23 @@
     font-size:12px;
     cursor:pointer;
   }
+  /* ---- Rates page ---- */
+  .rates-section{ margin-bottom:24px; }
+  .rates-section-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; font-weight:700; letter-spacing:0.5px;
+    text-transform:uppercase; color:var(--text);
+    margin-bottom:10px;
+  }
+  .rates-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; }
+  .rate-card{
+    background:var(--panel); border:1px solid var(--panel-border); border-radius:12px;
+    padding:14px 16px;
+  }
+  .rate-card-label{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .rate-card-value{ font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:var(--text); }
+  .rate-card-note{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.4; }
+
   .trending-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; align-items:start; }
   .trending-item{
     display:flex;

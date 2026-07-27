@@ -70,6 +70,10 @@
     </div>
 
     <div class="nav-group">
+      <button class="nav-item" data-view="rates-summary">Rates</button>
+    </div>
+
+    <div class="nav-group">
       <button class="nav-item" data-view="practice-mode">Practice</button>
     </div>
 
@@ -725,6 +729,17 @@
   <div class="search-hint" style="text-align:center; margin-top:10px;">Estimates provided by Finnhub · actuals populate after companies report</div>
 </section>
 
+      <!-- Rates -->
+<section class="view-panel" data-view-panel="rates-summary">
+  <div class="trending-intro">
+    National average rates. <span id="ratesAsOf"></span> · via FRED (Federal Reserve).
+  </div>
+  <div id="ratesContainer">
+    <div class="news-loading">Loading rates…</div>
+  </div>
+  <div class="search-hint" style="text-align:center; margin-top:10px;">Data via the Federal Reserve Economic Data (FRED) API · national averages, not offers from any specific bank</div>
+</section>
+
       <!-- Social: Reddit -->
       <section class="view-panel" data-view-panel="social-reddit">
         <div class="trending-intro">Live sentiment from any subreddit. Pick a quick tab or search your own.</div>
@@ -1010,6 +1025,7 @@
 <script src="markets.js"></script>
 <script src="forex.js"></script>
 <script src="earnings.js"></script>
+<script src="rates.js"></script>
 <script src="news.js"></script>
 <script src="reddit.js"></script>
 <script src="hackernews.js"></script>
