@@ -113,6 +113,7 @@
 #sidenav [data-view="earnings-calendar"],
 #sidenav [data-view="rates-summary"],
 #sidenav [data-view="practice-mode"],
+#sidenav [data-view="practice-leaderboard"],
 #sidenav [data-view="calculators"]{
   font-family:'IBM Plex Mono',monospace;
     font-size:10px;

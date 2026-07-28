@@ -994,6 +994,69 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+// ---- Practice Mode leaderboard (public) ----
+// Reads every user's practice_accounts + practice_holdings via the
+// service-role client (RLS on those tables normally scopes reads to
+// auth.uid()), but only ever returns a nickname (or an anonymous
+// "Trader ####" fallback) plus their portfolio stats — never email or
+// user_id. Prices are fetched fresh for the union of everyone's holdings
+// (arbitrary tickers/coins, not just the curated pools), then cached for
+// 5 minutes since this can touch a lot of distinct symbols.
+async function fetchLeaderboardRows(){
+  const [{ data: accounts, error: accErr }, { data: holdings, error: holdErr }] = await Promise.all([
+    supabaseAdmin.from('practice_accounts').select('user_id, cash_balance, nickname'),
+    supabaseAdmin.from('practice_holdings').select('user_id, asset_type, asset_key, qty, avg_price')
+  ]);
+  if (accErr) throw accErr;
+  if (holdErr) throw holdErr;
+
+  const stockSyms = Array.from(new Set(holdings.filter(h => h.asset_type === 'stock').map(h => h.asset_key)));
+  const cryptoIds = Array.from(new Set(holdings.filter(h => h.asset_type === 'crypto').map(h => h.asset_key)));
+
+  const [stockResults, cryptoRes] = await Promise.all([
+    Promise.allSettled(stockSyms.map(sym => fetchYahooChartQuote(sym))),
+    cryptoIds.length > 0
+      ? fetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cryptoIds.join(','))}&vs_currencies=usd`, 8000)
+          .then(r => r.data).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  const stockPrices = {};
+  stockResults.forEach((r, i) => {
+    if (r.status === 'fulfilled') stockPrices[stockSyms[i]] = r.value.price;
+  });
+
+  const holdingsValueByUser = {};
+  holdings.forEach(h => {
+    const price = h.asset_type === 'crypto' ? cryptoRes[h.asset_key]?.usd : stockPrices[h.asset_key];
+    const value = (price !== undefined && price !== null) ? h.qty * price : h.qty * h.avg_price;
+    holdingsValueByUser[h.user_id] = (holdingsValueByUser[h.user_id] || 0) + value;
+  });
+
+  const rows = accounts.map(a => {
+    const totalValue = a.cash_balance + (holdingsValueByUser[a.user_id] || 0);
+    const gainPct = ((totalValue - 10000) / 10000) * 100;
+    const name = (a.nickname || '').trim() || `Trader ${a.user_id.slice(0, 4)}`;
+    return { name, totalValue, gainPct };
+  });
+
+  rows.sort((a, b) => b.totalValue - a.totalValue);
+  return rows.slice(0, 50);
+}
+
+app.get('/api/practice/leaderboard', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('practice:leaderboard', 5 * 60_000, async () => {
+      const rows = await fetchLeaderboardRows();
+      return { data: rows, contentType: 'application/json' };
+    });
+    res.json(data);
+  } catch (e) {
+    console.error('leaderboard fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch leaderboard' });
+  }
+});
+
 
 // ---- Serve the static frontend (index.html, script.js, style.css) ----
 const publicDir = path.join(__dirname, 'public');

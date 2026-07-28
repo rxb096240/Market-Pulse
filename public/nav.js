@@ -32,6 +32,7 @@ const VIEW_TITLES = {
   'earnings-calendar': 'Earnings',
   'rates-summary': 'Rates',
   'practice-mode': 'Practice',
+  'practice-leaderboard': 'Leaderboard',
   'social-reddit': 'Social · Reddit',
   'social-hackernews': 'Social · Hacker News',
   'admin-reports': 'Admin · Reports'
@@ -83,6 +84,8 @@ function showView(view){
   }else{
     loadPracticeAccount();
   }
+}else if(view === 'practice-leaderboard'){
+  refreshLeaderboard();
 }else if(view === 'social-reddit'){
     refreshRedditFeed();
 }else if(view === 'social-hackernews'){

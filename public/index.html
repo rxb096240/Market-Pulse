@@ -78,6 +78,10 @@
     </div>
 
     <div class="nav-group">
+      <button class="nav-item" data-view="practice-leaderboard">Leaderboard</button>
+    </div>
+
+    <div class="nav-group">
   <button class="nav-item" data-view="calculators">Calculators</button>
    </div>
 
@@ -696,6 +700,14 @@
   </div>
 </section>
 
+      <!-- Practice Leaderboard -->
+<section class="view-panel" data-view-panel="practice-leaderboard">
+  <div class="trending-intro">Top Practice Mode portfolios, ranked by total value. Updates every few minutes.</div>
+  <div id="leaderboardContainer">
+    <div class="news-loading">Loading leaderboard…</div>
+  </div>
+</section>
+
       <!-- Forex Rates -->
 <section class="view-panel" data-view-panel="forex-rates">
   <div class="trending-intro">
@@ -1035,6 +1047,7 @@
 <script src="prices.js"></script>
 <script src="trending.js"></script>
 <script src="practice.js"></script>
+<script src="leaderboard.js"></script>
 <script src="portfolio.js"></script>
 <script src="markets.js"></script>
 <script src="forex.js"></script>
