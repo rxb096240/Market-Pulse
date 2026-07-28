@@ -435,7 +435,7 @@ app.get('/api/crypto/trending', async (req, res) => {
   }
 });
 
-const EARNINGS_WINDOW_DAYS = 14;
+const EARNINGS_WINDOW_DAYS = 7;
 const EARNINGS_LOOKBACK_DAYS = 7; // also surface recently-reported earnings, not just upcoming
 let sp500SymbolMap = null; // cached { SYMBOL: 'Company Name' }
 
