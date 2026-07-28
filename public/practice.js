@@ -218,6 +218,14 @@ function renderPracticeMode(){
         <div class="balance-sub-item"><div class="balance-sub-label">Cash Left</div><div class="balance-sub-value">${fmtUsd(cash)}</div></div>
         <div class="balance-sub-item"><div class="balance-sub-label">Total Gain</div><div class="balance-sub-value ${gainCls}">${gainSign}${fmtUsd(totalGain)} (${gainSign}${totalGainPct.toFixed(1)}%)</div></div>
       </div>
+      <div class="nickname-row">
+        <div class="nickname-label">Leaderboard nickname</div>
+        <div class="nickname-input-row">
+          <input id="practiceNicknameInput" type="text" maxlength="24" placeholder="Pick a nickname" value="${escapeHtml(practiceAccount.nickname || '')}">
+          <button class="add-btn" id="practiceNicknameSaveBtn">Save</button>
+        </div>
+        <div class="nickname-hint" id="practiceNicknameHint"></div>
+      </div>
     </div>
 
     <div class="buy-card">
@@ -255,6 +263,26 @@ function renderPracticeMode(){
       await resetPracticeAccount();
     }
   });
+
+  document.getElementById('practiceNicknameSaveBtn')?.addEventListener('click', async () => {
+    const input = document.getElementById('practiceNicknameInput');
+    const hint = document.getElementById('practiceNicknameHint');
+    const nickname = input.value.trim();
+    if(nickname.length > 24){ hint.textContent = 'Keep it under 24 characters.'; return; }
+    hint.textContent = '';
+    await savePracticeNickname(nickname);
+  });
+}
+
+async function savePracticeNickname(nickname){
+  if(!currentUser || !practiceAccount) return;
+  const { error } = await supabaseClient.from('practice_accounts')
+    .update({ nickname: nickname || null })
+    .eq('user_id', currentUser.id);
+  if(error){ console.error('Failed to save nickname:', error); return; }
+  practiceAccount.nickname = nickname || null;
+  const hint = document.getElementById('practiceNicknameHint');
+  if(hint) hint.textContent = nickname ? 'Saved.' : 'Nickname cleared.';
 }
 
 let practicePendingAsset = null; // { type, key, sym, name, price }
