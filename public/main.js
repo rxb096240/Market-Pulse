@@ -22,6 +22,15 @@ function refreshCurrentViewNews(){
   else if(currentView === 'news-india') refreshIndiaNews();
 }
 
+// Resolves once the first onAuthStateChange callback has run, so the
+// initial showView() below never runs while currentUser is still in its
+// pre-session-restore "unknown" null state — otherwise a refresh landing
+// directly on a sign-in-required view (e.g. #practice-mode) would see a
+// false "logged out" currentUser and wrongly pop the auth modal, only for
+// the real (logged-in) session to arrive a moment later.
+let resolveAuthReady;
+const authReady = new Promise(resolve => { resolveAuthReady = resolve; });
+
 supabaseClient.auth.onAuthStateChange((event, session) => {
   const wasLoggedIn = !!currentUser;
   currentUser = session?.user || null;
@@ -44,6 +53,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     practiceHoldings = [];
     renderPracticeMode();
   }
+  resolveAuthReady();
 });
 
 initGrids();
@@ -55,7 +65,7 @@ tickClock();
 // the matching refresh (refreshHomeView() by default, since currentView
 // starts as 'home' in state.js).
 if(!VIEW_TITLES[currentView]) currentView = 'home';
-showView(currentView);
+authReady.then(() => showView(currentView));
 setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
 setInterval(tickClock, 1000);
