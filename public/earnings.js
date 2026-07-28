@@ -18,12 +18,30 @@ function formatDayHeading(dateStr){
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function epsCellHtml(e){
+  const hasActual = e.epsActual !== null && e.epsActual !== undefined;
+  const hasEstimate = e.epsEstimate !== null && e.epsEstimate !== undefined;
+  if(!hasActual) return hasEstimate ? e.epsEstimate.toFixed(2) : '--';
+  const cls = hasEstimate ? (e.epsActual >= e.epsEstimate ? 'up' : 'down') : '';
+  const est = hasEstimate ? ` <span class="eq-est-inline">(est. ${e.epsEstimate.toFixed(2)})</span>` : '';
+  return `<span class="eq-actual ${cls}">${e.epsActual.toFixed(2)}</span>${est}`;
+}
+
+function revenueCellHtml(e){
+  const hasActual = e.revenueActual !== null && e.revenueActual !== undefined;
+  const hasEstimate = e.revenueEstimate !== null && e.revenueEstimate !== undefined;
+  if(!hasActual) return hasEstimate ? fmtCap(e.revenueEstimate) : '--';
+  const cls = hasEstimate ? (e.revenueActual >= e.revenueEstimate ? 'up' : 'down') : '';
+  const est = hasEstimate ? ` <span class="eq-est-inline">(est. ${fmtCap(e.revenueEstimate)})</span>` : '';
+  return `<span class="eq-actual ${cls}">${fmtCap(e.revenueActual)}</span>${est}`;
+}
+
 function renderEarningsCalendar(days){
   const container = document.getElementById('earningsContainer');
   if(!container) return;
 
   if(!days || days.length === 0){
-    container.innerHTML = '<div class="err">No upcoming earnings found in this window.</div>';
+    container.innerHTML = '<div class="err">No earnings found in this window.</div>';
     return;
   }
 
@@ -33,7 +51,7 @@ function renderEarningsCalendar(days){
       <div class="markets-table-wrap">
         <table class="markets-table">
           <thead>
-            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>EPS Est.</th><th>Revenue Est.</th></tr>
+            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>EPS</th><th>Revenue</th></tr>
           </thead>
           <tbody>
             ${day.entries.map(e => `
@@ -41,8 +59,8 @@ function renderEarningsCalendar(days){
                 <td class="eq-symbol">${escapeHtml(e.symbol)}</td>
                 <td class="eq-company">${escapeHtml(e.name)}</td>
                 <td><span class="eq-time">${e.hour === 'bmo' ? 'Before Open' : e.hour === 'amc' ? 'After Close' : '—'}</span></td>
-                <td>${e.epsEstimate !== null && e.epsEstimate !== undefined ? e.epsEstimate.toFixed(2) : '--'}</td>
-                <td>${e.revenueEstimate !== null && e.revenueEstimate !== undefined ? fmtCap(e.revenueEstimate) : '--'}</td>
+                <td>${epsCellHtml(e)}</td>
+                <td>${revenueCellHtml(e)}</td>
               </tr>
             `).join('')}
           </tbody>

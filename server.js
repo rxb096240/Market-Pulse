@@ -436,6 +436,7 @@ app.get('/api/crypto/trending', async (req, res) => {
 });
 
 const EARNINGS_WINDOW_DAYS = 14;
+const EARNINGS_LOOKBACK_DAYS = 7; // also surface recently-reported earnings, not just upcoming
 let sp500SymbolMap = null; // cached { SYMBOL: 'Company Name' }
 
 function parseCsv(text){
@@ -479,11 +480,13 @@ app.get('/api/earnings/calendar', async (req, res) => {
       }
 
       const today = new Date();
+      const start = new Date(today);
+      start.setDate(start.getDate() - EARNINGS_LOOKBACK_DAYS);
       const end = new Date(today);
       end.setDate(end.getDate() + EARNINGS_WINDOW_DAYS);
       const fmt = d => d.toISOString().slice(0, 10);
 
-      const url = `https://finnhub.io/api/v1/calendar/earnings?from=${fmt(today)}&to=${fmt(end)}&token=${process.env.FINNHUB_API_KEY}`;
+      const url = `https://finnhub.io/api/v1/calendar/earnings?from=${fmt(start)}&to=${fmt(end)}&token=${process.env.FINNHUB_API_KEY}`;
       const { data: raw } = await fetchJson(url, 10000);
       const all = raw.earningsCalendar || [];
 
@@ -501,7 +504,9 @@ app.get('/api/earnings/calendar', async (req, res) => {
         date: e.date,
         hour: e.hour, // 'bmo' | 'amc' | ''
         epsEstimate: e.epsEstimate,
-        revenueEstimate: e.revenueEstimate
+        epsActual: e.epsActual,
+        revenueEstimate: e.revenueEstimate,
+        revenueActual: e.revenueActual
       }));
 
       // Group by date

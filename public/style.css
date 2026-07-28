@@ -733,6 +733,10 @@
   padding:2px 7px;
   display:inline-block;
 }
+.eq-actual{ font-weight:700; }
+.eq-actual.up{ color:var(--up); }
+.eq-actual.down{ color:var(--down); }
+.eq-est-inline{ color:var(--muted); font-size:11px; }
 
 /* ---- Learn view ---- */
 .learn-grid{
@@ -884,10 +888,10 @@
 #forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:120px; }
 
 #earningsContainer .markets-table th:nth-child(1), #earningsContainer .markets-table td:nth-child(1){ width:80px; }
-#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:300px; }
+#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:260px; }
 #earningsContainer .markets-table th:nth-child(3), #earningsContainer .markets-table td:nth-child(3){ width:120px; }
-#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:80px; }
-#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:100px; }
+#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:170px; }
+#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:210px; }
 
   /* ---- Search ---- */
   .search-section{
