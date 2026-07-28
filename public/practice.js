@@ -171,7 +171,7 @@ function practiceHoldingHtml(h){
     <div class="holding-card">
       <div class="holding-left">
         <div class="holding-sym">${escapeHtml(h.sym)} — ${escapeHtml(h.name)}</div>
-        <div class="holding-blurb">${h.qty.toFixed(4)} @ ${fmtUsd(h.avg_price)} avg (${fmtUsd(cost)} total) · now worth ${value !== null ? fmtUsd(value) : '--'}</div>
+        <div class="holding-blurb">${Number(h.qty).toFixed(4)} @ ${fmtUsd(h.avg_price)} avg (${fmtUsd(cost)} total) · now worth ${value !== null ? fmtUsd(value) : '--'}</div>
       </div>
       <div class="holding-right">
         <div class="holding-stats">

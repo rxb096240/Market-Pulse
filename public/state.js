@@ -48,7 +48,9 @@ let newsRefreshToken = 0;
 let trendingLoaded = false;
 
 function fmtPrice(v){
-  if(v === undefined || v === null || isNaN(v)) return '--';
+  if(v === undefined || v === null) return '--';
+  v = Number(v); // Supabase serializes numeric/decimal columns as strings
+  if(isNaN(v)) return '--';
   if(v >= 1000) return v.toLocaleString('en-US',{maximumFractionDigits:0});
   if(v >= 1) return v.toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
   if(v >= 0.01) return v.toLocaleString('en-US',{minimumFractionDigits:4, maximumFractionDigits:4});
@@ -56,6 +58,7 @@ function fmtPrice(v){
 }
 
 function fmtCap(v){
+  v = Number(v); // Supabase serializes numeric/decimal columns as strings
   if(v >= 1e12) return '$'+(v/1e12).toFixed(2)+'T';
   if(v >= 1e9) return '$'+(v/1e9).toFixed(2)+'B';
   if(v >= 1e6) return '$'+(v/1e6).toFixed(2)+'M';
@@ -63,7 +66,7 @@ function fmtCap(v){
 }
 
 function fmtUsd(v){
-  return '$' + v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); // Supabase serializes numeric/decimal columns as strings
 }
 
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
