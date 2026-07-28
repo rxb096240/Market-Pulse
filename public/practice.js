@@ -4,6 +4,43 @@
 let practiceAccount = null; // { cash_balance }
 let practiceHoldings = [];  // [{ id, asset_type, asset_key, sym, name, qty, avg_price }]
 
+// Live prices for practice holdings specifically, fetched independently of
+// the user's separate Stocks/Crypto watchlist. Practice Mode has its own
+// buy flow, so a held asset isn't necessarily also being watchlisted — if
+// we only read from the watchlist's cache (latestStockData/latestCryptoData),
+// any holding not on the watchlist would silently freeze at its cost basis
+// (0 shown P&L) until it happened to also get watchlisted, at which point
+// whatever real price movement happened while frozen would appear all at
+// once as a sudden gain/loss.
+let practicePrices = { stock: {}, crypto: {} };
+
+async function fetchPracticePrices(holdings){
+  const stockSyms = [...new Set(holdings.filter(h => h.asset_type === 'stock').map(h => h.asset_key))];
+  const cryptoIds = [...new Set(holdings.filter(h => h.asset_type === 'crypto').map(h => h.asset_key))];
+
+  const [stockResults, cryptoData] = await Promise.all([
+    Promise.allSettled(stockSyms.map(sym => fetchOneStock(sym).then(d => [sym, d.price]))),
+    cryptoIds.length > 0
+      ? fetchJsonWithTimeout(`${API_BASE}/api/crypto/price?ids=${encodeURIComponent(cryptoIds.join(','))}`, 8000).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  const stockPrices = {};
+  stockResults.forEach(r => {
+    if(r.status === 'fulfilled'){
+      const [sym, price] = r.value;
+      stockPrices[sym] = price;
+    }
+  });
+
+  const cryptoPrices = {};
+  cryptoIds.forEach(id => {
+    if(cryptoData[id]?.usd !== undefined) cryptoPrices[id] = cryptoData[id].usd;
+  });
+
+  practicePrices = { stock: stockPrices, crypto: cryptoPrices };
+}
+
 async function loadPracticeAccount(){
   if(!currentUser) return;
 
@@ -31,12 +68,16 @@ async function loadPracticeAccount(){
   if(hErr){ console.error('Failed to load practice holdings:', hErr); return; }
   practiceHoldings = holdings || [];
 
+  await fetchPracticePrices(practiceHoldings);
+
   renderPracticeMode();
 }
 
 function currentPracticePriceFor(holding){
-  if(holding.asset_type === 'crypto') return latestCryptoData[holding.asset_key]?.usd;
-  return latestStockData[holding.asset_key]?.price;
+  if(holding.asset_type === 'crypto'){
+    return practicePrices.crypto[holding.asset_key] ?? latestCryptoData[holding.asset_key]?.usd;
+  }
+  return practicePrices.stock[holding.asset_key] ?? latestStockData[holding.asset_key]?.price;
 }
 
 async function buyPractice(assetType, key, sym, name, amountUsd, currentPrice){
