@@ -357,21 +357,53 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 
 // ---- CoinGecko passthrough endpoints ----
 
+// Builds { [coinId]: { usd, usd_24h_change, usd_market_cap } } for whichever
+// of the requested ids are present in the still-fresh /api/crypto/markets
+// cache (top 100 by market cap). Lets the watchlist/portfolio/practice mode
+// reuse data the overview already fetched instead of always hitting
+// simple/price, and gives us something to fall back on if simple/price
+// itself gets rate-limited.
+function priceDataFromMarketsCache(idList) {
+  const hit = cache.get('markets');
+  if (!hit || hit.expires <= Date.now() || !Array.isArray(hit.data)) return {};
+  const found = {};
+  for (const coin of hit.data) {
+    if (idList.includes(coin.id)) {
+      found[coin.id] = {
+        usd: coin.current_price,
+        usd_24h_change: coin.price_change_percentage_24h,
+        usd_market_cap: coin.market_cap
+      };
+    }
+  }
+  return found;
+}
+
 app.get('/api/crypto/price', async (req, res) => {
   const ids = (req.query.ids || '').toString();
   if (!ids) return res.status(400).json({ error: 'ids query param required' });
+  const idList = ids.split(',').map(s => s.trim()).filter(Boolean);
+
+  const fromMarkets = priceDataFromMarketsCache(idList);
+  const missingIds = idList.filter(id => !(id in fromMarkets));
+  if (missingIds.length === 0) return res.json(fromMarkets);
+
   try {
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
+    const missing = missingIds.join(',');
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(missing)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
     // Widened from 20s, then again from 60s: the watchlist poller, Portfolio,
     // and Practice Mode each hit this endpoint independently with their own
     // `ids` list, and CoinGecko's free-tier simple/price endpoint rate-limits
     // aggressively. The frontend only polls every 90s (public/main.js), so a
     // 120s cache means most poll cycles are served from cache instead of
     // triggering a fresh upstream call.
-    const { data } = await cachedFetch(`price:${ids}`, 120_000, () => fetchJson(url));
-    res.json(data);
+    const { data } = await cachedFetch(`price:${missing}`, 120_000, () => fetchJson(url));
+    res.json({ ...fromMarkets, ...data });
   } catch (e) {
     console.error('price fetch failed:', e.message);
+    // simple/price failed (often a rate limit) — serve whatever we already
+    // had from the markets cache rather than leaving the caller with nothing.
+    if (Object.keys(fromMarkets).length > 0) return res.json(fromMarkets);
     res.status(502).json({ error: 'Failed to fetch crypto prices' });
   }
 });
