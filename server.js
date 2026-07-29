@@ -362,12 +362,13 @@ app.get('/api/crypto/price', async (req, res) => {
   if (!ids) return res.status(400).json({ error: 'ids query param required' });
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
-    // Widened from 20s: the watchlist poller, Portfolio, and Practice Mode
-    // each hit this endpoint independently with their own `ids` list, and
-    // CoinGecko's free-tier simple/price endpoint rate-limits aggressively
-    // — a short cache window meant each of those triggered its own fresh
-    // upstream call far more often than the data actually needed refreshing.
-    const { data } = await cachedFetch(`price:${ids}`, 60_000, () => fetchJson(url));
+    // Widened from 20s, then again from 60s: the watchlist poller, Portfolio,
+    // and Practice Mode each hit this endpoint independently with their own
+    // `ids` list, and CoinGecko's free-tier simple/price endpoint rate-limits
+    // aggressively. The frontend only polls every 90s (public/main.js), so a
+    // 120s cache means most poll cycles are served from cache instead of
+    // triggering a fresh upstream call.
+    const { data } = await cachedFetch(`price:${ids}`, 120_000, () => fetchJson(url));
     res.json(data);
   } catch (e) {
     console.error('price fetch failed:', e.message);
@@ -378,7 +379,7 @@ app.get('/api/crypto/price', async (req, res) => {
 app.get('/api/crypto/markets', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
-    const { data } = await cachedFetch('markets', 30_000, () => fetchJson(url, 10_000));
+    const { data } = await cachedFetch('markets', 90_000, () => fetchJson(url, 10_000));
     res.json(data);
   } catch (e) {
     console.error('markets fetch failed:', e.message);
@@ -432,7 +433,7 @@ app.get('/api/crypto/search', async (req, res) => {
 app.get('/api/crypto/trending', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/search/trending';
-    const { data } = await cachedFetch('trending', 30_000, () => fetchJson(url, 8000));
+    const { data } = await cachedFetch('trending', 90_000, () => fetchJson(url, 8000));
     res.json(data);
   } catch (e) {
     console.error('trending fetch failed:', e.message);
