@@ -1,6 +1,41 @@
 // Real portfolio holdings: Supabase persistence plus the crypto/stock portfolio forms and P/L cards.
 // Renders cost basis, current value, and gain/loss for everything the user has manually added.
 
+// Live prices for portfolio holdings specifically, fetched independently of
+// the user's separate Stocks/Crypto watchlist. A portfolio holding isn't
+// necessarily also being watchlisted, so relying solely on the watchlist's
+// cache (latestStockData/latestCryptoData) left any non-watchlisted holding
+// permanently showing "--" for current value and P/L. Same fix as
+// fetchPracticePrices in practice.js.
+let portfolioPrices = { stock: {}, crypto: {} };
+
+async function fetchPortfolioPrices(entries){
+  const stockSyms = [...new Set(entries.filter(e => e.type === 'stock').map(e => e.key))];
+  const cryptoIds = [...new Set(entries.filter(e => e.type === 'crypto').map(e => e.key))];
+
+  const [stockResults, cryptoData] = await Promise.all([
+    Promise.allSettled(stockSyms.map(sym => fetchOneStock(sym).then(d => [sym, d.price]))),
+    cryptoIds.length > 0
+      ? fetchJsonWithTimeout(`${API_BASE}/api/crypto/price?ids=${encodeURIComponent(cryptoIds.join(','))}`, 8000).catch(() => ({}))
+      : Promise.resolve({})
+  ]);
+
+  const stockPrices = {};
+  stockResults.forEach(r => {
+    if(r.status === 'fulfilled'){
+      const [sym, price] = r.value;
+      stockPrices[sym] = price;
+    }
+  });
+
+  const cryptoPrices = {};
+  cryptoIds.forEach(id => {
+    if(cryptoData[id]?.usd !== undefined) cryptoPrices[id] = cryptoData[id].usd;
+  });
+
+  portfolioPrices = { stock: stockPrices, crypto: cryptoPrices };
+}
+
 async function loadUserPortfolio(){
   if(!currentUser) return;
   const { data, error } = await supabaseClient
@@ -22,6 +57,7 @@ async function loadUserPortfolio(){
   }));
 
   savePortfolio(); // keep localStorage in sync as an offline fallback
+  await fetchPortfolioPrices(PORTFOLIO);
   renderPortfolio();
 }
 
@@ -65,8 +101,10 @@ function removePortfolioEntry(id){
 }
 
 function currentPriceFor(entry){
-  if(entry.type === 'crypto') return latestCryptoData[entry.key]?.usd;
-  return latestStockData[entry.key]?.price;
+  if(entry.type === 'crypto'){
+    return portfolioPrices.crypto[entry.key] ?? latestCryptoData[entry.key]?.usd;
+  }
+  return portfolioPrices.stock[entry.key] ?? latestStockData[entry.key]?.price;
 }
 
 function buildPortfolioCard(entry){
