@@ -121,13 +121,17 @@ async function buyPractice(assetType, key, sym, name, amountUsd, currentPrice){
   await loadPracticeAccount();
 }
 
-async function sellAllPractice(holdingId){
+async function sellAllPractice(holdingId, btn){
   if(!currentUser || !practiceAccount) return;
   const holding = practiceHoldings.find(h => h.id === holdingId);
   if(!holding) return;
 
   const currentPrice = currentPracticePriceFor(holding);
-  if(!currentPrice) return;
+  if(!currentPrice){
+    alert(`Can't get a current price for ${holding.sym} right now (price feed is momentarily unavailable) — try again in a few seconds.`);
+    if(btn) btn.disabled = false;
+    return;
+  }
 
   const saleAmount = holding.qty * currentPrice;
 
@@ -396,21 +400,25 @@ function wirePracticeSellButtons(){
       if(!holding) return;
 
       const price = currentPracticePriceFor(holding);
-      const value = price !== undefined ? holding.qty * price : null;
+      if(price === undefined || price === null){
+        alert(`Can't get a current price for ${holding.sym} right now (price feed is momentarily unavailable) — try again in a few seconds.`);
+        return;
+      }
+      const value = holding.qty * price;
       const cost = holding.qty * holding.avg_price;
-      const pl = value !== null ? value - cost : null;
+      const pl = value - cost;
 
       // Sell nudge: warn if selling at a loss
-      if(pl !== null && pl < 0){
+      if(pl < 0){
         const proceed = confirm(`Selling now locks in a ${fmtUsd(Math.abs(pl))} loss on ${holding.sym}. Investing usually works best over time — sell anyway?`);
         if(!proceed) return;
       }else{
-        const proceed = confirm(`Sell all of your ${holding.sym} for ${value !== null ? fmtUsd(value) : 'the current price'}?`);
+        const proceed = confirm(`Sell all of your ${holding.sym} for ${fmtUsd(value)}?`);
         if(!proceed) return;
       }
 
       btn.disabled = true;
-      await sellAllPractice(holdingId);
+      await sellAllPractice(holdingId, btn);
     });
   });
 }
