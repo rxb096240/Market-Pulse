@@ -121,15 +121,28 @@ async function updatePortfolioEntry(id, qty, avgPrice){
   await updateSupabasePortfolioItem(id, qty, avgPrice);
 }
 
+// Manual fallback prices, keyed the same way as portfolioPrices — used only
+// when every live source (dedicated fetch, watchlist cache) comes back
+// empty, e.g. during a CoinGecko/Yahoo rate-limit. Session-only (not
+// persisted): the moment a live price is available again it takes over.
+let manualPrices = { stock: {}, crypto: {} };
+
 function currentPriceFor(entry){
   if(entry.type === 'crypto'){
-    return portfolioPrices.crypto[entry.key] ?? latestCryptoData[entry.key]?.usd;
+    return portfolioPrices.crypto[entry.key] ?? latestCryptoData[entry.key]?.usd ?? manualPrices.crypto[entry.key];
   }
-  return portfolioPrices.stock[entry.key] ?? latestStockData[entry.key]?.price;
+  return portfolioPrices.stock[entry.key] ?? latestStockData[entry.key]?.price ?? manualPrices.stock[entry.key];
 }
 
 function buildPortfolioCard(entry){
-  const price = currentPriceFor(entry);
+  const priceKey = entry.type === 'crypto' ? 'crypto' : 'stock';
+  const livePrice = entry.type === 'crypto'
+    ? (portfolioPrices.crypto[entry.key] ?? latestCryptoData[entry.key]?.usd)
+    : (portfolioPrices.stock[entry.key] ?? latestStockData[entry.key]?.price);
+  const manualPrice = manualPrices[priceKey][entry.key];
+  const price = livePrice ?? manualPrice;
+  const usingManualPrice = livePrice === undefined && manualPrice !== undefined;
+
   const cost = entry.qty * entry.avgPrice;
   const value = price !== undefined ? entry.qty * price : null;
   const pl = value !== null ? value - cost : null;
@@ -143,6 +156,17 @@ function buildPortfolioCard(entry){
   const plCls = pl === null ? '' : (pl >= 0 ? 'up' : 'down');
   const plSign = pl !== null && pl >= 0 ? '+' : '';
 
+  const priceHtml = price !== undefined
+    ? `<div class="price">$${fmtPrice(price)}${usingManualPrice ? ' <span class="price-manual-tag">manual</span>' : ''}</div>`
+    : `
+      <div class="price price-unavailable">--</div>
+      <div class="manual-price-row">
+        <input type="number" class="manual-price-input" placeholder="Enter price" min="0" step="any">
+        <button class="manual-price-btn">Use</button>
+      </div>
+      <div class="manual-price-hint">Live price unavailable right now — enter one to estimate value.</div>
+    `;
+
   card.innerHTML = `
     <div class="card-top">
       <div class="coin-id">
@@ -155,7 +179,7 @@ function buildPortfolioCard(entry){
       </div>
     </div>
     <div class="pf-view">
-      <div class="price">${price !== undefined ? '$' + fmtPrice(price) : '--'}</div>
+      ${priceHtml}
       <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(4)}</span></div>
       <div class="pf-row"><span>Avg buy price</span><span>${fmtUsd(entry.avgPrice)}</span></div>
       <div class="pf-row"><span>Cost basis</span><span>${fmtUsd(cost)}</span></div>
@@ -206,6 +230,22 @@ function buildPortfolioCard(entry){
     await updatePortfolioEntry(entry.id, newQty, newPrice);
   });
   card.querySelector('.remove-btn').addEventListener('click', () => removePortfolioEntry(entry.id));
+
+  const manualBtn = card.querySelector('.manual-price-btn');
+  if(manualBtn){
+    manualBtn.addEventListener('click', () => {
+      const input = card.querySelector('.manual-price-input');
+      const val = parseFloat(input.value);
+      if(!val || val <= 0){
+        input.focus();
+        return;
+      }
+      manualPrices[priceKey][entry.key] = val;
+      renderCryptoPortfolio();
+      renderStockPortfolio();
+    });
+  }
+
   return { card, cost, value };
 }
 
