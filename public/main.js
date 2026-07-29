@@ -48,6 +48,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
     initGrids();
     refreshAll();
+    // PORTFOLIO holds the signed-out user's personal holdings — clear it
+    // (and its localStorage mirror) before re-rendering, otherwise it
+    // stays populated with their data for whoever uses this browser next
+    // (a guest, or the next person to sign in on a shared machine).
+    PORTFOLIO = [];
+    savePortfolio();
     renderPortfolio();
     practiceAccount = null;
     practiceHoldings = [];

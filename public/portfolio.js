@@ -95,7 +95,7 @@ function buildPortfolioCard(entry){
       </div>
     </div>
     <div class="price">${price !== undefined ? '$' + fmtPrice(price) : '--'}</div>
-    <div class="pf-row"><span>Quantity</span><span>${entry.qty}</span></div>
+    <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(4)}</span></div>
     <div class="pf-row"><span>Avg buy price</span><span>${fmtUsd(entry.avgPrice)}</span></div>
     <div class="pf-row"><span>Cost basis</span><span>${fmtUsd(cost)}</span></div>
     <div class="pf-row"><span>Current value</span><span>${value !== null ? fmtUsd(value) : '--'}</span></div>

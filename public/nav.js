@@ -72,6 +72,12 @@ function showView(view){
   refreshStocksMarketsOverview();
   }else if(view === 'stocks-ai'){
   refreshAiStocksOverview();
+  }else if(view === 'crypto-portfolio' || view === 'stocks-portfolio'){
+  if(!currentUser){
+    openAuthModal();
+  }else{
+    renderPortfolio();
+  }
   }else if(view === 'forex-rates'){
   refreshForexRates();
 }else if(view === 'earnings-calendar'){
