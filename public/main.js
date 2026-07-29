@@ -43,6 +43,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     loadUserWatchlist();
     loadUserPortfolio();
     loadPracticeAccount();
+    // Social views gate on currentUser and otherwise sit on their
+    // "sign in to continue" placeholder — nothing else here re-triggers
+    // them, so a sign-in while already on one of these views would
+    // otherwise leave that placeholder up until the next navigation/reload.
+    if(currentView === 'social-reddit') refreshRedditFeed();
+    else if(currentView === 'social-hackernews') refreshHackerNews();
   }else if(wasLoggedIn){
     COINS.length = 0; DEFAULT_COINS.forEach(c => COINS.push({...c}));
     STOCKS.length = 0; DEFAULT_STOCKS.forEach(s => STOCKS.push({...s}));
