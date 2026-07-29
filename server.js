@@ -593,7 +593,10 @@ app.get('/api/stock/quote/:symbol', async (req, res) => {
   const symbol = req.params.symbol;
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
-    const { data } = await cachedFetch(`quote:${symbol}`, 10_000, () => fetchJson(url));
+    // Widened from 10s: the frontend only polls every 90s (public/main.js),
+    // so a 10s cache meant almost every poll cycle still hit Yahoo fresh for
+    // each watchlist symbol. 60s keeps most polls served from cache instead.
+    const { data } = await cachedFetch(`quote:${symbol}`, 60_000, () => fetchJson(url));
     res.json(data);
   } catch (e) {
     console.error('stock quote failed:', symbol, e.message);
