@@ -91,6 +91,16 @@ async function deleteSupabasePortfolioItem(id){
   if(error) console.error('Failed to delete portfolio item:', error);
 }
 
+async function updateSupabasePortfolioItem(id, qty, avgPrice){
+  if(!currentUser) return;
+  const { error } = await supabaseClient
+    .from('portfolio_holdings')
+    .update({ qty, avg_price: avgPrice })
+    .eq('id', id)
+    .eq('user_id', currentUser.id);
+  if(error) console.error('Failed to update portfolio item:', error);
+}
+
 /* ---- Portfolio: shared helpers ---- */
 function removePortfolioEntry(id){
   PORTFOLIO = PORTFOLIO.filter(p => p.id !== id);
@@ -98,6 +108,17 @@ function removePortfolioEntry(id){
   renderCryptoPortfolio();
   renderStockPortfolio();
   deleteSupabasePortfolioItem(id);
+}
+
+async function updatePortfolioEntry(id, qty, avgPrice){
+  const entry = PORTFOLIO.find(p => p.id === id);
+  if(!entry) return;
+  entry.qty = qty;
+  entry.avgPrice = avgPrice;
+  savePortfolio();
+  renderCryptoPortfolio();
+  renderStockPortfolio();
+  await updateSupabasePortfolioItem(id, qty, avgPrice);
 }
 
 function currentPriceFor(entry){
@@ -129,19 +150,61 @@ function buildPortfolioCard(entry){
         <div class="coin-name">${entry.name}</div>
       </div>
       <div class="card-top-right">
+        <button class="edit-btn" title="Edit holding">✎</button>
         <button class="remove-btn" title="Remove holding">×</button>
       </div>
     </div>
-    <div class="price">${price !== undefined ? '$' + fmtPrice(price) : '--'}</div>
-    <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(4)}</span></div>
-    <div class="pf-row"><span>Avg buy price</span><span>${fmtUsd(entry.avgPrice)}</span></div>
-    <div class="pf-row"><span>Cost basis</span><span>${fmtUsd(cost)}</span></div>
-    <div class="pf-row"><span>Current value</span><span>${value !== null ? fmtUsd(value) : '--'}</span></div>
-    <div class="pf-pl">
-      <span class="pf-pl-label">P/L</span>
-      <span class="pf-pl-value ${plCls}">${pl !== null ? plSign + fmtUsd(pl) + ' (' + plSign + plPct.toFixed(2) + '%)' : '--'}</span>
+    <div class="pf-view">
+      <div class="price">${price !== undefined ? '$' + fmtPrice(price) : '--'}</div>
+      <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(4)}</span></div>
+      <div class="pf-row"><span>Avg buy price</span><span>${fmtUsd(entry.avgPrice)}</span></div>
+      <div class="pf-row"><span>Cost basis</span><span>${fmtUsd(cost)}</span></div>
+      <div class="pf-row"><span>Current value</span><span>${value !== null ? fmtUsd(value) : '--'}</span></div>
+      <div class="pf-pl">
+        <span class="pf-pl-label">P/L</span>
+        <span class="pf-pl-value ${plCls}">${pl !== null ? plSign + fmtUsd(pl) + ' (' + plSign + plPct.toFixed(2) + '%)' : '--'}</span>
+      </div>
+    </div>
+    <div class="pf-edit-form" style="display:none;">
+      <div class="pf-edit-row">
+        <label>Quantity</label>
+        <input type="number" class="pf-edit-qty qty-input" value="${entry.qty}" min="0" step="any">
+      </div>
+      <div class="pf-edit-row">
+        <label>Avg buy price</label>
+        <input type="number" class="pf-edit-price price-input" value="${entry.avgPrice}" min="0" step="any">
+      </div>
+      <div class="pf-edit-actions">
+        <button class="pf-edit-save add-btn">Save</button>
+        <button class="pf-edit-cancel">Cancel</button>
+      </div>
     </div>
   `;
+
+  const viewEl = card.querySelector('.pf-view');
+  const editForm = card.querySelector('.pf-edit-form');
+  const qtyInput = card.querySelector('.pf-edit-qty');
+  const priceInput = card.querySelector('.pf-edit-price');
+
+  card.querySelector('.edit-btn').addEventListener('click', () => {
+    qtyInput.value = entry.qty;
+    priceInput.value = entry.avgPrice;
+    viewEl.style.display = 'none';
+    editForm.style.display = 'block';
+  });
+  card.querySelector('.pf-edit-cancel').addEventListener('click', () => {
+    editForm.style.display = 'none';
+    viewEl.style.display = '';
+  });
+  card.querySelector('.pf-edit-save').addEventListener('click', async () => {
+    const newQty = parseFloat(qtyInput.value);
+    const newPrice = parseFloat(priceInput.value);
+    if(!newQty || newQty <= 0 || !newPrice || newPrice <= 0){
+      alert('Enter a quantity and average buy price greater than zero.');
+      return;
+    }
+    await updatePortfolioEntry(entry.id, newQty, newPrice);
+  });
   card.querySelector('.remove-btn').addEventListener('click', () => removePortfolioEntry(entry.id));
   return { card, cost, value };
 }
