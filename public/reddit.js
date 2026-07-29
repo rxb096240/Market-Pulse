@@ -136,6 +136,12 @@ function renderRedditPosts(posts) {
 
 async function refreshRedditFeed() {
   const container = document.getElementById('redditPostList');
+  if (!currentUser) {
+    if (container) container.innerHTML = `<div class="news-loading">Sign in to view live Reddit sentiment.</div>`;
+    openAuthModal();
+    return;
+  }
+
   const headingEl = document.getElementById('redditResultsHeading');
   if (container) container.innerHTML = `<div class="news-loading">Loading r/${escapeHtml(redditState.subreddit)}…</div>`;
 
@@ -153,7 +159,8 @@ async function refreshRedditFeed() {
 
 try {
     const url = buildRedditFeedUrl(redditState.subreddit, redditState.sort, redditState.time);
-    const xmlText = await fetchTextWithTimeout(url, 8000);
+    const token = await getAccessToken();
+    const xmlText = await fetchTextWithTimeout(url, 8000, { Authorization: `Bearer ${token}` });
     const posts = parseRedditAtom(xmlText);
     renderRedditPosts(posts);
   } catch (e) {

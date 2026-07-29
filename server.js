@@ -23,6 +23,24 @@ async function cachedFetch(cacheKey, ttlMs, fetcher) {
   return result;
 }
 
+// Requires a valid Supabase session. Used to gate the Reddit/Hacker News
+// passthroughs to signed-in users only — those upstream APIs rate-limit
+// aggressively, and reserving that budget for registered users (rather than
+// any anonymous visitor) means logged-in users see fresher results instead
+// of the limit getting burned through by casual browsing.
+async function requireAuth(req, res) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) { res.status(401).json({ error: 'Sign in required' }); return false; }
+  try {
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data?.user) { res.status(401).json({ error: 'Sign in required' }); return false; }
+    return true;
+  } catch (e) {
+    res.status(401).json({ error: 'Sign in required' });
+    return false;
+  }
+}
+
 async function fetchJson(url, timeoutMs = 8000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -787,6 +805,7 @@ const REDDIT_LIMITS = { hot: 15, new: 15, rising: 15, top: 25, controversial: 20
 const REDDIT_SUBREDDIT_RE = /^[A-Za-z0-9_]{2,21}$/;
 
 app.get('/api/reddit/feed', async (req, res) => {
+  if (!(await requireAuth(req, res))) return;
   const subreddit = (req.query.subreddit || '').toString();
   const sort = (req.query.sort || 'hot').toString();
   const t = (req.query.t || 'week').toString();
@@ -873,6 +892,7 @@ const cacheKey = `reddit:${subreddit}:${sort}:${needsTime ? t : ''}`;
 // ---- Hacker News passthrough (Algolia Search API — free, keyless, no CORS/rate-limit drama) ----
 
 app.get('/api/hackernews/search', async (req, res) => {
+  if (!(await requireAuth(req, res))) return;
   const query = (req.query.q || '').toString();
   const sort = (req.query.sort || 'relevance').toString();
   if (!query) return res.status(400).json({ error: 'q param required' });

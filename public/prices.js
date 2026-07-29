@@ -22,11 +22,11 @@ async function fetchCrypto(){
   }
 }
 
-async function fetchJsonWithTimeout(url, ms){
+async function fetchJsonWithTimeout(url, ms, headers){
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try{
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { signal: controller.signal, headers });
     clearTimeout(timer);
     if(!res.ok) throw new Error('http ' + res.status);
     return await res.json();
@@ -35,11 +35,11 @@ async function fetchJsonWithTimeout(url, ms){
   }
 }
 
-async function fetchTextWithTimeout(url, ms){
+async function fetchTextWithTimeout(url, ms, headers){
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try{
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { signal: controller.signal, headers });
     clearTimeout(timer);
     if(!res.ok) throw new Error('http ' + res.status);
     return await res.text();

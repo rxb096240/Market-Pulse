@@ -101,6 +101,12 @@ function renderHnResults(hits){
 
 async function refreshHackerNews(){
   const container = document.getElementById('hnCardContainer');
+  if (!currentUser) {
+    if (container) container.innerHTML = `<div class="news-loading">Sign in to search Hacker News for market discussion.</div>`;
+    openAuthModal();
+    return;
+  }
+
   const headingEl = document.getElementById('hnResultsHeading');
   if (container) container.innerHTML = `<div class="news-loading">Searching "${escapeHtml(hnState.query)}"…</div>`;
 
@@ -114,7 +120,8 @@ async function refreshHackerNews(){
 
   try {
     const url = buildHnSearchUrl(hnState.query, hnState.sort);
-    const json = await fetchJsonWithTimeout(url, 8000);
+    const token = await getAccessToken();
+    const json = await fetchJsonWithTimeout(url, 8000, { Authorization: `Bearer ${token}` });
     renderHnResults(json.hits || []);
   } catch (e){
     console.error('Hacker News search failed:', hnState.query, e);
