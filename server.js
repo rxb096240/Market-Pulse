@@ -362,7 +362,12 @@ app.get('/api/crypto/price', async (req, res) => {
   if (!ids) return res.status(400).json({ error: 'ids query param required' });
   try {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(ids)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
-    const { data } = await cachedFetch(`price:${ids}`, 20_000, () => fetchJson(url));
+    // Widened from 20s: the watchlist poller, Portfolio, and Practice Mode
+    // each hit this endpoint independently with their own `ids` list, and
+    // CoinGecko's free-tier simple/price endpoint rate-limits aggressively
+    // — a short cache window meant each of those triggered its own fresh
+    // upstream call far more often than the data actually needed refreshing.
+    const { data } = await cachedFetch(`price:${ids}`, 60_000, () => fetchJson(url));
     res.json(data);
   } catch (e) {
     console.error('price fetch failed:', e.message);
