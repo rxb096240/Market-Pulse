@@ -15,12 +15,25 @@ const cache = new Map(); // key -> { expires, data, contentType }
 const redditStaleCache = new Map(); // key -> last-known-good RSS text, never expires, used as 429 fallback
 
 
-async function cachedFetch(cacheKey, ttlMs, fetcher) {
+// failureTtlMs is opt-in (existing callers are unaffected): without it, a
+// failed fetcher() call is never cached, so a currently-rate-limited
+// upstream gets hammered again on every single request with no backoff.
+// Passing it caches the failure itself for a short window, so repeated
+// requests during an outage fail fast instead of piling onto CoinGecko.
+async function cachedFetch(cacheKey, ttlMs, fetcher, failureTtlMs) {
   const hit = cache.get(cacheKey);
-  if (hit && hit.expires > Date.now()) return hit;
-  const result = await fetcher();
-  cache.set(cacheKey, { ...result, expires: Date.now() + ttlMs });
-  return result;
+  if (hit && hit.expires > Date.now()) {
+    if (hit.failed) throw hit.error;
+    return hit;
+  }
+  try {
+    const result = await fetcher();
+    cache.set(cacheKey, { ...result, expires: Date.now() + ttlMs });
+    return result;
+  } catch (e) {
+    if (failureTtlMs) cache.set(cacheKey, { failed: true, error: e, expires: Date.now() + failureTtlMs });
+    throw e;
+  }
 }
 
 // Requires a valid Supabase session. Used to gate the Reddit/Hacker News
@@ -413,7 +426,7 @@ app.get('/api/crypto/price', async (req, res) => {
     // and Practice Mode each hit this endpoint independently with their own
     // `ids` list, and CoinGecko's free-tier simple/price endpoint rate-limits
     // aggressively. 5 minutes trades some price freshness for reliability.
-    const { data } = await cachedFetch(`price:${missing}`, 5 * 60_000, () => fetchJson(url));
+    const { data } = await cachedFetch(`price:${missing}`, 5 * 60_000, () => fetchJson(url), 45_000);
     res.json({ ...fromMarkets, ...data });
   } catch (e) {
     console.error('price fetch failed:', e.message);
@@ -427,7 +440,7 @@ app.get('/api/crypto/price', async (req, res) => {
 app.get('/api/crypto/markets', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
-    const { data } = await cachedFetch('markets', 5 * 60_000, () => fetchJson(url, 10_000));
+    const { data } = await cachedFetch('markets', 5 * 60_000, () => fetchJson(url, 10_000), 45_000);
     res.json(data);
   } catch (e) {
     console.error('markets fetch failed:', e.message);
@@ -481,7 +494,7 @@ app.get('/api/crypto/search', async (req, res) => {
 app.get('/api/crypto/trending', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/search/trending';
-    const { data } = await cachedFetch('trending', 5 * 60_000, () => fetchJson(url, 8000));
+    const { data } = await cachedFetch('trending', 5 * 60_000, () => fetchJson(url, 8000), 45_000);
     res.json(data);
   } catch (e) {
     console.error('trending fetch failed:', e.message);
