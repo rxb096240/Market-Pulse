@@ -371,23 +371,33 @@ try{
       ensureCryptoTracked(pfPendingCoin.id, pfPendingCoin.symbol, pfPendingCoin.name);
       await fetchCrypto();
 
-      const localId = 'pf-' + Date.now();
-      const newEntry = {
-        id: localId,
-        type: 'crypto',
-        key: pfPendingCoin.id,
-        sym: pfPendingCoin.symbol.toUpperCase(),
-        name: pfPendingCoin.name,
-        qty, avgPrice
-      };
-      PORTFOLIO.push(newEntry);
-      savePortfolio();
-      renderCryptoPortfolio();
-
-      const supabaseId = await saveSupabasePortfolioItem(newEntry);
-      if(supabaseId){
-        newEntry.id = supabaseId;
+      // Adding a coin already held consolidates into that position (combined
+      // qty, weighted-average price) instead of creating a second card for
+      // the same coin.
+      const existing = PORTFOLIO.find(p => p.type === 'crypto' && p.key === pfPendingCoin.id);
+      if(existing){
+        const combinedQty = existing.qty + qty;
+        const combinedAvgPrice = (existing.qty * existing.avgPrice + qty * avgPrice) / combinedQty;
+        await updatePortfolioEntry(existing.id, combinedQty, combinedAvgPrice);
+      }else{
+        const localId = 'pf-' + Date.now();
+        const newEntry = {
+          id: localId,
+          type: 'crypto',
+          key: pfPendingCoin.id,
+          sym: pfPendingCoin.symbol.toUpperCase(),
+          name: pfPendingCoin.name,
+          qty, avgPrice
+        };
+        PORTFOLIO.push(newEntry);
         savePortfolio();
+        renderCryptoPortfolio();
+
+        const supabaseId = await saveSupabasePortfolioItem(newEntry);
+        if(supabaseId){
+          newEntry.id = supabaseId;
+          savePortfolio();
+        }
       }
 
       buildTape();
@@ -454,21 +464,31 @@ if(pfStockAddBtn){
         return;
       }
      const name = (STOCKS.find(s => s.sym === sym) || {}).name || sym;
-      const localId = 'pf-' + Date.now();
-      const newEntry = {
-        id: localId,
-        type: 'stock',
-        key: sym,
-        sym, name, qty, avgPrice
-      };
-      PORTFOLIO.push(newEntry);
-      savePortfolio();
-      renderStockPortfolio();
 
-      const supabaseId = await saveSupabasePortfolioItem(newEntry);
-      if(supabaseId){
-        newEntry.id = supabaseId;
+      // Same consolidation as the crypto form: adding a symbol already held
+      // combines into that position instead of creating a duplicate card.
+      const existing = PORTFOLIO.find(p => p.type === 'stock' && p.key === sym);
+      if(existing){
+        const combinedQty = existing.qty + qty;
+        const combinedAvgPrice = (existing.qty * existing.avgPrice + qty * avgPrice) / combinedQty;
+        await updatePortfolioEntry(existing.id, combinedQty, combinedAvgPrice);
+      }else{
+        const localId = 'pf-' + Date.now();
+        const newEntry = {
+          id: localId,
+          type: 'stock',
+          key: sym,
+          sym, name, qty, avgPrice
+        };
+        PORTFOLIO.push(newEntry);
         savePortfolio();
+        renderStockPortfolio();
+
+        const supabaseId = await saveSupabasePortfolioItem(newEntry);
+        if(supabaseId){
+          newEntry.id = supabaseId;
+          savePortfolio();
+        }
       }
       buildTape();
       refreshNews();
