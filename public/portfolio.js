@@ -180,7 +180,7 @@ function buildPortfolioCard(entry){
     </div>
     <div class="pf-view">
       ${priceHtml}
-      <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(4)}</span></div>
+      <div class="pf-row"><span>Quantity</span><span>${Number(entry.qty).toFixed(entry.type === 'crypto' ? 8 : 4)}</span></div>
       <div class="pf-row"><span>Avg buy price</span><span>${fmtUsd(entry.avgPrice)}</span></div>
       <div class="pf-row"><span>Cost basis</span><span>${fmtUsd(cost)}</span></div>
       <div class="pf-row"><span>Current value</span><span>${value !== null ? fmtUsd(value) : '--'}</span></div>
