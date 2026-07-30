@@ -556,6 +556,14 @@ function parseCsv(text){
   });
 }
 
+// The source CSV's name column carries share-class/security-type suffixes
+// (e.g. "Apple Inc. Common Stock", "Alphabet Inc. Class C Capital Stock",
+// "American International Group Inc. New Common Stock") that are just
+// ticker-listing boilerplate, not part of how anyone refers to the company.
+function cleanCompanyName(name){
+  return name.replace(/\s+(Class\s+[A-Za-z]\s+)?(New\s+)?(Common|Capital)\s+Stock$/i, '');
+}
+
 async function fetchSp500List(){
   const url = 'https://raw.githubusercontent.com/Ate329/top-us-stock-tickers/main/tickers/sp500.csv';
   const { data: text } = await fetchText(url, 10000); // assumes you have a fetchText helper like fetchJson
@@ -570,7 +578,7 @@ async function fetchSp500List(){
   const map = {};
   rows.forEach(row => {
     const sym = row[symbolKey];
-    if (sym) map[sym.toUpperCase()] = row[nameKey] || sym;
+    if (sym) map[sym.toUpperCase()] = cleanCompanyName(row[nameKey] || sym);
   });
   return map;
 }
