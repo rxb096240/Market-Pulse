@@ -888,10 +888,12 @@
 #forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:120px; }
 
 #earningsContainer .markets-table th:nth-child(1), #earningsContainer .markets-table td:nth-child(1){ width:80px; }
-#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:260px; }
+#earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:230px; }
 #earningsContainer .markets-table th:nth-child(3), #earningsContainer .markets-table td:nth-child(3){ width:120px; }
-#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:170px; }
-#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:210px; }
+#earningsContainer .markets-table th:nth-child(4), #earningsContainer .markets-table td:nth-child(4){ width:110px; }
+#earningsContainer .markets-table th:nth-child(5), #earningsContainer .markets-table td:nth-child(5){ width:90px; }
+#earningsContainer .markets-table th:nth-child(6), #earningsContainer .markets-table td:nth-child(6){ width:120px; }
+#earningsContainer .markets-table th:nth-child(7), #earningsContainer .markets-table td:nth-child(7){ width:140px; }
 
   /* ---- Search ---- */
   .search-section{
