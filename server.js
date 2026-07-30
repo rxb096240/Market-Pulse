@@ -440,7 +440,18 @@ app.get('/api/crypto/price', async (req, res) => {
 app.get('/api/crypto/markets', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
-    const { data } = await cachedFetch('markets', 5 * 60_000, () => fetchJson(url, 10_000), 45_000);
+    const { data } = await cachedFetch('markets', 5 * 60_000, async () => {
+      const result = await fetchJson(url, 10_000);
+      // CoinGecko sometimes answers 200 with an empty/degenerate body instead
+      // of a real error — fetchJson's res.ok check alone lets that through as
+      // a "success," which would otherwise get cached as good data for the
+      // full 5 minutes. Treat it as a failure instead, so it only sticks
+      // around for the short negative-cache window.
+      if (!Array.isArray(result.data) || result.data.length === 0) {
+        throw new Error('Empty markets response from CoinGecko');
+      }
+      return result;
+    }, 45_000);
     res.json(data);
   } catch (e) {
     console.error('markets fetch failed:', e.message);
