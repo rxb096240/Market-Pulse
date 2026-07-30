@@ -494,6 +494,54 @@ app.get('/api/crypto/trending', async (req, res) => {
 const EARNINGS_WINDOW_DAYS = 14;
 let sp500SymbolMap = null; // cached { SYMBOL: 'Company Name' }
 
+// Nasdaq's own public calendar (same one nasdaq.com/calendar/earnings uses).
+// Unlike Finnhub's free tier, it doesn't embargo near-term dates — but it's
+// a per-day bulk endpoint (all companies reporting that day in one call),
+// not per-symbol, and it only carries the forecast/last-year comparison,
+// never this quarter's actual EPS (confirmed by hitting it directly — its
+// own header list has no "actual" column, even for already-reported days).
+// Needs browser-like headers or Nasdaq's anti-bot layer 403s the request.
+const NASDAQ_HEADERS = {
+  'accept': 'application/json, text/plain, */*',
+  'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36',
+  'origin': 'https://www.nasdaq.com',
+  'referer': 'https://www.nasdaq.com/',
+  'accept-language': 'en-US,en;q=0.9'
+};
+
+function parseNasdaqEps(str){
+  if (!str) return null;
+  const negative = str.startsWith('(');
+  const num = parseFloat(str.replace(/[()$,]/g, ''));
+  if (isNaN(num)) return null;
+  return negative ? -num : num;
+}
+
+async function fetchNasdaqEarningsForDate(dateStr){
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`https://api.nasdaq.com/api/calendar/earnings?date=${dateStr}`, {
+      signal: controller.signal,
+      headers: NASDAQ_HEADERS
+    });
+    if (!res.ok) throw new Error(`Nasdaq earnings calendar error ${res.status}`);
+    const json = await res.json();
+    const rows = json?.data?.rows || [];
+    return rows.map(r => ({
+      symbol: r.symbol,
+      date: dateStr,
+      hour: r.time === 'time-pre-market' ? 'bmo' : r.time === 'time-after-hours' ? 'amc' : '',
+      epsEstimate: parseNasdaqEps(r.epsForecast),
+      epsActual: null,
+      revenueEstimate: null,
+      revenueActual: null
+    }));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function parseCsv(text){
   const lines = text.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
@@ -535,17 +583,16 @@ app.get('/api/earnings/calendar', async (req, res) => {
       }
 
       const today = new Date();
-      const end = new Date(today);
-      end.setDate(end.getDate() + EARNINGS_WINDOW_DAYS);
-      const fmt = d => d.toISOString().slice(0, 10);
+      const dates = Array.from({ length: EARNINGS_WINDOW_DAYS }, (_, i) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() + i);
+        return d.toISOString().slice(0, 10);
+      });
 
-      // Note: Finnhub's free tier only returns entries from today forward
-      // regardless of a past `from` date, so there's no point requesting a
-      // lookback window — epsActual/revenueActual still populate for
-      // today's date once a company reports (see earnings.js rendering).
-      const url = `https://finnhub.io/api/v1/calendar/earnings?from=${fmt(today)}&to=${fmt(end)}&token=${process.env.FINNHUB_API_KEY}`;
-      const { data: raw } = await fetchJson(url, 10000);
-      const all = raw.earningsCalendar || [];
+      // One call per day (Nasdaq's calendar is bulk-per-day, not per-symbol),
+      // in parallel — 14 requests, well within reason for an hourly refresh.
+      const results = await Promise.allSettled(dates.map(fetchNasdaqEarningsForDate));
+      const all = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
 
       // Filter to S&P 500 only, dedupe by symbol+date
       const seen = new Set();
@@ -556,14 +603,8 @@ app.get('/api/earnings/calendar', async (req, res) => {
         seen.add(key);
         return true;
       }).map(e => ({
-        symbol: e.symbol,
-        name: sp500SymbolMap[e.symbol],
-        date: e.date,
-        hour: e.hour, // 'bmo' | 'amc' | ''
-        epsEstimate: e.epsEstimate,
-        epsActual: e.epsActual,
-        revenueEstimate: e.revenueEstimate,
-        revenueActual: e.revenueActual
+        ...e,
+        name: sp500SymbolMap[e.symbol]
       }));
 
       // Group by date
