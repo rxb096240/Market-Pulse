@@ -409,13 +409,11 @@ app.get('/api/crypto/price', async (req, res) => {
   try {
     const missing = missingIds.join(',');
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(missing)}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`;
-    // Widened from 20s, then again from 60s: the watchlist poller, Portfolio,
+    // Widened from 20s, then 60s, then 120s: the watchlist poller, Portfolio,
     // and Practice Mode each hit this endpoint independently with their own
     // `ids` list, and CoinGecko's free-tier simple/price endpoint rate-limits
-    // aggressively. The frontend only polls every 90s (public/main.js), so a
-    // 120s cache means most poll cycles are served from cache instead of
-    // triggering a fresh upstream call.
-    const { data } = await cachedFetch(`price:${missing}`, 120_000, () => fetchJson(url));
+    // aggressively. 5 minutes trades some price freshness for reliability.
+    const { data } = await cachedFetch(`price:${missing}`, 5 * 60_000, () => fetchJson(url));
     res.json({ ...fromMarkets, ...data });
   } catch (e) {
     console.error('price fetch failed:', e.message);
@@ -429,7 +427,7 @@ app.get('/api/crypto/price', async (req, res) => {
 app.get('/api/crypto/markets', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
-    const { data } = await cachedFetch('markets', 90_000, () => fetchJson(url, 10_000));
+    const { data } = await cachedFetch('markets', 5 * 60_000, () => fetchJson(url, 10_000));
     res.json(data);
   } catch (e) {
     console.error('markets fetch failed:', e.message);
@@ -483,7 +481,7 @@ app.get('/api/crypto/search', async (req, res) => {
 app.get('/api/crypto/trending', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/search/trending';
-    const { data } = await cachedFetch('trending', 90_000, () => fetchJson(url, 8000));
+    const { data } = await cachedFetch('trending', 5 * 60_000, () => fetchJson(url, 8000));
     res.json(data);
   } catch (e) {
     console.error('trending fetch failed:', e.message);
