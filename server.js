@@ -509,7 +509,7 @@ const NASDAQ_HEADERS = {
   'accept-language': 'en-US,en;q=0.9'
 };
 
-function parseNasdaqEps(str){
+function parseNasdaqNumber(str){
   if (!str) return null;
   const negative = str.startsWith('(');
   const num = parseFloat(str.replace(/[()$,]/g, ''));
@@ -532,8 +532,11 @@ async function fetchNasdaqEarningsForDate(dateStr){
       symbol: r.symbol,
       date: dateStr,
       hour: r.time === 'time-pre-market' ? 'bmo' : r.time === 'time-after-hours' ? 'amc' : '',
-      epsEstimate: parseNasdaqEps(r.epsForecast),
-      epsActual: null
+      epsEstimate: parseNasdaqNumber(r.epsForecast),
+      epsActual: null,
+      marketCap: parseNasdaqNumber(r.marketCap),
+      lastYearEps: parseNasdaqNumber(r.lastYearEPS),
+      fiscalQuarterEnding: r.fiscalQuarterEnding || null
     }));
   } finally {
     clearTimeout(timer);

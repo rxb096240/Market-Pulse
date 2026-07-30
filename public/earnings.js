@@ -27,6 +27,14 @@ function epsCellHtml(e){
   return `<span class="eq-actual ${cls}">${e.epsActual.toFixed(2)}</span>${est}`;
 }
 
+function marketCapCellHtml(e){
+  return (e.marketCap === null || e.marketCap === undefined) ? '--' : fmtCap(e.marketCap);
+}
+
+function lastYearEpsCellHtml(e){
+  return (e.lastYearEps === null || e.lastYearEps === undefined) ? '--' : e.lastYearEps.toFixed(2);
+}
+
 function renderEarningsCalendar(days){
   const container = document.getElementById('earningsContainer');
   if(!container) return;
@@ -42,7 +50,7 @@ function renderEarningsCalendar(days){
       <div class="markets-table-wrap">
         <table class="markets-table">
           <thead>
-            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>EPS</th></tr>
+            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>Market Cap</th><th>EPS Est.</th><th>Last Yr EPS</th><th>Fiscal Qtr End</th></tr>
           </thead>
           <tbody>
             ${day.entries.map(e => `
@@ -50,7 +58,10 @@ function renderEarningsCalendar(days){
                 <td class="eq-symbol">${escapeHtml(e.symbol)}</td>
                 <td class="eq-company">${escapeHtml(e.name)}</td>
                 <td><span class="eq-time">${e.hour === 'bmo' ? 'Before Open' : e.hour === 'amc' ? 'After Close' : '—'}</span></td>
+                <td>${marketCapCellHtml(e)}</td>
                 <td>${epsCellHtml(e)}</td>
+                <td>${lastYearEpsCellHtml(e)}</td>
+                <td>${escapeHtml(e.fiscalQuarterEnding || '--')}</td>
               </tr>
             `).join('')}
           </tbody>
