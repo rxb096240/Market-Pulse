@@ -134,6 +134,46 @@ function currentPriceFor(entry){
   return portfolioPrices.stock[entry.key] ?? latestStockData[entry.key]?.price ?? manualPrices.stock[entry.key];
 }
 
+// Wires "any two of quantity / cost basis / avg price determine the third"
+// across a trio of inputs — not everyone remembers their average buy price
+// when they bought in multiple chunks, but they usually know the total they
+// spent. Whichever field the user hasn't touched recently (relative to the
+// other two) is the one that gets recalculated, so editing either "source"
+// field after all three are filled naturally updates the odd one out.
+function wireCostBasisCalc(qtyEl, costEl, priceEl){
+  const fields = { qty: qtyEl, cost: costEl, price: priceEl };
+  let order = ['qty', 'cost', 'price']; // most-recently-touched first
+
+  function touch(name){
+    order = [name, ...order.filter(f => f !== name)];
+  }
+
+  function recalc(){
+    const vals = {
+      qty: parseFloat(qtyEl.value),
+      cost: parseFloat(costEl.value),
+      price: parseFloat(priceEl.value)
+    };
+    const [a, b, target] = order;
+    if(!(vals[a] > 0) || !(vals[b] > 0)) return;
+
+    let result;
+    if(target === 'cost') result = vals.qty * vals.price;
+    else if(target === 'price') result = vals.cost / vals.qty;
+    else if(target === 'qty') result = vals.cost / vals.price;
+
+    if(isFinite(result) && result > 0){
+      fields[target].value = target === 'qty' ? result.toFixed(8) : result.toFixed(2);
+    }
+  }
+
+  Object.keys(fields).forEach(name => {
+    fields[name].addEventListener('input', () => { touch(name); recalc(); });
+  });
+
+  return { reset(){ order = ['qty', 'cost', 'price']; } };
+}
+
 function buildPortfolioCard(entry){
   const priceKey = entry.type === 'crypto' ? 'crypto' : 'stock';
   const livePrice = entry.type === 'crypto'
@@ -195,6 +235,10 @@ function buildPortfolioCard(entry){
         <input type="number" class="pf-edit-qty qty-input" value="${entry.qty}" min="0" step="any">
       </div>
       <div class="pf-edit-row">
+        <label>Cost basis</label>
+        <input type="number" class="pf-edit-cost price-input" value="${(entry.qty * entry.avgPrice).toFixed(2)}" min="0" step="any">
+      </div>
+      <div class="pf-edit-row">
         <label>Avg buy price</label>
         <input type="number" class="pf-edit-price price-input" value="${entry.avgPrice}" min="0" step="any">
       </div>
@@ -208,11 +252,15 @@ function buildPortfolioCard(entry){
   const viewEl = card.querySelector('.pf-view');
   const editForm = card.querySelector('.pf-edit-form');
   const qtyInput = card.querySelector('.pf-edit-qty');
+  const costInput = card.querySelector('.pf-edit-cost');
   const priceInput = card.querySelector('.pf-edit-price');
+  const editCalc = wireCostBasisCalc(qtyInput, costInput, priceInput);
 
   card.querySelector('.edit-btn').addEventListener('click', () => {
     qtyInput.value = entry.qty;
     priceInput.value = entry.avgPrice;
+    costInput.value = (entry.qty * entry.avgPrice).toFixed(2);
+    editCalc.reset();
     viewEl.style.display = 'none';
     editForm.style.display = 'block';
   });
@@ -224,7 +272,7 @@ function buildPortfolioCard(entry){
     const newQty = parseFloat(qtyInput.value);
     const newPrice = parseFloat(priceInput.value);
     if(!newQty || newQty <= 0 || !newPrice || newPrice <= 0){
-      alert('Enter a quantity and average buy price greater than zero.');
+      alert('Enter values so that quantity and average buy price are both greater than zero.');
       return;
     }
     await updatePortfolioEntry(entry.id, newQty, newPrice);
@@ -332,9 +380,11 @@ function renderPortfolio(){
 const pfCryptoSymbolInput = document.getElementById('pfCryptoSymbolInput');
 const pfCryptoSearchResults = document.getElementById('pfCryptoSearchResults');
 const pfCryptoQtyInput = document.getElementById('pfCryptoQtyInput');
+const pfCryptoCostInput = document.getElementById('pfCryptoCostInput');
 const pfCryptoPriceInput = document.getElementById('pfCryptoPriceInput');
 const pfCryptoAddBtn = document.getElementById('pfCryptoAddBtn');
 const pfCryptoHint = document.getElementById('pfCryptoHint');
+const pfCryptoCalc = pfCryptoQtyInput ? wireCostBasisCalc(pfCryptoQtyInput, pfCryptoCostInput, pfCryptoPriceInput) : null;
 
 if(pfCryptoSymbolInput){
   pfCryptoSymbolInput.addEventListener('input', () => {
@@ -356,7 +406,7 @@ if(pfCryptoAddBtn){
     const qty = parseFloat(pfCryptoQtyInput.value);
     const avgPrice = parseFloat(pfCryptoPriceInput.value);
     if(!qty || qty <= 0 || !avgPrice || avgPrice <= 0){
-      pfCryptoHint.textContent = 'Enter a quantity and average buy price greater than zero.';
+      pfCryptoHint.textContent = 'Enter any two of quantity, cost basis, and average buy price.';
       return;
     }
     if(!pfPendingCoin){
@@ -404,7 +454,9 @@ try{
       refreshNews();
       pfCryptoSymbolInput.value = '';
       pfCryptoQtyInput.value = '';
+      pfCryptoCostInput.value = '';
       pfCryptoPriceInput.value = '';
+      if(pfCryptoCalc) pfCryptoCalc.reset();
       pfPendingCoin = null;
       pfCryptoHint.textContent = 'Holding added.';
     }finally{
