@@ -54,13 +54,13 @@ async function requireAuth(req, res) {
   }
 }
 
-async function fetchJson(url, timeoutMs = 8000) {
+async function fetchJson(url, timeoutMs = 8000, extraHeaders = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TickerDashboard/1.0)' }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TickerDashboard/1.0)', ...extraHeaders }
     });
     if (!res.ok) throw new Error(`Upstream error ${res.status}`);
     const data = await res.json();
@@ -69,6 +69,16 @@ async function fetchJson(url, timeoutMs = 8000) {
     clearTimeout(timer);
   }
 }
+
+// CoinGecko's free "Demo" plan (register at coingecko.com/api/pricing, no
+// card needed) bumps the rate limit from ~5-15 calls/min (anonymous) to 100
+// calls/min. Sent as a header rather than a query param per CoinGecko's own
+// guidance — query params risk leaking into logs. Falls back to anonymous
+// access if the env var isn't set, so this stays optional rather than a
+// hard requirement.
+const COINGECKO_HEADERS = process.env.COINGECKO_API_KEY
+  ? { 'x-cg-demo-api-key': process.env.COINGECKO_API_KEY }
+  : {};
 
 async function fetchText(url, timeoutMs = 8000) {
   const controller = new AbortController();
@@ -426,7 +436,7 @@ app.get('/api/crypto/price', async (req, res) => {
     // and Practice Mode each hit this endpoint independently with their own
     // `ids` list, and CoinGecko's free-tier simple/price endpoint rate-limits
     // aggressively. 5 minutes trades some price freshness for reliability.
-    const { data } = await cachedFetch(`price:${missing}`, 5 * 60_000, () => fetchJson(url), 45_000);
+    const { data } = await cachedFetch(`price:${missing}`, 5 * 60_000, () => fetchJson(url, 8000, COINGECKO_HEADERS), 45_000);
     res.json({ ...fromMarkets, ...data });
   } catch (e) {
     console.error('price fetch failed:', e.message);
@@ -441,7 +451,7 @@ app.get('/api/crypto/markets', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false';
     const { data } = await cachedFetch('markets', 5 * 60_000, async () => {
-      const result = await fetchJson(url, 10_000);
+      const result = await fetchJson(url, 10_000, COINGECKO_HEADERS);
       // CoinGecko sometimes answers 200 with an empty/degenerate body instead
       // of a real error — fetchJson's res.ok check alone lets that through as
       // a "success," which would otherwise get cached as good data for the
@@ -494,7 +504,7 @@ app.get('/api/crypto/search', async (req, res) => {
   if (!query) return res.status(400).json({ error: 'query param required' });
   try {
     const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`;
-    const { data } = await fetchJson(url);
+    const { data } = await fetchJson(url, 8000, COINGECKO_HEADERS);
     res.json(data);
   } catch (e) {
     console.error('crypto search failed:', e.message);
@@ -505,7 +515,7 @@ app.get('/api/crypto/search', async (req, res) => {
 app.get('/api/crypto/trending', async (req, res) => {
   try {
     const url = 'https://api.coingecko.com/api/v3/search/trending';
-    const { data } = await cachedFetch('trending', 5 * 60_000, () => fetchJson(url, 8000), 45_000);
+    const { data } = await cachedFetch('trending', 5 * 60_000, () => fetchJson(url, 8000, COINGECKO_HEADERS), 45_000);
     res.json(data);
   } catch (e) {
     console.error('trending fetch failed:', e.message);
@@ -1155,7 +1165,7 @@ async function fetchLeaderboardRows(){
   const [stockResults, cryptoRes] = await Promise.all([
     Promise.allSettled(stockSyms.map(sym => fetchYahooChartQuote(sym))),
     cryptoIds.length > 0
-      ? fetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cryptoIds.join(','))}&vs_currencies=usd`, 8000)
+      ? fetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cryptoIds.join(','))}&vs_currencies=usd`, 8000, COINGECKO_HEADERS)
           .then(r => r.data).catch(() => ({}))
       : Promise.resolve({})
   ]);
