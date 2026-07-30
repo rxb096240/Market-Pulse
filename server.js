@@ -533,9 +533,7 @@ async function fetchNasdaqEarningsForDate(dateStr){
       date: dateStr,
       hour: r.time === 'time-pre-market' ? 'bmo' : r.time === 'time-after-hours' ? 'amc' : '',
       epsEstimate: parseNasdaqEps(r.epsForecast),
-      epsActual: null,
-      revenueEstimate: null,
-      revenueActual: null
+      epsActual: null
     }));
   } finally {
     clearTimeout(timer);

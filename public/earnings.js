@@ -1,5 +1,5 @@
 // Fetches and renders the upcoming Earnings Calendar, grouped by day.
-// Formats each day's heading and lists symbol/company/time/EPS/revenue estimates per entry.
+// Formats each day's heading and lists symbol/company/time/EPS estimates per entry.
 
 let earningsLoaded = false;
 
@@ -27,15 +27,6 @@ function epsCellHtml(e){
   return `<span class="eq-actual ${cls}">${e.epsActual.toFixed(2)}</span>${est}`;
 }
 
-function revenueCellHtml(e){
-  const hasActual = e.revenueActual !== null && e.revenueActual !== undefined;
-  const hasEstimate = e.revenueEstimate !== null && e.revenueEstimate !== undefined;
-  if(!hasActual) return hasEstimate ? fmtCap(e.revenueEstimate) : '--';
-  const cls = hasEstimate ? (e.revenueActual >= e.revenueEstimate ? 'up' : 'down') : '';
-  const est = hasEstimate ? ` <span class="eq-est-inline">(est. ${fmtCap(e.revenueEstimate)})</span>` : '';
-  return `<span class="eq-actual ${cls}">${fmtCap(e.revenueActual)}</span>${est}`;
-}
-
 function renderEarningsCalendar(days){
   const container = document.getElementById('earningsContainer');
   if(!container) return;
@@ -51,7 +42,7 @@ function renderEarningsCalendar(days){
       <div class="markets-table-wrap">
         <table class="markets-table">
           <thead>
-            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>EPS</th><th>Revenue</th></tr>
+            <tr><th>Symbol</th><th>Company</th><th>Time</th><th>EPS</th></tr>
           </thead>
           <tbody>
             ${day.entries.map(e => `
@@ -60,7 +51,6 @@ function renderEarningsCalendar(days){
                 <td class="eq-company">${escapeHtml(e.name)}</td>
                 <td><span class="eq-time">${e.hour === 'bmo' ? 'Before Open' : e.hour === 'amc' ? 'After Close' : '—'}</span></td>
                 <td>${epsCellHtml(e)}</td>
-                <td>${revenueCellHtml(e)}</td>
               </tr>
             `).join('')}
           </tbody>
