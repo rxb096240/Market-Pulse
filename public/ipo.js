@@ -79,16 +79,19 @@ function renderIpoCalendar(){
     return;
   }
 
-  tbody.innerHTML = filtered.map(ipo => `
+  tbody.innerHTML = filtered.map(ipo => {
+    const companyLabel = `${ipo.name}${ipo.symbol ? ` (${ipo.symbol})` : ''}`;
+    return `
     <tr>
-      <td class="eq-symbol">${escapeHtml(ipo.name)}${ipo.symbol ? ` (${escapeHtml(ipo.symbol)})` : ''}</td>
+      <td class="eq-symbol" title="${escapeHtml(companyLabel)}">${escapeHtml(companyLabel)}</td>
       <td>${formatIpoDate(ipo.date)}</td>
-      <td>${escapeHtml(ipo.exchange || '--')}</td>
+      <td title="${escapeHtml(ipo.exchange || '')}">${escapeHtml(ipo.exchange || '--')}</td>
       <td>${ipoPriceCellHtml(ipo)}</td>
       <td>${ipo.sharesOutstanding ? Number(ipo.sharesOutstanding).toLocaleString('en-US') : '--'}</td>
       <td class="eq-actual up">${ipoValuationCellHtml(ipo)}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function refreshIpoCalendar(){
