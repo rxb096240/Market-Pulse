@@ -917,8 +917,20 @@
 
        <!-- News: India -->
       <section class="view-panel" data-view-panel="news-india">
+        <div class="markets-header-row">
+          <div class="trending-intro">Google News India headlines by topic.</div>
+          <select id="indiaNewsTopicSelect" class="markets-market-select">
+            <option value="in" selected>Top Stories</option>
+            <option value="in-business">Business</option>
+            <option value="in-entertainment">Entertainment</option>
+            <option value="in-health">Health</option>
+            <option value="in-science">Science</option>
+            <option value="in-sports">Sports</option>
+            <option value="in-technology">Technology</option>
+          </select>
+        </div>
         <div class="news-column">
-          <div class="news-column-label">India Headlines</div>
+          <div class="news-column-label" id="indiaNewsLabel">India Headlines</div>
           <div class="news-list" id="indiaNewsList">
             <div class="news-loading">Loading news…</div>
           </div>
