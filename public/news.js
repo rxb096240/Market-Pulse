@@ -222,10 +222,12 @@ async function refreshIndiaNews(){
 
 /* ---- News: Google News RSS (Topics) ---- */
 const TOPIC_LABELS = {
-  technology: 'Technology',
+  business: 'Business',
   entertainment: 'Entertainment',
+  health: 'Health',
+  science: 'Science',
   sports: 'Sports',
-  health: 'Health'
+  technology: 'Technology'
 };
 
 let currentNewsTopic = 'technology';
