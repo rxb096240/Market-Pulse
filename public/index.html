@@ -37,6 +37,7 @@
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
+      <button class="nav-item" data-view="ipo-calendar">IPO</button>
       </div>
     </div>
 
@@ -857,6 +858,43 @@
         </div>
       </section>
 
+      <!-- Stocks: IPO Calendar -->
+      <section class="view-panel" data-view-panel="ipo-calendar">
+        <div class="markets-header-row">
+          <div class="trending-intro">Upcoming IPOs. <span class="as-of">Valuation = price × shares outstanding</span> · via Finnhub.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <select id="ipoWindowSelect" class="markets-market-select">
+              <option value="7">Next 7 days</option>
+              <option value="30">Next 30 days</option>
+              <option value="month">This month</option>
+            </select>
+            <select id="ipoExchangeSelect" class="markets-market-select">
+              <option value="all">All exchanges</option>
+              <option value="NASDAQ">NASDAQ</option>
+              <option value="NYSE">NYSE</option>
+            </select>
+          </div>
+        </div>
+        <div class="markets-table-wrap">
+          <table class="markets-table" id="ipoCalendarTable">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Date</th>
+                <th>Exchange</th>
+                <th>Price</th>
+                <th>Shares Out.</th>
+                <th>Valuation</th>
+              </tr>
+            </thead>
+            <tbody id="ipoCalendarTableBody">
+              <tr><td colspan="6" class="news-loading">Loading IPO calendar…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="search-hint" style="text-align:center; margin-top:10px;">Estimates via Finnhub · valuation uses the price midpoint until an IPO is finally priced</div>
+      </section>
+
       <!-- News: US -->
       <section class="view-panel" data-view-panel="news-us">
         <div class="news-column">
@@ -1068,6 +1106,7 @@
 <script src="leaderboard.js"></script>
 <script src="portfolio.js"></script>
 <script src="markets.js"></script>
+<script src="ipo.js"></script>
 <script src="forex.js"></script>
 <script src="earnings.js"></script>
 <script src="rates.js"></script>

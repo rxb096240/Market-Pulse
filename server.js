@@ -669,6 +669,62 @@ app.get('/api/earnings/calendar', async (req, res) => {
   }
 });
 
+const IPO_WINDOW_DAYS = 60;
+
+// Finnhub's price field is a plain string: a single value ("18.00"), a
+// range before final pricing ("18.00-20.00"), or "" when not yet set.
+// Use the midpoint for a range so a valuation can still be estimated,
+// and flag it so the frontend can mark it as "est.".
+function parseIpoPrice(priceStr) {
+  if (!priceStr) return { price: null, isRange: false };
+  const parts = priceStr.split('-').map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
+  if (parts.length === 0) return { price: null, isRange: false };
+  if (parts.length === 1) return { price: parts[0], isRange: false };
+  return { price: (parts[0] + parts[1]) / 2, isRange: true };
+}
+
+app.get('/api/ipo/calendar', async (req, res) => {
+  try {
+    const { data } = await cachedFetch('ipo:calendar', 60 * 60_000, async () => {
+      const today = new Date();
+      const from = today.toISOString().slice(0, 10);
+      const to = new Date(today.getTime() + IPO_WINDOW_DAYS * 24 * 60 * 60_000).toISOString().slice(0, 10);
+
+      const { data: json } = await fetchJson(
+        `https://finnhub.io/api/v1/calendar/ipo?from=${from}&to=${to}&token=${process.env.FINNHUB_API_KEY}`, 10000
+      );
+      const rows = json?.ipoCalendar || [];
+
+      const ipos = rows
+        .filter(r => r.status !== 'withdrawn')
+        .map(r => {
+          const { price, isRange } = parseIpoPrice(r.price);
+          const sharesOutstanding = r.numberOfShares || null;
+          const valuation = (price !== null && sharesOutstanding) ? price * sharesOutstanding : null;
+          return {
+            symbol: r.symbol || null,
+            name: r.name || r.symbol || 'Unknown',
+            date: r.date,
+            exchange: r.exchange || null,
+            price,
+            priceIsRange: isRange,
+            sharesOutstanding,
+            valuation,
+            status: r.status || null
+          };
+        })
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      return { data: ipos, contentType: 'application/json' };
+    });
+
+    res.json(data);
+  } catch (e) {
+    console.error('IPO calendar fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch IPO calendar' });
+  }
+});
+
 // ---- Yahoo Finance passthrough endpoints ----
 
 app.get('/api/stock/quote/:symbol', async (req, res) => {

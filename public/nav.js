@@ -22,6 +22,7 @@ const VIEW_TITLES = {
   'stocks-watchlist': 'Stocks Watchlist',
   'stocks-portfolio': 'Stocks · Portfolio',
   'stocks-news': 'Stocks · News',
+  'ipo-calendar': 'Stocks · IPO',
   'news-us': 'News · US',
   'news-world': 'News · World',
   'news-india': 'News . India',
@@ -75,6 +76,8 @@ function showView(view){
   refreshStocksMarketsOverview();
   }else if(view === 'stocks-ai'){
   refreshAiStocksOverview();
+  }else if(view === 'ipo-calendar'){
+  refreshIpoCalendar();
   }else if(view === 'crypto-portfolio' || view === 'stocks-portfolio'){
   if(!currentUser){
     openAuthModal();
