@@ -220,5 +220,43 @@ async function refreshIndiaNews(){
   indiaNewsLoaded = true;
 }
 
+/* ---- News: Google News RSS (Topics) ---- */
+const TOPIC_LABELS = {
+  technology: 'Technology',
+  entertainment: 'Entertainment',
+  sports: 'Sports',
+  health: 'Health'
+};
+
+let currentNewsTopic = 'technology';
+const loadedNewsTopics = new Set();
+
+async function refreshTopicNews(){
+  const container = document.getElementById('topicNewsList');
+  if(!container) return;
+  const topic = currentNewsTopic;
+  const label = TOPIC_LABELS[topic] || topic;
+
+  const labelEl = document.getElementById('topicNewsLabel');
+  if(labelEl) labelEl.textContent = `${label} Headlines`;
+
+  if(!loadedNewsTopics.has(topic)) container.innerHTML = '<div class="news-loading">Loading news…</div>';
+
+  const items = await fetchGoogleNews(`${API_BASE}/api/news/google?edition=${topic}`, label);
+  if(currentNewsTopic !== topic) return; // topic changed while the fetch was in flight
+
+  if(items.length === 0){
+    if(!loadedNewsTopics.has(topic)) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
+    return;
+  }
+  renderNewsColumn('topicNewsList', dedupeSortAndTrim(items, 20));
+  loadedNewsTopics.add(topic);
+}
+
+const newsTopicSelect = document.getElementById('newsTopicSelect');
+newsTopicSelect?.addEventListener('change', () => {
+  currentNewsTopic = newsTopicSelect.value;
+  refreshTopicNews();
+});
 
 

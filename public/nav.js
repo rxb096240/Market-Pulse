@@ -25,6 +25,7 @@ const VIEW_TITLES = {
   'news-us': 'News · US',
   'news-world': 'News · World',
   'news-india': 'News . India',
+  'news-topics': 'News · Topics',
   'learn-stocks': 'Learn · Stocks Basics',
   'learn-index-funds': 'Learn · Index Funds',
   'learn-crypto': 'Learn · Crypto Basics',
@@ -68,6 +69,8 @@ function showView(view){
     refreshWorldNews();
   }else if(view === 'news-india'){
     refreshIndiaNews();
+  }else if(view === 'news-topics'){
+    refreshTopicNews();
   }else if(view === 'stocks-overview'){
   refreshStocksMarketsOverview();
   }else if(view === 'stocks-ai'){

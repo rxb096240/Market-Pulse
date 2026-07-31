@@ -65,6 +65,7 @@
       <button class="nav-item" data-view="news-us">US</button>
       <button class="nav-item" data-view="news-world">World</button>
        <button class="nav-item" data-view="news-india">India</button>
+      <button class="nav-item" data-view="news-topics">Topics</button>
       </div>
     </div>
 
@@ -886,7 +887,24 @@
         </div>
       </section>
 
-      
+      <!-- News: Topics -->
+      <section class="view-panel" data-view-panel="news-topics">
+        <div class="markets-header-row">
+          <div class="trending-intro">Google News headlines by topic.</div>
+          <select id="newsTopicSelect" class="markets-market-select">
+            <option value="technology">Topic: Technology</option>
+            <option value="entertainment">Topic: Entertainment</option>
+            <option value="sports">Topic: Sports</option>
+            <option value="health">Topic: Health</option>
+          </select>
+        </div>
+        <div class="news-column">
+          <div class="news-column-label" id="topicNewsLabel">Technology Headlines</div>
+          <div class="news-list" id="topicNewsList">
+            <div class="news-loading">Loading news…</div>
+          </div>
+        </div>
+      </section>
 
       <!-- Learn: Stocks Basics -->
 <section class="view-panel" data-view-panel="learn-stocks">

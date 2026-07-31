@@ -20,6 +20,7 @@ function refreshCurrentViewNews(){
   else if(currentView === 'news-us') refreshUsNews();
   else if(currentView === 'news-world') refreshWorldNews();
   else if(currentView === 'news-india') refreshIndiaNews();
+  else if(currentView === 'news-topics') refreshTopicNews();
 }
 
 // Resolves once the first onAuthStateChange callback has run, so the

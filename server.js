@@ -861,6 +861,10 @@ const GNEWS_URLS = {
   us: 'https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en',
   world: 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en',
   in: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
+  technology: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en',
+  entertainment: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en',
+  sports: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en',
+  health: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US&ceid=US:en',
 };
 
 app.get('/api/news/google', async (req, res) => {
