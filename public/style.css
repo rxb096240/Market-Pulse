@@ -776,6 +776,8 @@
   /* ---- Markets overview table ---- */
   .markets-table-wrap{
     overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
     border:1px solid var(--panel-border);
     border-radius:10px;
     background:var(--panel);
@@ -895,12 +897,19 @@
 #earningsContainer .markets-table th:nth-child(6), #earningsContainer .markets-table td:nth-child(6){ width:120px; }
 #earningsContainer .markets-table th:nth-child(7), #earningsContainer .markets-table td:nth-child(7){ width:140px; }
 
-#ipoCalendarTable th:nth-child(1), #ipoCalendarTable td:nth-child(1){ width:230px; }
+#ipoCalendarTable th:nth-child(1), #ipoCalendarTable td:nth-child(1){ width:260px; }
 #ipoCalendarTable th:nth-child(2), #ipoCalendarTable td:nth-child(2){ width:120px; }
 #ipoCalendarTable th:nth-child(3), #ipoCalendarTable td:nth-child(3){ width:110px; }
 #ipoCalendarTable th:nth-child(4), #ipoCalendarTable td:nth-child(4){ width:100px; }
 #ipoCalendarTable th:nth-child(5), #ipoCalendarTable td:nth-child(5){ width:120px; }
 #ipoCalendarTable th:nth-child(6), #ipoCalendarTable td:nth-child(6){ width:110px; }
+/* table-layout:fixed clips column width but doesn't hide overflowing text by
+   default — without this, a long company name spills across the Date
+   column instead of truncating inside its own cell. */
+#ipoCalendarTable td, #ipoCalendarTable th{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 
   /* ---- Search ---- */
   .search-section{
