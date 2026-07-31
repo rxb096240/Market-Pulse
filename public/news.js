@@ -135,11 +135,9 @@ async function refreshNews(){
 /* ---- News: Google News RSS (US / World) ---- */
 const GNEWS_US_URL = `${API_BASE}/api/news/google?edition=us`;
 const GNEWS_WORLD_URL = `${API_BASE}/api/news/google?edition=world`;
-const GNEWS_INDIA_URL = `${API_BASE}/api/news/google?edition=in`;
 
 let usNewsLoaded = false;
 let worldNewsLoaded = false;
-let indiaNewsLoaded = false;
 
 function parseGoogleNewsRss(xmlText, tag){
   try{
@@ -203,22 +201,53 @@ async function refreshWorldNews(){
   worldNewsLoaded = true;
 }
 
+// India edition topics, mirroring the News · Topics panel but scoped to
+// Google News' India edition (hl=en-IN&gl=IN&ceid=IN:en on the server side).
+const INDIA_TOPIC_LABELS = {
+  in: 'Top Stories',
+  'in-business': 'Business',
+  'in-entertainment': 'Entertainment',
+  'in-health': 'Health',
+  'in-science': 'Science',
+  'in-sports': 'Sports',
+  'in-technology': 'Technology'
+};
+
+let currentIndiaNewsTopic = 'in';
+const loadedIndiaNewsTopics = new Set();
+
 async function refreshIndiaNews(){
   const container = document.getElementById('indiaNewsList');
   if(!container) return;
-  if(!indiaNewsLoaded) container.innerHTML = '<div class="news-loading">Loading news…</div>';
+  const topic = currentIndiaNewsTopic;
+  const label = INDIA_TOPIC_LABELS[topic] || topic;
+
+  const labelEl = document.getElementById('indiaNewsLabel');
+  if(labelEl) labelEl.textContent = `India · ${label}`;
+
+  if(!loadedIndiaNewsTopics.has(topic)) container.innerHTML = '<div class="news-loading">Loading news…</div>';
 
   // We tag these as 'India' so they get labeled cleanly in the UI
-  const items = await fetchGoogleNews(GNEWS_INDIA_URL, 'India');
-  items.forEach(item => { if(item.source === 'Google News') item.source = 'NDTV'; });
+  const items = await fetchGoogleNews(`${API_BASE}/api/news/google?edition=${topic}`, 'India');
+  if(currentIndiaNewsTopic !== topic) return; // topic changed while the fetch was in flight
+
+  // The Top Stories edition proxies Times of India directly, which has no
+  // <source> tag, so it falls back to the 'Google News' default — relabel it.
+  if(topic === 'in') items.forEach(item => { if(item.source === 'Google News') item.source = 'NDTV'; });
 
   if(items.length === 0){
-    if(!indiaNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
+    if(!loadedIndiaNewsTopics.has(topic)) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20), false);
-  indiaNewsLoaded = true;
+  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20));
+  loadedIndiaNewsTopics.add(topic);
 }
+
+const indiaNewsTopicSelect = document.getElementById('indiaNewsTopicSelect');
+indiaNewsTopicSelect?.addEventListener('change', () => {
+  currentIndiaNewsTopic = indiaNewsTopicSelect.value;
+  refreshIndiaNews();
+});
 
 /* ---- News: Google News RSS (Topics) ---- */
 const TOPIC_LABELS = {
