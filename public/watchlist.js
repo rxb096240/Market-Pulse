@@ -116,6 +116,14 @@ document.getElementById('tape')?.addEventListener('click', (e) => {
   if(item) openStockDetailModal(item.dataset.symbol, item.dataset.name);
 });
 
+// Belt-and-suspenders pause alongside the CSS `.tape-wrap:hover` rule —
+// driven from JS/pointer events instead of relying purely on :hover, since
+// hover-state edge cases vary across browsers/WebViews (the app is also
+// wrapped as an Android app).
+const tapeWrapEl = document.querySelector('.tape-wrap');
+tapeWrapEl?.addEventListener('pointerenter', () => tapeWrapEl.classList.add('tape-paused'));
+tapeWrapEl?.addEventListener('pointerleave', () => tapeWrapEl.classList.remove('tape-paused'));
+
 
 /* ---- Watchlist helpers (used by search bars and portfolio) ---- */
 function ensureCryptoTracked(id, symbol, name){
