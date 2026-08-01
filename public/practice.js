@@ -60,6 +60,7 @@ async function loadPracticeAccount(){
     account = created;
   }
   practiceAccount = account;
+  refreshAuthButtonLabel();
 
   const { data: holdings, error: hErr } = await supabaseClient
     .from('practice_holdings')
@@ -285,6 +286,7 @@ async function savePracticeNickname(nickname){
     .eq('user_id', currentUser.id);
   if(error){ console.error('Failed to save nickname:', error); return; }
   practiceAccount.nickname = nickname || null;
+  refreshAuthButtonLabel();
   const hint = document.getElementById('practiceNicknameHint');
   if(hint) hint.textContent = nickname ? 'Saved.' : 'Nickname cleared.';
 }

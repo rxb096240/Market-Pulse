@@ -16,6 +16,7 @@ const authToggleText = document.getElementById('authToggleText');
 const authToggleLink = document.getElementById('authToggleLink');
 const authMenuWrap = document.getElementById('authMenuWrap');
 const authMenu = document.getElementById('authMenu');
+const authMenuEmail = document.getElementById('authMenuEmail');
 const authNicknameInput = document.getElementById('authNicknameInput');
 const authNicknameSaveBtn = document.getElementById('authNicknameSaveBtn');
 const authNicknameHint = document.getElementById('authNicknameHint');
@@ -24,8 +25,15 @@ const authLogoutBtn = document.getElementById('authLogoutBtn');
 function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
 function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail.value=''; authPassword.value=''; }
 
+function refreshAuthButtonLabel(){
+  if(!currentUser){ authBtn.textContent = 'Sign in'; return; }
+  const nickname = (practiceAccount?.nickname || '').trim();
+  authBtn.textContent = `Hello, ${nickname || 'Trader'}`;
+}
+
 async function openAuthMenu(){
   authNicknameHint.textContent = '';
+  authMenuEmail.textContent = currentUser?.email || '';
   if(!practiceAccount) await loadPracticeAccount();
   authNicknameInput.value = practiceAccount?.nickname || '';
   authMenu.classList.add('open');
@@ -33,12 +41,8 @@ async function openAuthMenu(){
 function closeAuthMenu(){ authMenu.classList.remove('open'); }
 
 async function updateAuthUI(){
-  if(currentUser){
-    authBtn.textContent = currentUser.email;
-  }else{
-    authBtn.textContent = 'Sign in';
-    closeAuthMenu();
-  }
+  refreshAuthButtonLabel();
+  if(!currentUser) closeAuthMenu();
   const adminGroup = document.getElementById('adminNavGroup');
   if(adminGroup){
     if(currentUser){
@@ -84,6 +88,7 @@ authNicknameSaveBtn?.addEventListener('click', async () => {
   authNicknameHint.textContent = '';
   await savePracticeNickname(nickname);
   authNicknameHint.textContent = nickname ? 'Saved.' : 'Nickname cleared.';
+  refreshAuthButtonLabel();
 });
 
 authLogoutBtn?.addEventListener('click', async () => {
