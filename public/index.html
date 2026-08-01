@@ -138,7 +138,18 @@
       <div class="header-right">
          <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="Toggle light/dark mode" title="Toggle light/dark mode"></button>
          <button id="donateNavBtn" class="add-btn" type="button" style="margin-right:4px;">☕ Donate</button>
-         <button id="authBtn" class="add-btn" style="margin-right:4px;">Sign in</button>
+         <div class="auth-menu-wrap" id="authMenuWrap" style="margin-right:4px;">
+           <button id="authBtn" class="add-btn">Sign in</button>
+           <div class="auth-menu" id="authMenu">
+             <div class="auth-menu-label">Leaderboard nickname</div>
+             <div class="auth-menu-nickname-row">
+               <input id="authNicknameInput" type="text" maxlength="24" placeholder="Pick a nickname">
+               <button class="auth-menu-save-btn" id="authNicknameSaveBtn">Save</button>
+             </div>
+             <div class="auth-menu-hint" id="authNicknameHint"></div>
+             <button class="auth-menu-logout-btn" id="authLogoutBtn">Log out</button>
+           </div>
+         </div>
         <div class="greeting">Track the trend!</div>
         <div id="clock">LOCAL TIME<br><span id="clock-time">--:--:--</span></div>
       </div>

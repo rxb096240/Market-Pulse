@@ -14,15 +14,30 @@ const authError = document.getElementById('authError');
 const authSubmitBtn = document.getElementById('authSubmitBtn');
 const authToggleText = document.getElementById('authToggleText');
 const authToggleLink = document.getElementById('authToggleLink');
+const authMenuWrap = document.getElementById('authMenuWrap');
+const authMenu = document.getElementById('authMenu');
+const authNicknameInput = document.getElementById('authNicknameInput');
+const authNicknameSaveBtn = document.getElementById('authNicknameSaveBtn');
+const authNicknameHint = document.getElementById('authNicknameHint');
+const authLogoutBtn = document.getElementById('authLogoutBtn');
 
 function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
 function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail.value=''; authPassword.value=''; }
+
+async function openAuthMenu(){
+  authNicknameHint.textContent = '';
+  if(!practiceAccount) await loadPracticeAccount();
+  authNicknameInput.value = practiceAccount?.nickname || '';
+  authMenu.classList.add('open');
+}
+function closeAuthMenu(){ authMenu.classList.remove('open'); }
 
 async function updateAuthUI(){
   if(currentUser){
     authBtn.textContent = currentUser.email;
   }else{
     authBtn.textContent = 'Sign in';
+    closeAuthMenu();
   }
   const adminGroup = document.getElementById('adminNavGroup');
   if(adminGroup){
@@ -44,13 +59,11 @@ async function updateAuthUI(){
 
 authModalClose?.addEventListener('click', closeAuthModal);
 
-authBtn?.addEventListener('click', async () => {
+authBtn?.addEventListener('click', async (e) => {
   if(currentUser){
-    const confirmed = confirm('Sign out?');
-    if(!confirmed) return;
-    await supabaseClient.auth.signOut();
-    currentUser = null;
-    updateAuthUI();
+    e.stopPropagation();
+    if(authMenu.classList.contains('open')) closeAuthMenu();
+    else await openAuthMenu();
     return;
   }
   authMode = 'signin';
@@ -59,6 +72,27 @@ authBtn?.addEventListener('click', async () => {
   authToggleText.textContent = 'No account?';
   authToggleLink.textContent = 'Sign up';
   openAuthModal();
+});
+
+document.addEventListener('click', (e) => {
+  if(authMenu.classList.contains('open') && !authMenuWrap.contains(e.target)) closeAuthMenu();
+});
+
+authNicknameSaveBtn?.addEventListener('click', async () => {
+  const nickname = authNicknameInput.value.trim();
+  if(nickname.length > 24){ authNicknameHint.textContent = 'Keep it under 24 characters.'; return; }
+  authNicknameHint.textContent = '';
+  await savePracticeNickname(nickname);
+  authNicknameHint.textContent = nickname ? 'Saved.' : 'Nickname cleared.';
+});
+
+authLogoutBtn?.addEventListener('click', async () => {
+  const confirmed = confirm('Sign out?');
+  if(!confirmed) return;
+  closeAuthMenu();
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  updateAuthUI();
 });
 
 
