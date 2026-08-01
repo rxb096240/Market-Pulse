@@ -864,12 +864,17 @@ async function fetchYahooScreener(scrId, count){
   }));
 }
 
+// count is clamped to 25 — the Home widget passes none (defaults to 5), the
+// dedicated Top Movers panel asks for 20. Each distinct count is its own
+// cache key, so bumping this doesn't add upstream call volume per viewer,
+// just one more periodic Yahoo screener call per count value in use.
 app.get('/api/stocks/top-movers', async (req, res) => {
+  const count = Math.min(Math.max(parseInt(req.query.count, 10) || 5, 1), 25);
   try {
-   const { data } = await cachedFetch('stocks:top-movers', 60_000, async () => {
+   const { data } = await cachedFetch(`stocks:top-movers:${count}`, 60_000, async () => {
       const [gainers, losers] = await Promise.all([
-        fetchYahooScreener('day_gainers', 5),
-        fetchYahooScreener('day_losers', 5)
+        fetchYahooScreener('day_gainers', count),
+        fetchYahooScreener('day_losers', count)
       ]);
       return { data: { gainers, losers, lastFetched: Date.now() }, contentType: 'application/json' };
     });

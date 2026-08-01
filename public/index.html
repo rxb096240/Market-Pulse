@@ -34,6 +34,7 @@
       <div class="nav-group-items">
       <button class="nav-item" data-view="stocks-overview">Overview</button>
       <button class="nav-item" data-view="stocks-ai">AI Stocks</button>
+      <button class="nav-item" data-view="stocks-top-movers">Top Movers</button>
       <button class="nav-item" data-view="stocks-watchlist">Watchlist</button>
       <button class="nav-item" data-view="stocks-portfolio">Portfolio</button>
       <button class="nav-item" data-view="stocks-news">News</button>
@@ -252,7 +253,10 @@
           </div>
 
           <div class="home-chart-card">
-            <div class="home-chart-card-title">Today's Top Movers <span class="as-of">Whole market</span></div>
+            <div class="home-chart-card-title">
+              <span>Today's Top Movers <span class="as-of">Whole market</span></span>
+              <a href="#" class="home-panel-link" data-target-view="stocks-top-movers">See all →</a>
+            </div>
             <div class="mover-cols" id="homeTopMovers">
               <div class="news-loading">Loading top movers…</div>
             </div>
@@ -858,6 +862,15 @@
         </div>
       </section>
 
+      <!-- Stocks: Top Movers -->
+      <section class="view-panel" data-view-panel="stocks-top-movers">
+        <div class="trending-intro">Today's biggest gainers &amp; losers, whole market <span class="as-of">via Yahoo Finance</span></div>
+        <div class="mover-cols" id="stocksTopMovers">
+          <div class="news-loading">Loading top movers…</div>
+        </div>
+        <div class="home-chart-note" id="stocksTopMoversNote"></div>
+      </section>
+
       <!-- Stocks: IPO Calendar -->
       <section class="view-panel" data-view-panel="ipo-calendar">
         <div class="markets-header-row">
@@ -1127,6 +1140,7 @@
 <script src="hackernews.js"></script>
 <script src="calculator.js"></script>
 <script src="home.js"></script>
+<script src="topmovers.js"></script>
 <script src="vix.js"></script>
 <script src="admin.js"></script>
 <script src="nav.js"></script>

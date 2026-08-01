@@ -40,10 +40,14 @@ function renderHomeSnapshot(items){
   }).join('');
 }
 
-/* ---- Home: Today's Top Movers (whole market, via Yahoo screener) ---- */
-async function fetchTopMovers(){
+/* ---- Top Movers (whole market, via Yahoo screener) ----
+   Shared between the compact Home widget and the dedicated Stocks · Top
+   Movers panel (topmovers.js) — they just pass different element ids and
+   counts. */
+async function fetchTopMovers(count){
   try{
-    const data = await fetchJsonWithTimeout(`${API_BASE}/api/stocks/top-movers`, 10000);
+    const url = count ? `${API_BASE}/api/stocks/top-movers?count=${count}` : `${API_BASE}/api/stocks/top-movers`;
+    const data = await fetchJsonWithTimeout(url, 10000);
     return data || null;
   }catch(e){
     console.error('Top movers fetch failed:', e);
@@ -51,9 +55,9 @@ async function fetchTopMovers(){
   }
 }
 
-function renderTopMovers(data){
-  const el = document.getElementById('homeTopMovers');
-  const noteEl = document.getElementById('homeTopMoversNote');
+function renderTopMovers(data, elId = 'homeTopMovers', noteElId = 'homeTopMoversNote'){
+  const el = document.getElementById(elId);
+  const noteEl = document.getElementById(noteElId);
   if(!el) return;
 
   const gainers = data?.gainers || [];
@@ -149,6 +153,13 @@ async function refreshHomeView(){
   renderHomeSnapshot(picked.length > 0 ? picked : items.slice(0, 4));
   refreshTopMovers();
 }
+
+document.querySelectorAll('.home-panel-link[data-target-view]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    showView(link.dataset.targetView);
+  });
+});
 
 document.querySelectorAll('.home-card[data-target-view]').forEach(card => {
   card.addEventListener('click', () => showView(card.dataset.targetView));

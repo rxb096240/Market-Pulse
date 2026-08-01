@@ -19,6 +19,7 @@ const VIEW_TITLES = {
   'crypto-news': 'Crypto · News',
   'stocks-overview': 'Stocks · Overview',
   'stocks-ai': 'Stocks · AI Stocks',
+  'stocks-top-movers': 'Stocks · Top Movers',
   'stocks-watchlist': 'Stocks Watchlist',
   'stocks-portfolio': 'Stocks · Portfolio',
   'stocks-news': 'Stocks · News',
@@ -76,6 +77,8 @@ function showView(view){
   refreshStocksMarketsOverview();
   }else if(view === 'stocks-ai'){
   refreshAiStocksOverview();
+  }else if(view === 'stocks-top-movers'){
+  refreshStocksTopMovers();
   }else if(view === 'ipo-calendar'){
   refreshIpoCalendar();
   }else if(view === 'crypto-portfolio' || view === 'stocks-portfolio'){
