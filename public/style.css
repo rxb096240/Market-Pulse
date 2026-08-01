@@ -250,6 +250,8 @@
   .tape-item b{ color:var(--text); font-weight:600; }
   .tape-item .chg.up{ color:var(--up); }
   .tape-item .chg.down{ color:var(--down); }
+  .tape-item-stock{ cursor:pointer; }
+  .tape-item-stock:hover b{ color:var(--up); }
 
   .markets-summary-wrap{
     border-bottom:1px solid var(--panel-border);

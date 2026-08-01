@@ -102,11 +102,19 @@ function buildTape(){
     if(!d) return '';
     const cls = d.changePct >= 0 ? 'up' : 'down';
     const arrow = d.changePct >= 0 ? '▲' : '▼';
-    return `<span class="tape-item"><b>${s.sym}</b> $${fmtPrice(d.price)} <span class="chg ${cls}">${arrow} ${Math.abs(d.changePct).toFixed(2)}%</span></span>`;
+    const name = (s.name || '').replace(/"/g, '&quot;');
+    return `<span class="tape-item tape-item-stock" data-symbol="${s.sym}" data-name="${name}"><b>${s.sym}</b> $${fmtPrice(d.price)} <span class="chg ${cls}">${arrow} ${Math.abs(d.changePct).toFixed(2)}%</span></span>`;
   }).join('');
   const items = cryptoItems + stockItems;
   tape.innerHTML = items + items;
 }
+
+// Same detail modal used on the Overview/AI Stocks tables and watchlist
+// cards — delegated so it keeps working across buildTape()'s re-renders.
+document.getElementById('tape')?.addEventListener('click', (e) => {
+  const item = e.target.closest('.tape-item-stock');
+  if(item) openStockDetailModal(item.dataset.symbol, item.dataset.name);
+});
 
 
 /* ---- Watchlist helpers (used by search bars and portfolio) ---- */
