@@ -1809,6 +1809,8 @@
   padding:6px 0; border-bottom:1px solid var(--panel-border); gap:6px;
 }
 .mover-row:last-child{ border-bottom:none; }
+.mover-row-clickable{ cursor:pointer; }
+.mover-row-clickable:hover .mover-sym{ color:var(--amber); }
 .mover-id{ min-width:0; }
 .mover-sym{ font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; display:block; }
 .mover-name{ font-size:9.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px; }

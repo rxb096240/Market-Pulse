@@ -71,7 +71,7 @@ function renderTopMovers(data, elId = 'homeTopMovers', noteElId = 'homeTopMovers
     <div class="mover-col">
       <div class="mover-col-label ${cls}">${cls === 'gainers' ? '▲' : '▼'} ${label}</div>
       ${list.map(m => `
-        <div class="mover-row">
+        <div class="mover-row mover-row-clickable" data-symbol="${m.symbol}" data-name="${(m.name || '').replace(/"/g, '&quot;')}">
           <div class="mover-id">
             <span class="mover-sym">${escapeHtml(m.symbol)}</span>
             <span class="mover-name">${escapeHtml(m.name)}</span>
@@ -86,6 +86,11 @@ function renderTopMovers(data, elId = 'homeTopMovers', noteElId = 'homeTopMovers
   if(noteEl && data?.lastFetched){
   noteEl.textContent = `Last updated ${new Date(data.lastFetched).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`;
 }
+
+  // Same detail modal used on the Overview/AI Stocks tables.
+  el.querySelectorAll('.mover-row-clickable').forEach(row => {
+    row.addEventListener('click', () => openStockDetailModal(row.dataset.symbol, row.dataset.name));
+  });
 }
 
 /* ---- Home: Age-Based Suggested Allocation (static guideline, not tied to user's actual holdings) ---- */
