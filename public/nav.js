@@ -34,6 +34,7 @@ const VIEW_TITLES = {
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
   'fire': 'FIRE',
+  'fire-calculator': 'FIRE Calculator',
   'rates-summary': 'Rates',
   'practice-mode': 'Practice',
   'practice-leaderboard': 'Leaderboard',
