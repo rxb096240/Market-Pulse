@@ -64,6 +64,39 @@
 
   .wrap{ max-width: 780px; margin: 0 auto; padding: 0 24px; }
 
+  .bio-nav{
+    border-bottom: 1px solid var(--rule);
+    padding: 16px 0;
+  }
+  .bio-nav .wrap{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .bio-nav-brand{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+  .bio-nav-brand:hover{ text-decoration: none; }
+  .bio-nav-brand .dot{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+  }
+  .bio-nav-back{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+  }
+  .bio-nav-back:hover{ color: var(--accent); }
+
   header.hero{ padding: 72px 0 48px; }
 
   .avatar-row{
@@ -214,6 +247,16 @@
 </style>
 </head>
 <body>
+
+  <nav class="bio-nav">
+    <div class="wrap">
+      <a class="bio-nav-brand" href="index.html">
+        <span class="dot"></span>
+        <span>PULSE</span>
+      </a>
+      <a class="bio-nav-back" href="index.html">← Back to Dashboard</a>
+    </div>
+  </nav>
 
   <div class="ticker-bar" aria-hidden="true">
     <div class="ticker-track mono">
