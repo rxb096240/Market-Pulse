@@ -887,6 +887,100 @@
   color:var(--muted);
   padding:0 14px 14px;
 }
+
+/* ---- FIRE view ---- */
+.fire-panel{ display:flex; flex-direction:column; gap:28px; }
+.fire-section p{ font-size:14px; margin-bottom:10px; }
+.fire-section p:last-child{ margin-bottom:0; }
+.fire-dim{ color:var(--muted); }
+.fire-heading{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.4px;
+  color:var(--amber);
+  margin-bottom:10px;
+}
+.fire-formula{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-left:3px solid var(--amber);
+  border-radius:8px;
+  padding:14px 16px;
+  margin:12px 0;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+}
+.fire-formula-line{ margin-bottom:6px; }
+.fire-formula-line:last-child{ margin-bottom:0; }
+.fire-formula-result{ color:var(--amber); font-weight:700; }
+.fire-stat-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.fire-stat-box{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  padding:14px 12px;
+  text-align:center;
+}
+.fire-stat-num{ font-size:20px; font-weight:700; color:var(--amber); line-height:1.1; }
+.fire-stat-lbl{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10.5px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-top:6px;
+}
+.fire-variant-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:12px;
+}
+.fire-variant-card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:16px 18px;
+}
+.fire-variant-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+}
+.fire-variant-head h4{ font-size:14.5px; font-weight:700; }
+.fire-variant-card p{ font-size:13px; color:var(--muted); }
+.fire-tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  padding:3px 8px;
+  border-radius:10px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+.fire-tag-lean{ background:rgba(14,143,95,0.15); color:var(--up); border:1px solid rgba(14,143,95,0.35); }
+.fire-tag-fat{ background:rgba(255,176,32,0.15); color:var(--amber); border:1px solid rgba(255,176,32,0.35); }
+.fire-tag-barista{ background:rgba(214,41,59,0.12); color:var(--down); border:1px solid rgba(214,41,59,0.3); }
+.fire-tag-coast{ background:var(--hover-bg-2); color:var(--muted); border:1px solid var(--panel-border); }
+.fire-caveat{
+  background:rgba(255,176,32,0.08);
+  border:1px solid rgba(255,176,32,0.3);
+  border-radius:8px;
+  padding:14px 16px;
+  font-size:13px;
+  color:var(--muted);
+}
+.fire-caveat strong{ color:var(--amber); }
+@media (max-width:480px){
+  .fire-stat-row{ grid-template-columns:1fr; }
+}
   /* ---- Markets overview table ---- */
   .markets-table-wrap{
     overflow-x:auto;
