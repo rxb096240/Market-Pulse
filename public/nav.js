@@ -33,6 +33,7 @@ const VIEW_TITLES = {
   'learn-crypto': 'Learn · Crypto Basics',
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
+  'fire': 'FIRE',
   'rates-summary': 'Rates',
   'practice-mode': 'Practice',
   'practice-leaderboard': 'Leaderboard',
