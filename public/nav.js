@@ -36,6 +36,7 @@ const VIEW_TITLES = {
   'fire': 'FIRE',
   'fire-calculator': 'FIRE Calculator',
   'fire-videos': 'FIRE Videos',
+  'pf-flowchart': 'Flowchart',
   'rates-summary': 'Rates',
   'practice-mode': 'Practice',
   'practice-leaderboard': 'Leaderboard',

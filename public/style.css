@@ -888,6 +888,20 @@
   padding:0 14px 14px;
 }
 
+.flowchart-wrap{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:16px;
+  text-align:center;
+}
+.flowchart-img{
+  max-width:100%;
+  height:auto;
+  border-radius:6px;
+  cursor:zoom-in;
+}
+
 /* ---- FIRE view ---- */
 .fire-panel{ display:flex; flex-direction:column; gap:28px; }
 .fire-section p{ font-size:14px; margin-bottom:10px; }
