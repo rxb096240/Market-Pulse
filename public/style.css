@@ -984,6 +984,7 @@
   /* ---- Markets overview table ---- */
   .markets-table-wrap{
     overflow-x:auto;
+    overflow-y:hidden;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior-x:contain;
     border:1px solid var(--panel-border);
