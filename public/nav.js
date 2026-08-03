@@ -35,6 +35,7 @@ const VIEW_TITLES = {
   'earnings-calendar': 'Earnings',
   'fire': 'FIRE',
   'fire-calculator': 'FIRE Calculator',
+  'fire-videos': 'FIRE Videos',
   'rates-summary': 'Rates',
   'practice-mode': 'Practice',
   'practice-leaderboard': 'Leaderboard',
