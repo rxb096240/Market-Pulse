@@ -62,6 +62,6 @@ function renderAdminStats(s){
 
   const recentBody = document.getElementById('adminRecentTableBody');
   recentBody.innerHTML = s.recent.length
-    ? s.recent.map(r => `<tr><td>${timeAgo(new Date(r.time).getTime())}</td><td>${escapeHtml(r.city || '—')}</td><td>${escapeHtml(r.section)}</td><td>${r.signedIn ? 'Yes' : 'Guest'}</td></tr>`).join('')
-    : '<tr><td colspan="4" class="empty">No activity yet.</td></tr>';
+    ? s.recent.map(r => `<tr><td>${timeAgo(new Date(r.time).getTime())}</td><td>${escapeHtml(r.city || '—')}</td><td>${escapeHtml(r.section)}</td><td>${r.signedIn ? 'Yes' : 'Guest'}</td><td>${escapeHtml(r.email || '—')}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty">No activity yet.</td></tr>';
 }
