@@ -1196,9 +1196,22 @@ app.get('/api/admin/stats', async (req, res) => {
     rows.forEach(r => { viewCounts[r.nav_section] = (viewCounts[r.nav_section] || 0) + 1; });
     const topView = Object.entries(viewCounts).sort((a, b) => b[1] - a[1])[0];
 
-    const recent = rows.slice(0, 25).map(r => ({
+    const recentRows = rows.slice(0, 25);
+    const recentUserIds = Array.from(new Set(recentRows.map(r => r.user_id).filter(Boolean)));
+    const emailByUserId = {};
+    await Promise.all(recentUserIds.map(async id => {
+      try {
+        const { data } = await supabaseAdmin.auth.admin.getUserById(id);
+        emailByUserId[id] = data?.user?.email || null;
+      } catch (e) {
+        emailByUserId[id] = null;
+      }
+    }));
+
+    const recent = recentRows.map(r => ({
       time: r.created_at, city: r.city, country: r.country,
-      section: r.nav_section, signedIn: !!r.user_id
+      section: r.nav_section, signedIn: !!r.user_id,
+      email: r.user_id ? (emailByUserId[r.user_id] || null) : null
     }));
 
     res.json({
