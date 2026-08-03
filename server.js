@@ -1217,6 +1217,37 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    // listUsers is paginated (max 1000/page) — loop until a short page tells
+    // us we've reached the end, capped so a runaway user table can't hang this.
+    const users = [];
+    for (let page = 1; page <= 10; page++) {
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw error;
+      users.push(...data.users);
+      if (data.users.length < 1000) break;
+    }
+
+    res.json(users.map(u => ({
+      email: u.email,
+      createdAt: u.created_at,
+      lastSignInAt: u.last_sign_in_at
+    })));
+  } catch (e) {
+    console.error('admin users fetch failed:', e.message);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 // ---- Practice Mode leaderboard (public) ----
 // Reads every user's practice_accounts + practice_holdings via the
 // service-role client (RLS on those tables normally scopes reads to

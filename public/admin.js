@@ -22,6 +22,30 @@ async function refreshAdminReports(){
   renderAdminStats(stats);
 }
 
+async function refreshAdminUsers(){
+  const body = document.getElementById('adminUsersTableBody');
+  if(!body) return;
+
+  const token = await getAccessToken();
+  const res = await fetch(`${API_BASE}/api/admin/users`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if(res.status === 403){
+    body.innerHTML = '<tr><td colspan="3" class="empty">Not authorized.</td></tr>';
+    return;
+  }
+  if(!res.ok){
+    body.innerHTML = '<tr><td colspan="3" class="err">Failed to load users.</td></tr>';
+    return;
+  }
+
+  const users = await res.json();
+  body.innerHTML = users.length
+    ? users.map(u => `<tr><td>${escapeHtml(u.email || '—')}</td><td>${u.createdAt ? timeAgo(new Date(u.createdAt).getTime()) : '—'}</td><td>${u.lastSignInAt ? timeAgo(new Date(u.lastSignInAt).getTime()) : 'Never'}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty">No users yet.</td></tr>';
+}
+
 function renderAdminStats(s){
   document.getElementById('adminSummaryBar').style.display = '';
   document.getElementById('adminTotalHits').textContent = s.totalHits;
