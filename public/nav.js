@@ -42,7 +42,8 @@ const VIEW_TITLES = {
   'practice-leaderboard': 'Leaderboard',
   'social-reddit': 'Social · Reddit',
   'social-hackernews': 'Social · Hacker News',
-  'admin-reports': 'Admin · Reports'
+  'admin-reports': 'Admin · Reports',
+  'admin-users': 'Admin · Users'
 };
 
 function showView(view){
@@ -111,6 +112,8 @@ function showView(view){
     refreshHackerNews();
 }else if(view === 'admin-reports'){
   refreshAdminReports();
+}else if(view === 'admin-users'){
+  refreshAdminUsers();
 }
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {

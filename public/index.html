@@ -117,9 +117,13 @@
   <button class="nav-item" data-view="calculators">Calculators</button>
    </div>
 
-    <div class="nav-group" id="adminNavGroup" style="display:none;">
-  <button class="nav-item" data-view="admin-reports">Admin Reports</button>
-</div>
+    <div class="nav-group" data-group="admin" id="adminNavGroup" style="display:none;">
+      <button class="nav-group-label" data-group-toggle="admin">Admin <span class="nav-chevron">▾</span></button>
+      <div class="nav-group-items">
+      <button class="nav-item" data-view="admin-reports">Reports</button>
+      <button class="nav-item" data-view="admin-users">Users</button>
+      </div>
+    </div>
 
     <div class="nav-group" data-group="learn">
       <button class="nav-group-label" data-group-toggle="learn">Learn <span class="nav-chevron">▾</span></button>
@@ -349,7 +353,20 @@
   </div>
 </section>
 
-      
+<!-- Admin Users -->
+<section class="view-panel" data-view-panel="admin-users">
+  <div class="trending-intro">All registered accounts. Visible only to the admin account.</div>
+  <div class="markets-table-wrap">
+    <table class="markets-table">
+      <thead><tr><th>Email</th><th>Created</th><th>Last Sign-in</th></tr></thead>
+      <tbody id="adminUsersTableBody">
+        <tr><td colspan="3" class="news-loading">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
       <!-- Crypto Overview -->
       <section class="view-panel" data-view-panel="crypto-overview">
         <div class="trending-intro">Top 100 cryptocurrencies by market cap. Tap a column to sort.</div>
