@@ -1107,6 +1107,11 @@
   }
   .mt-ticker-link:hover{ color:var(--amber); text-decoration-color:var(--amber); }
 
+/* Admin users table: email gets more room, created/last sign-in split evenly */
+#adminUsersTable th:nth-child(1), #adminUsersTable td:nth-child(1){ width:50%; }
+#adminUsersTable th:nth-child(2), #adminUsersTable td:nth-child(2){ width:25%; }
+#adminUsersTable th:nth-child(3), #adminUsersTable td:nth-child(3){ width:25%; }
+
 /* Forex table: override the crypto/stock table's wide fixed column widths */
 #forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:160px; }
 #forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:80px; }
