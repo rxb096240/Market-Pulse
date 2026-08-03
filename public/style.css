@@ -1501,6 +1501,27 @@
     grid-column:1/-1;
   }
 
+  /* ---- Admin Portfolio: user-select + Stocks/Crypto tab view ---- */
+  .admin-pf-tabs{ display:flex; gap:8px; margin:18px 0; }
+  .admin-pf-tab{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+    padding:9px 0;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .admin-pf-tab.active{
+    background:rgba(255,176,32,0.14);
+    color:var(--amber);
+    border-color:rgba(255,176,32,0.3);
+  }
+  .admin-pf-panel{ display:none; }
+  .admin-pf-panel.active{ display:block; }
+
   @media (max-width:480px){
     .price{ font-size:22px; }
     header{ padding:16px 14px 10px; }
