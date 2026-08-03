@@ -122,6 +122,7 @@
       <div class="nav-group-items">
       <button class="nav-item" data-view="admin-reports">Reports</button>
       <button class="nav-item" data-view="admin-users">Users</button>
+      <button class="nav-item" data-view="admin-portfolio">Portfolio</button>
       </div>
     </div>
 
@@ -363,6 +364,45 @@
         <tr><td colspan="3" class="news-loading">Loading…</td></tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<!-- Admin Portfolio -->
+<section class="view-panel" data-view-panel="admin-portfolio">
+  <div class="trending-intro">View any registered user's portfolio holdings. Visible only to the admin account.</div>
+
+  <div class="markets-header-row">
+    <div class="trending-intro" style="margin:0;">Select user</div>
+    <select id="adminPfUserSelect" class="markets-market-select">
+      <option value="">Choose a user…</option>
+    </select>
+  </div>
+
+  <div id="adminPfBody" style="display:none;">
+    <div class="admin-pf-tabs">
+      <button class="admin-pf-tab active" data-admin-pf-tab="stock">Stocks</button>
+      <button class="admin-pf-tab" data-admin-pf-tab="crypto">Crypto</button>
+    </div>
+
+    <div class="admin-pf-panel active" data-admin-pf-panel="stock">
+      <div class="summary-bar" id="adminPfStockSummary" style="display:none;">
+        <div class="summary-item"><span class="summary-label">Total Value</span><span class="summary-value" id="adminPfStockTotalValue">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total Cost</span><span class="summary-value" id="adminPfStockTotalCost">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total P/L</span><span class="summary-value" id="adminPfStockTotalPl">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total P/L %</span><span class="summary-value" id="adminPfStockTotalPlPct">0.00%</span></div>
+      </div>
+      <div class="grid" id="adminPfStockGrid"><div class="empty">No stock holdings for this user.</div></div>
+    </div>
+
+    <div class="admin-pf-panel" data-admin-pf-panel="crypto">
+      <div class="summary-bar" id="adminPfCryptoSummary" style="display:none;">
+        <div class="summary-item"><span class="summary-label">Total Value</span><span class="summary-value" id="adminPfCryptoTotalValue">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total Cost</span><span class="summary-value" id="adminPfCryptoTotalCost">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total P/L</span><span class="summary-value" id="adminPfCryptoTotalPl">$0.00</span></div>
+        <div class="summary-item"><span class="summary-label">Total P/L %</span><span class="summary-value" id="adminPfCryptoTotalPlPct">0.00%</span></div>
+      </div>
+      <div class="grid" id="adminPfCryptoGrid"><div class="empty">No crypto holdings for this user.</div></div>
+    </div>
   </div>
 </section>
 

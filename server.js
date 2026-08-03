@@ -1251,6 +1251,7 @@ app.get('/api/admin/users', async (req, res) => {
     }
 
     res.json(users.map(u => ({
+      id: u.id,
       email: u.email,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at
@@ -1258,6 +1259,39 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (e) {
     console.error('admin users fetch failed:', e.message);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.get('/api/admin/user-portfolio', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const targetUserId = (req.query.userId || '').toString();
+    if (!targetUserId) return res.status(400).json({ error: 'Missing userId' });
+
+    const { data, error } = await supabaseAdmin
+      .from('portfolio_holdings')
+      .select('asset_type, asset_key, sym, name, qty, avg_price')
+      .eq('user_id', targetUserId);
+    if (error) throw error;
+
+    res.json(data.map(r => ({
+      type: r.asset_type,
+      key: r.asset_key,
+      sym: r.sym,
+      name: r.name,
+      qty: r.qty,
+      avgPrice: r.avg_price
+    })));
+  } catch (e) {
+    console.error('admin user-portfolio fetch failed:', e.message);
+    res.status(500).json({ error: 'Failed to fetch portfolio' });
   }
 });
 
