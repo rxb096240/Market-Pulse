@@ -45,5 +45,5 @@ function avatarIconHtml(key, extraClass){
   const a = avatarByKey(key);
   if(!a) return null;
   const cls = extraClass ? `avatar-icon ${extraClass}` : 'avatar-icon';
-  return `<span class="${cls}" style="--tint:${a.tint};--bg:${a.bg};--border:${a.border};" title="${a.name}">${avatarSvgMarkup(a)}</span>`;
+  return `<span class="${cls}" style="--tint:${a.tint};" title="${a.name}">${avatarSvgMarkup(a)}</span>`;
 }

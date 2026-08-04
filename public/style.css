@@ -256,14 +256,11 @@
   align-items:center;
   justify-content:center;
   flex-shrink:0;
-  border-radius:50%;
-  background:var(--bg);
-  border:1px solid var(--border);
   color:var(--tint);
 }
-.avatar-icon svg{ width:60%; height:60%; overflow:visible; }
+.avatar-icon svg{ width:88%; height:88%; overflow:visible; }
 
-.auth-btn-avatar{ width:24px; height:24px; margin-right:6px; vertical-align:-7px; }
+.auth-btn-avatar{ width:22px; height:22px; }
 
 .auth-menu-avatar-grid{
   display:grid;
@@ -1401,6 +1398,10 @@
   .qty-input:focus, .price-input:focus{ border-color:var(--amber); }
   .qty-input::placeholder, .price-input::placeholder{ color:var(--muted); }
   .add-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
     background:var(--amber);
     color:var(--amber-contrast);
     border:none;
@@ -1416,7 +1417,7 @@
   }
   .add-btn:hover{ filter:brightness(1.08); }
   .add-btn:disabled{ opacity:0.5; cursor:default; }
-  .btn-emoji{ font-size:16px; vertical-align:-3px; line-height:1; }
+  .btn-emoji{ font-size:16px; line-height:1; display:inline-flex; }
 
   .summary-bar{
     display:grid;
