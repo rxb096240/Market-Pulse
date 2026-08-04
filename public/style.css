@@ -263,7 +263,7 @@
 }
 .avatar-icon svg{ width:60%; height:60%; overflow:visible; }
 
-.auth-btn-avatar{ width:18px; height:18px; margin-right:6px; vertical-align:-4px; }
+.auth-btn-avatar{ width:24px; height:24px; margin-right:6px; vertical-align:-7px; }
 
 .auth-menu-avatar-grid{
   display:grid;
@@ -1416,6 +1416,7 @@
   }
   .add-btn:hover{ filter:brightness(1.08); }
   .add-btn:disabled{ opacity:0.5; cursor:default; }
+  .btn-emoji{ font-size:16px; vertical-align:-3px; line-height:1; }
 
   .summary-bar{
     display:grid;
