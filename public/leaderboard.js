@@ -37,10 +37,11 @@ function renderLeaderboard(rows){
           ${rows.map((r, i) => {
             const cls = r.gainPct >= 0 ? 'up' : 'down';
             const sign = r.gainPct >= 0 ? '+' : '';
+            const avatar = avatarIconHtml(r.avatarKey, 'lb-avatar') || '';
             return `
               <tr>
                 <td class="mt-rank">${i + 1}</td>
-                <td>${escapeHtml(r.name)}</td>
+                <td><span class="lb-trader">${avatar}${escapeHtml(r.name)}</span></td>
                 <td>${fmtUsd(r.totalValue)}</td>
                 <td class="mt-chg ${cls}">${sign}${r.gainPct.toFixed(1)}%</td>
               </tr>

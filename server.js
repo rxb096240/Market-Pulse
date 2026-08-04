@@ -1305,7 +1305,7 @@ app.get('/api/admin/user-portfolio', async (req, res) => {
 // 5 minutes since this can touch a lot of distinct symbols.
 async function fetchLeaderboardRows(){
   const [{ data: accounts, error: accErr }, { data: holdings, error: holdErr }] = await Promise.all([
-    supabaseAdmin.from('practice_accounts').select('user_id, cash_balance, nickname'),
+    supabaseAdmin.from('practice_accounts').select('user_id, cash_balance, nickname, avatar_key'),
     supabaseAdmin.from('practice_holdings').select('user_id, asset_type, asset_key, qty, avg_price')
   ]);
   if (accErr) throw accErr;
@@ -1338,7 +1338,7 @@ async function fetchLeaderboardRows(){
     const totalValue = a.cash_balance + (holdingsValueByUser[a.user_id] || 0);
     const gainPct = ((totalValue - 10000) / 10000) * 100;
     const name = (a.nickname || '').trim() || `Trader ${a.user_id.slice(0, 4)}`;
-    return { name, totalValue, gainPct };
+    return { name, totalValue, gainPct, avatarKey: a.avatar_key || null };
   });
 
   rows.sort((a, b) => b.totalValue - a.totalValue);
