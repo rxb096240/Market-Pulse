@@ -20,6 +20,7 @@ const authMenuEmail = document.getElementById('authMenuEmail');
 const authNicknameInput = document.getElementById('authNicknameInput');
 const authNicknameSaveBtn = document.getElementById('authNicknameSaveBtn');
 const authNicknameHint = document.getElementById('authNicknameHint');
+const authAvatarGrid = document.getElementById('authAvatarGrid');
 const authLogoutBtn = document.getElementById('authLogoutBtn');
 
 function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
@@ -28,7 +29,26 @@ function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail
 function refreshAuthButtonLabel(){
   if(!currentUser){ authBtn.textContent = 'Sign in'; return; }
   const nickname = (practiceAccount?.nickname || '').trim();
-  authBtn.textContent = `Hello, ${nickname || 'Trader'}`;
+  const avatarIcon = avatarIconHtml(practiceAccount?.avatar_key, 'auth-btn-avatar') || '';
+  authBtn.innerHTML = `${avatarIcon}Hello, ${escapeHtml(nickname || 'Trader')}`;
+}
+
+function renderAuthAvatarGrid(){
+  if(!authAvatarGrid) return;
+  const selectedKey = practiceAccount?.avatar_key || null;
+  authAvatarGrid.innerHTML = AVATARS.map(a => `
+    <button type="button" class="auth-avatar-tile${a.key === selectedKey ? ' selected' : ''}" data-key="${a.key}">
+      ${avatarIconHtml(a.key)}
+    </button>
+  `).join('');
+  authAvatarGrid.querySelectorAll('.auth-avatar-tile').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.dataset.key;
+      if(key === selectedKey) return;
+      await savePracticeAvatar(key);
+      renderAuthAvatarGrid();
+    });
+  });
 }
 
 async function openAuthMenu(){
@@ -36,6 +56,7 @@ async function openAuthMenu(){
   authMenuEmail.textContent = currentUser?.email || '';
   if(!practiceAccount) await loadPracticeAccount();
   authNicknameInput.value = practiceAccount?.nickname || '';
+  renderAuthAvatarGrid();
   authMenu.classList.add('open');
 }
 function closeAuthMenu(){ authMenu.classList.remove('open'); }

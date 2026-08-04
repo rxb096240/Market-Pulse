@@ -291,6 +291,16 @@ async function savePracticeNickname(nickname){
   if(hint) hint.textContent = nickname ? 'Saved.' : 'Nickname cleared.';
 }
 
+async function savePracticeAvatar(avatarKey){
+  if(!currentUser || !practiceAccount) return;
+  const { error } = await supabaseClient.from('practice_accounts')
+    .update({ avatar_key: avatarKey })
+    .eq('user_id', currentUser.id);
+  if(error){ console.error('Failed to save avatar:', error); return; }
+  practiceAccount.avatar_key = avatarKey;
+  refreshAuthButtonLabel();
+}
+
 let practicePendingAsset = null; // { type, key, sym, name, price }
 
 function wirePracticeBuyForm(){
