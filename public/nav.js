@@ -36,7 +36,7 @@ const VIEW_TITLES = {
   'fire': 'What is FIRE',
   'fire-calculator': 'FIRE Calculator',
   'fire-videos': 'FIRE Videos',
-  'pf-flowchart': 'Flowchart',
+  'pf-flowchart': 'The Flowchart',
   'retire-401k': 'What is a 401(k)',
   'retire-401k-by-age': '401(k) Balance by Age',
   'retire-roth-ira': 'Roth IRA & Backdoor Roth',
