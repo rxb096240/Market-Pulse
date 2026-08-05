@@ -47,7 +47,7 @@ async function refreshAdminUsers(){
         <td>${escapeHtml(u.email || '—')}</td>
         <td>${u.createdAt ? timeAgo(new Date(u.createdAt).getTime()) : '—'}</td>
         <td>${u.lastSignInAt ? timeAgo(new Date(u.lastSignInAt).getTime()) : 'Never'}</td>
-        <td class="admin-user-delete-cell"><button class="admin-delete-btn" data-id="${u.id}" data-email="${escapeHtml(u.email || '')}" title="Delete user" type="button">×</button></td>
+        <td class="admin-user-delete-cell">${u.id === currentUser?.id ? '' : `<button class="admin-delete-btn" data-id="${u.id}" data-email="${escapeHtml(u.email || '')}" title="Delete user" type="button">×</button>`}</td>
       </tr>
     `).join('')
     : '<tr><td colspan="4" class="empty">No users yet.</td></tr>';
