@@ -1262,6 +1262,32 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+app.delete('/api/admin/users/:userId', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const targetUserId = req.params.userId;
+    if (!targetUserId) return res.status(400).json({ error: 'Missing userId' });
+    if (targetUserId === userData.user.id) {
+      return res.status(400).json({ error: "Can't delete your own admin account" });
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+    if (error) throw error;
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('admin delete user failed:', e.message);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 app.get('/api/admin/user-portfolio', async (req, res) => {
   try {
     const token = (req.headers.authorization || '').replace('Bearer ', '');

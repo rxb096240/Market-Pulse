@@ -1144,9 +1144,26 @@
   .mt-ticker-link:hover{ color:var(--amber); text-decoration-color:var(--amber); }
 
 /* Admin users table: email gets more room, created/last sign-in split evenly */
-#adminUsersTable th:nth-child(1), #adminUsersTable td:nth-child(1){ width:50%; }
-#adminUsersTable th:nth-child(2), #adminUsersTable td:nth-child(2){ width:25%; }
-#adminUsersTable th:nth-child(3), #adminUsersTable td:nth-child(3){ width:25%; }
+#adminUsersTable th:nth-child(1), #adminUsersTable td:nth-child(1){ width:45%; }
+#adminUsersTable th:nth-child(2), #adminUsersTable td:nth-child(2){ width:23%; }
+#adminUsersTable th:nth-child(3), #adminUsersTable td:nth-child(3){ width:23%; }
+#adminUsersTable th:nth-child(4), #adminUsersTable td:nth-child(4){ width:44px; }
+
+.admin-user-delete-cell{ text-align:center; }
+.admin-delete-btn{
+  width:24px; height:24px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:transparent;
+  border:1px solid var(--panel-border);
+  border-radius:50%;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1;
+  cursor:pointer;
+  padding:0;
+}
+.admin-delete-btn:hover{ color:var(--down); border-color:var(--down); }
+.admin-delete-btn:disabled{ opacity:0.4; cursor:default; }
 
 /* Forex table: override the crypto/stock table's wide fixed column widths */
 #forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:160px; }

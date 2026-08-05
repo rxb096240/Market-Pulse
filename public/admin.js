@@ -32,19 +32,52 @@ async function refreshAdminUsers(){
   });
 
   if(res.status === 403){
-    body.innerHTML = '<tr><td colspan="3" class="empty">Not authorized.</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="empty">Not authorized.</td></tr>';
     return;
   }
   if(!res.ok){
-    body.innerHTML = '<tr><td colspan="3" class="err">Failed to load users.</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" class="err">Failed to load users.</td></tr>';
     return;
   }
 
   const users = await res.json();
   body.innerHTML = users.length
-    ? users.map(u => `<tr><td>${escapeHtml(u.email || '—')}</td><td>${u.createdAt ? timeAgo(new Date(u.createdAt).getTime()) : '—'}</td><td>${u.lastSignInAt ? timeAgo(new Date(u.lastSignInAt).getTime()) : 'Never'}</td></tr>`).join('')
-    : '<tr><td colspan="3" class="empty">No users yet.</td></tr>';
+    ? users.map(u => `
+      <tr>
+        <td>${escapeHtml(u.email || '—')}</td>
+        <td>${u.createdAt ? timeAgo(new Date(u.createdAt).getTime()) : '—'}</td>
+        <td>${u.lastSignInAt ? timeAgo(new Date(u.lastSignInAt).getTime()) : 'Never'}</td>
+        <td class="admin-user-delete-cell"><button class="admin-delete-btn" data-id="${u.id}" data-email="${escapeHtml(u.email || '')}" title="Delete user" type="button">×</button></td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="4" class="empty">No users yet.</td></tr>';
 }
+
+document.getElementById('adminUsersTableBody')?.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.admin-delete-btn');
+  if(!btn) return;
+
+  const userId = btn.dataset.id;
+  const email = btn.dataset.email || 'this user';
+  const confirmed = confirm(`Delete ${email}? This permanently removes their account and can't be undone.`);
+  if(!confirmed) return;
+
+  btn.disabled = true;
+  const token = await getAccessToken();
+  const res = await fetch(`${API_BASE}/api/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if(!res.ok){
+    const { error } = await res.json().catch(() => ({}));
+    alert(error || 'Failed to delete user.');
+    btn.disabled = false;
+    return;
+  }
+
+  btn.closest('tr')?.remove();
+});
 
 async function refreshAdminPortfolio(){
   const select = document.getElementById('adminPfUserSelect');
