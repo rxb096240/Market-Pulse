@@ -33,7 +33,7 @@ const VIEW_TITLES = {
   'learn-crypto': 'Learn · Crypto Basics',
   'forex-rates': 'Forex',
   'earnings-calendar': 'Earnings',
-  'fire': 'FIRE',
+  'fire': 'What is FIRE',
   'fire-calculator': 'FIRE Calculator',
   'fire-videos': 'FIRE Videos',
   'pf-flowchart': 'Flowchart',
@@ -170,11 +170,15 @@ function initNavCollapse(){
 
 function expandGroupForView(view){
   const activeBtn = document.querySelector(`.nav-item[data-view="${view}"]`);
-  const groupEl = activeBtn?.closest('.nav-group');
-  if(groupEl){
+  // Walk up through every ancestor .nav-group (not just the nearest one) so
+  // a nested subgroup like Personal Finance > FIRE expands its parent too —
+  // otherwise the now-active nested group stays hidden inside a collapsed parent.
+  let groupEl = activeBtn?.closest('.nav-group');
+  while(groupEl){
     groupEl.classList.remove('collapsed');
     const gName = groupEl.dataset.group;
     if(gName) localStorage.setItem(`navGroup:${gName}`, 'expanded');
+    groupEl = groupEl.parentElement?.closest('.nav-group');
   }
 }
 
