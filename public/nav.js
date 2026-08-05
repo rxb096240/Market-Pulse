@@ -52,6 +52,7 @@ function showView(view){
   location.hash=view;
   trackNavVisit(view);
   updateTopBannerVisibility(view);
+  buildTape();
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });

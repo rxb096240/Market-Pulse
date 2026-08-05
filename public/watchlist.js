@@ -89,7 +89,14 @@ function updateCard(key, price, changePct, capText){
 
 function buildTape(){
   const tape = document.getElementById('tape');
-  let cryptoItems = COINS.map(c => {
+  // Inside the Stocks or Crypto section, the tape narrows to just that
+  // asset class — anywhere else it shows both, same as before.
+  const inStocksSection = currentView.startsWith('stocks-') || currentView === 'ipo-calendar';
+  const inCryptoSection = currentView.startsWith('crypto-');
+  const showCrypto = !inStocksSection;
+  const showStocks = !inCryptoSection;
+
+  let cryptoItems = !showCrypto ? '' : COINS.map(c => {
     const d = latestCryptoData[c.id];
     if(!d) return '';
     const chg = d.usd_24h_change || 0;
@@ -97,7 +104,7 @@ function buildTape(){
     const arrow = chg >= 0 ? '▲' : '▼';
     return `<span class="tape-item"><b>${c.sym}</b> $${fmtPrice(d.usd)} <span class="chg ${cls}">${arrow} ${Math.abs(chg).toFixed(2)}%</span></span>`;
   }).join('');
-  let stockItems = STOCKS.map(s => {
+  let stockItems = !showStocks ? '' : STOCKS.map(s => {
     const d = latestStockData[s.sym];
     if(!d) return '';
     const cls = d.changePct >= 0 ? 'up' : 'down';
