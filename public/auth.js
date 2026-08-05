@@ -14,6 +14,10 @@ const authError = document.getElementById('authError');
 const authSubmitBtn = document.getElementById('authSubmitBtn');
 const authToggleText = document.getElementById('authToggleText');
 const authToggleLink = document.getElementById('authToggleLink');
+const authToggleRow = document.getElementById('authToggleRow');
+const authForgotRow = document.getElementById('authForgotRow');
+const authForgotLink = document.getElementById('authForgotLink');
+const authHint = document.getElementById('authHint');
 const authMenuWrap = document.getElementById('authMenuWrap');
 const authMenu = document.getElementById('authMenu');
 const authMenuEmail = document.getElementById('authMenuEmail');
@@ -24,7 +28,35 @@ const authAvatarGrid = document.getElementById('authAvatarGrid');
 const authLogoutBtn = document.getElementById('authLogoutBtn');
 
 function openAuthModal(){ authModalBackdrop.classList.add('open'); authError.textContent=''; }
-function closeAuthModal(){ authModalBackdrop.classList.remove('open'); authEmail.value=''; authPassword.value=''; }
+function closeAuthModal(){
+  authModalBackdrop.classList.remove('open');
+  authEmail.value=''; authPassword.value='';
+  authEmail.style.display=''; authPassword.placeholder='Password';
+  authForgotRow.style.display=''; authToggleRow.style.display='';
+  authHint.textContent='';
+  authMode = 'signin';
+}
+
+// Supabase redirects here with a recovery token after the user clicks the
+// emailed reset link, and fires this event once it's processed into a
+// session — at that point the modal repurposes into a "set new password"
+// form instead of the normal sign in/up one.
+function enterRecoveryMode(){
+  authMode = 'recovery';
+  authEmail.style.display = 'none';
+  authPassword.placeholder = 'New password';
+  authForgotRow.style.display = 'none';
+  authToggleRow.style.display = 'none';
+  authModalTitle.textContent = 'Set a new password';
+  authSubmitBtn.textContent = 'Set new password';
+  authError.textContent = '';
+  authHint.textContent = '';
+  openAuthModal();
+}
+
+supabaseClient.auth.onAuthStateChange((event) => {
+  if(event === 'PASSWORD_RECOVERY') enterRecoveryMode();
+});
 
 function refreshAuthButtonLabel(){
   if(!currentUser){ authBtn.textContent = 'Sign in'; return; }
@@ -129,9 +161,35 @@ authToggleLink?.addEventListener('click', (e) => {
   authSubmitBtn.textContent = authMode === 'signin' ? 'Sign in' : 'Sign up';
   authToggleText.textContent = authMode === 'signin' ? 'No account?' : 'Already have one?';
   authToggleLink.textContent = authMode === 'signin' ? 'Sign up' : 'Sign in';
+  authError.textContent = ''; authHint.textContent = '';
+});
+
+authForgotLink?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  authError.textContent = ''; authHint.textContent = '';
+  const email = authEmail.value.trim();
+  if(!email){ authError.textContent = 'Enter your email above first.'; return; }
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  if(error){ authError.textContent = error.message; return; }
+  authHint.textContent = 'Check your email for a reset link.';
 });
 
 authSubmitBtn?.addEventListener('click', async () => {
+  if(authMode === 'recovery'){
+    const password = authPassword.value;
+    if(!password || password.length < 6){ authError.textContent = 'Password must be at least 6 characters.'; return; }
+    authSubmitBtn.disabled = true;
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    authSubmitBtn.disabled = false;
+    if(error){ authError.textContent = error.message; return; }
+    closeAuthModal();
+    authSubmitBtn.textContent = 'Sign in';
+    updateAuthUI();
+    return;
+  }
+
   const email = authEmail.value.trim();
   const password = authPassword.value;
   if(!email || !password){ authError.textContent = 'Enter both email and password.'; return; }
