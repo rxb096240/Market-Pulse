@@ -1185,6 +1185,14 @@
 #earningsContainer .markets-table th:nth-child(6), #earningsContainer .markets-table td:nth-child(6){ width:120px; }
 #earningsContainer .markets-table th:nth-child(7), #earningsContainer .markets-table td:nth-child(7){ width:140px; }
 
+#retireAgeTable th:nth-child(1), #retireAgeTable td:nth-child(1){ width:80px; }
+#retireAgeTable th:nth-child(2), #retireAgeTable td:nth-child(2){ width:160px; }
+#retireAgeTable th:nth-child(3), #retireAgeTable td:nth-child(3){ width:auto; }
+
+#retireLimitsTable th:nth-child(1), #retireLimitsTable td:nth-child(1){ width:auto; }
+#retireLimitsTable th:nth-child(2), #retireLimitsTable td:nth-child(2){ width:130px; }
+#retireLimitsTable th:nth-child(3), #retireLimitsTable td:nth-child(3){ width:130px; }
+
 #ipoCalendarTable th:nth-child(1), #ipoCalendarTable td:nth-child(1){ width:260px; }
 #ipoCalendarTable th:nth-child(2), #ipoCalendarTable td:nth-child(2){ width:120px; }
 #ipoCalendarTable th:nth-child(3), #ipoCalendarTable td:nth-child(3){ width:110px; }
