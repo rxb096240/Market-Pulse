@@ -257,12 +257,17 @@
   // ---------------------------------------------------------------
   // CREDIT SCORE SIMULATOR
   // ---------------------------------------------------------------
-  // Deliberately doesn't compute a fake resulting score — FICO/VantageScore
-  // formulas are proprietary and nonlinear. This only surfaces known
-  // directional ranges pulled straight from published guidance (a 30-day
-  // late payment, a new hard inquiry), plus a qualitative utilization band,
-  // so it can't be mistaken for a real scoring simulation.
+  // The resulting range only ever subtracts published point RANGES for
+  // levers the source guidance actually quantifies (late payment,
+  // hard inquiry) from a starting score — never a single fabricated
+  // number. Utilization has no fixed point value in that guidance, so
+  // it stays a qualitative band and is excluded from the point math,
+  // called out explicitly in the UI so it isn't mistaken for a gap.
   const simState = { late: false, inquiry: false };
+  const SIM_IMPACT = {
+    late: { min: 50, max: 100, label: '30-day late payment', detail: '-50 to -100+ pts' },
+    inquiry: { min: 5, max: 10, label: 'New hard inquiry', detail: '-5 to -10 pts (~2 yrs visible)' }
+  };
 
   function utilizationBand(pct) {
     if (pct < 10) return { label: 'Ideal', note: 'well under 10%', neutral: true };
@@ -273,8 +278,10 @@
 
   function renderScoreImpact() {
     const utilEl = document.getElementById('sim-util');
+    const startEl = document.getElementById('sim-start-score');
     const resultsEl = document.getElementById('sim-results');
-    if (!utilEl || !resultsEl) return;
+    const heroEl = document.getElementById('sim-hero');
+    if (!utilEl || !startEl || !resultsEl || !heroEl) return;
 
     const utilPct = parseFloat(utilEl.value) || 0;
     document.getElementById('sim-util-out').textContent = utilPct.toFixed(0) + '%';
@@ -287,22 +294,20 @@
       </div>
     `];
 
-    if (simState.late) {
+    let minDrop = 0, maxDrop = 0;
+    ['late', 'inquiry'].forEach(key => {
+      if (!simState[key]) return;
+      const impact = SIM_IMPACT[key];
+      minDrop += impact.min;
+      maxDrop += impact.max;
       rows.push(`
         <div class="calc-sim-result-row">
-          <div class="calc-sim-result-lbl">30-day late payment</div>
-          <div class="calc-sim-result-val">-50 to -100+ pts</div>
+          <div class="calc-sim-result-lbl">${impact.label}</div>
+          <div class="calc-sim-result-val">${impact.detail}</div>
         </div>
       `);
-    }
-    if (simState.inquiry) {
-      rows.push(`
-        <div class="calc-sim-result-row">
-          <div class="calc-sim-result-lbl">New hard inquiry</div>
-          <div class="calc-sim-result-val">-a few pts (~2 yrs visible)</div>
-        </div>
-      `);
-    }
+    });
+
     if (!simState.late && !simState.inquiry) {
       rows.push(`
         <div class="calc-sim-result-row calc-sim-neutral">
@@ -313,6 +318,18 @@
     }
 
     resultsEl.innerHTML = rows.join('');
+
+    const startScore = Math.min(850, Math.max(300, parseFloat(startEl.value) || 717));
+    const rangeLow = Math.max(300, startScore - maxDrop);
+    const rangeHigh = Math.max(300, startScore - minDrop);
+
+    const rangeEl = document.getElementById('sim-range');
+    const pointsEl = document.getElementById('sim-points');
+    if (rangeEl) rangeEl.textContent = maxDrop === 0 ? String(startScore) : `${rangeLow}–${rangeHigh}`;
+    if (pointsEl) pointsEl.textContent = maxDrop === 0
+      ? 'No changes toggled'
+      : `-${minDrop} to -${maxDrop} pts from ${startScore}`;
+    heroEl.className = 'calc-hero-result' + (maxDrop > 0 ? ' calc-red' : '');
   }
 
   function initScoreSimToggles() {
@@ -553,8 +570,11 @@
       if (el) el.addEventListener('input', renderUtilization);
     });
 
-    const simUtilEl = document.getElementById('sim-util');
-    if (simUtilEl) simUtilEl.addEventListener('input', renderScoreImpact);
+    const simInputs = ['sim-util', 'sim-start-score'];
+    simInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', renderScoreImpact);
+    });
   }
 
   function initCalculators() {

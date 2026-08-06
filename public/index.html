@@ -1355,6 +1355,14 @@
     <div class="calc-sub">Toggle a few common scenarios to see their known directional impact — not a real FICO simulation.</div>
 
     <div class="calc-input-group">
+      <div class="calc-input-label"><span>Starting score</span></div>
+      <div class="calc-input-box">
+        <input type="number" id="sim-start-score" value="717" min="300" max="850" step="1">
+        <span class="calc-unit">FICO</span>
+      </div>
+    </div>
+
+    <div class="calc-input-group">
       <div class="calc-input-label"><span>Current utilization</span><span id="sim-util-out">25%</span></div>
       <input type="range" class="calc-slider" id="sim-util" min="0" max="100" step="1" value="25">
     </div>
@@ -1375,12 +1383,19 @@
       <div class="calc-sim-switch"></div>
     </div>
 
+    <div class="calc-hero-result" id="sim-hero">
+      <div class="calc-accent-bar"></div>
+      <div class="calc-lbl">Estimated resulting range</div>
+      <div class="calc-big" id="sim-range">717</div>
+      <div class="calc-delta" id="sim-points">No changes toggled</div>
+    </div>
+
     <div class="calc-table-card" style="margin-top:16px;">
       <div class="calc-table-title">Estimated impact</div>
       <div id="sim-results"></div>
     </div>
 
-    <div class="calc-sim-note">FICO and VantageScore formulas are proprietary and nonlinear — this shows known directional ranges from published guidance, not a computed score. Use it to understand which levers matter most, not to predict an exact number.</div>
+    <div class="calc-sim-note">FICO and VantageScore formulas are proprietary and nonlinear — the resulting range above just subtracts published point ranges for late payments and hard inquiries from your starting score (utilization isn't included in that math, since the source guidance doesn't give it a fixed point value). Use this to understand which levers matter most, not to predict an exact number.</div>
   </div>
 </section>
 
