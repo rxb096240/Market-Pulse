@@ -257,12 +257,11 @@
   // ---------------------------------------------------------------
   // CREDIT SCORE SIMULATOR
   // ---------------------------------------------------------------
-  // The resulting range only ever subtracts published point RANGES for
-  // levers the source guidance actually quantifies (late payment,
-  // hard inquiry) from a starting score — never a single fabricated
-  // number. Utilization has no fixed point value in that guidance, so
-  // it stays a qualitative band and is excluded from the point math,
-  // called out explicitly in the UI so it isn't mistaken for a gap.
+  // Late payment and hard inquiry point ranges come straight from the
+  // source guidance docs. Utilization has no fixed point value there,
+  // so its drag range below is a separate, clearly-labeled industry
+  // approximation (common FICO-education bands), not a PDF-sourced
+  // figure — kept distinct so the two provenances never blur together.
   const simState = { late: false, inquiry: false };
   const SIM_IMPACT = {
     late: { min: 50, max: 100, label: '30-day late payment', detail: '-50 to -100+ pts' },
@@ -270,10 +269,10 @@
   };
 
   function utilizationBand(pct) {
-    if (pct < 10) return { label: 'Ideal', note: 'well under 10%', neutral: true };
-    if (pct < 30) return { label: 'Good', note: 'under the 30% guideline', neutral: true };
-    if (pct < 50) return { label: 'Elevated', note: 'above the recommended 30%', neutral: false };
-    return { label: 'High', note: 'well above the recommended range', neutral: false };
+    if (pct < 10) return { label: 'Ideal', note: 'well under 10%', neutral: true, min: 0, max: 0 };
+    if (pct < 30) return { label: 'Good', note: 'under the 30% guideline', neutral: true, min: 0, max: 15 };
+    if (pct < 50) return { label: 'Elevated', note: 'above the recommended 30%', neutral: false, min: 15, max: 40 };
+    return { label: 'High', note: 'well above the recommended range', neutral: false, min: 40, max: 90 };
   }
 
   function renderScoreImpact() {
@@ -287,14 +286,15 @@
     document.getElementById('sim-util-out').textContent = utilPct.toFixed(0) + '%';
     const band = utilizationBand(utilPct);
 
+    let minDrop = band.min, maxDrop = band.max;
+    const utilDetail = band.max === 0 ? 'no drag at this level' : `~-${band.min} to -${band.max} pts (industry est.)`;
     const rows = [`
       <div class="calc-sim-result-row${band.neutral ? ' calc-sim-neutral' : ''}">
         <div class="calc-sim-result-lbl">Utilization at ${utilPct.toFixed(0)}% (${band.label})</div>
-        <div class="calc-sim-result-val">${band.note}</div>
+        <div class="calc-sim-result-val">${utilDetail}</div>
       </div>
     `];
 
-    let minDrop = 0, maxDrop = 0;
     ['late', 'inquiry'].forEach(key => {
       if (!simState[key]) return;
       const impact = SIM_IMPACT[key];
@@ -308,7 +308,7 @@
       `);
     });
 
-    if (!simState.late && !simState.inquiry) {
+    if (!simState.late && !simState.inquiry && band.max === 0) {
       rows.push(`
         <div class="calc-sim-result-row calc-sim-neutral">
           <div class="calc-sim-result-lbl">No other scenarios toggled</div>
