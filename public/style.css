@@ -1035,6 +1035,42 @@
   color:var(--muted);
 }
 .fire-caveat strong{ color:var(--amber); }
+
+/* ---- Credit score gauge (Credit 101) ---- */
+.credit-gauge-wrap{ background:var(--panel); border:1px solid var(--panel-border); border-radius:10px; padding:18px 20px; margin-bottom:8px; }
+.credit-gauge-readout{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+.credit-gauge-readout .score{ font-size:32px; font-weight:700; color:var(--text); font-family:'IBM Plex Mono',monospace; }
+.credit-gauge-readout .rating{ font-size:12px; color:var(--amber); letter-spacing:.06em; font-weight:700; text-transform:uppercase; }
+.credit-gauge-track{
+  position:relative;
+  height:8px;
+  border-radius:4px;
+  background:linear-gradient(90deg, var(--down) 0%, var(--amber) 45%, var(--up) 100%);
+  margin-bottom:10px;
+}
+.credit-gauge-marker{
+  position:absolute;
+  top:-4px;
+  width:3px;
+  height:16px;
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.3);
+  border-radius:1px;
+  transform:translateX(-50%);
+}
+.credit-gauge-ticks{ display:flex; justify-content:space-between; font-size:10px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+.credit-gauge-note{ font-size:11px; color:var(--muted); margin-top:10px; }
+
+/* ---- 5-factor weight bars (Credit 101) ---- */
+.credit-factor-row{ margin-bottom:16px; }
+.credit-factor-row:last-child{ margin-bottom:0; }
+.credit-factor-head{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+.credit-factor-head .name{ color:var(--text); font-weight:600; }
+.credit-factor-head .pct{ color:var(--amber); font-weight:700; font-family:'IBM Plex Mono',monospace; }
+.credit-factor-bar{ background:var(--bg-alt); height:8px; border-radius:4px; overflow:hidden; }
+.credit-factor-fill{ height:100%; background:var(--amber); border-radius:4px; }
+.credit-factor-note{ font-size:12px; color:var(--muted); margin-top:5px; }
+
 @media (max-width:480px){
   .fire-stat-row{ grid-template-columns:1fr; }
 }
@@ -1192,6 +1228,9 @@
 #retireLimitsTable th:nth-child(1), #retireLimitsTable td:nth-child(1){ width:auto; }
 #retireLimitsTable th:nth-child(2), #retireLimitsTable td:nth-child(2){ width:130px; }
 #retireLimitsTable th:nth-child(3), #retireLimitsTable td:nth-child(3){ width:130px; }
+
+#creditMortgageTable th:nth-child(1), #creditMortgageTable td:nth-child(1){ width:110px; }
+#creditMortgageTable tr.credit-threshold td{ color:var(--amber); font-weight:700; }
 
 #ipoCalendarTable th:nth-child(1), #ipoCalendarTable td:nth-child(1){ width:260px; }
 #ipoCalendarTable th:nth-child(2), #ipoCalendarTable td:nth-child(2){ width:120px; }
@@ -1913,6 +1952,62 @@
   position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--calc-green);
 }
 .calc-hero-result.calc-blue .calc-accent-bar{ background:var(--calc-blue); }
+.calc-hero-result.calc-amber .calc-big{ color:var(--calc-amber); }
+.calc-hero-result.calc-amber .calc-delta{ color:var(--calc-amber); }
+.calc-hero-result.calc-amber .calc-accent-bar{ background:var(--calc-amber); }
+.calc-hero-result.calc-red .calc-big{ color:var(--down); }
+.calc-hero-result.calc-red .calc-delta{ color:var(--down); }
+.calc-hero-result.calc-red .calc-accent-bar{ background:var(--down); }
+
+/* ---- Utilization gauge ---- */
+.calc-util-gauge-track{
+  position:relative;
+  height:10px;
+  border-radius:5px;
+  background:linear-gradient(90deg, var(--calc-green) 0%, var(--calc-green) 10%, var(--calc-amber) 10%, var(--calc-amber) 30%, var(--down) 30%, var(--down) 100%);
+  margin:16px 0 6px;
+}
+.calc-util-gauge-marker{
+  position:absolute;
+  top:-5px;
+  width:3px;
+  height:20px;
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.3);
+  border-radius:1px;
+  transform:translateX(-50%);
+}
+.calc-util-gauge-ticks{ display:flex; justify-content:space-between; font-size:10px; color:var(--calc-muted); font-family:'IBM Plex Mono',monospace; margin-bottom:18px; }
+.calc-target-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:9px 0; border-bottom:1px solid var(--calc-border); }
+.calc-target-row:last-child{ border-bottom:none; }
+.calc-target-row .calc-target-lbl{ color:var(--calc-muted); }
+.calc-target-row .calc-target-val{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--calc-text); }
+
+/* ---- Score simulator ---- */
+.calc-sim-toggle{
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--calc-card); border:1px solid var(--calc-border); border-radius:10px;
+  padding:12px 14px; margin-bottom:10px; cursor:pointer;
+}
+.calc-sim-toggle .calc-sim-toggle-text{ flex:1; margin-right:12px; }
+.calc-sim-toggle .calc-sim-toggle-name{ font-size:13px; color:var(--calc-text); font-weight:600; margin-bottom:2px; }
+.calc-sim-toggle .calc-sim-toggle-note{ font-size:11px; color:var(--calc-muted); }
+.calc-sim-switch{
+  width:38px; height:22px; border-radius:11px; background:var(--calc-border);
+  position:relative; flex-shrink:0; transition:background .15s ease;
+}
+.calc-sim-switch::after{
+  content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+  background:#fff; transition:transform .15s ease;
+}
+.calc-sim-toggle.active .calc-sim-switch{ background:var(--down); }
+.calc-sim-toggle.active .calc-sim-switch::after{ transform:translateX(16px); }
+.calc-sim-result-row{ display:flex; justify-content:space-between; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--calc-border); font-size:12.5px; }
+.calc-sim-result-row:last-child{ border-bottom:none; }
+.calc-sim-result-row .calc-sim-result-lbl{ color:var(--calc-muted); }
+.calc-sim-result-row .calc-sim-result-val{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--down); }
+.calc-sim-result-row.calc-sim-neutral .calc-sim-result-val{ color:var(--calc-muted); font-weight:500; }
+.calc-sim-note{ font-size:11px; color:var(--calc-muted); margin-top:14px; line-height:1.5; }
 
 .calc-chart-card{
   background:var(--calc-card);

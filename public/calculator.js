@@ -218,6 +218,122 @@
     return { fireNumber, fiYear, yearly };
   }
 
+  // ---------------------------------------------------------------
+  // CREDIT UTILIZATION
+  // ---------------------------------------------------------------
+  function calculateUtilization({ limit, balance }) {
+    const pct = limit > 0 ? (balance / limit) * 100 : 0;
+    let status, tier, note;
+    if (pct < 10) { status = 'Ideal'; tier = 'green'; note = 'Well under the 10% mark.'; }
+    else if (pct < 30) { status = 'Good'; tier = 'green'; note = 'Under the 30% guideline.'; }
+    else if (pct < 50) { status = 'Elevated'; tier = 'amber'; note = 'Above the recommended 30%.'; }
+    else { status = 'High'; tier = 'red'; note = 'Well above the recommended range.'; }
+    return { pct, status, tier, note, target30: limit * 0.30, target10: limit * 0.10 };
+  }
+
+  function renderUtilization() {
+    const limitEl = document.getElementById('util-limit');
+    const balanceEl = document.getElementById('util-balance');
+    const heroEl = document.getElementById('util-hero');
+    if (!limitEl || !balanceEl || !heroEl) return;
+
+    const limit = parseFloat(limitEl.value) || 0;
+    const balance = parseFloat(balanceEl.value) || 0;
+    const result = calculateUtilization({ limit, balance });
+
+    document.getElementById('util-pct').textContent = result.pct.toFixed(1) + '%';
+    document.getElementById('util-status').textContent = result.status + ' — ' + result.note;
+    heroEl.className = 'calc-hero-result' + (result.tier === 'amber' ? ' calc-amber' : result.tier === 'red' ? ' calc-red' : '');
+
+    const marker = document.getElementById('util-marker');
+    if (marker) marker.style.left = Math.min(100, result.pct) + '%';
+
+    const target30El = document.getElementById('util-target-30');
+    const target10El = document.getElementById('util-target-10');
+    if (target30El) target30El.textContent = balance <= result.target30 ? 'Already there' : fmtUSD(result.target30);
+    if (target10El) target10El.textContent = balance <= result.target10 ? 'Already there' : fmtUSD(result.target10);
+  }
+
+  // ---------------------------------------------------------------
+  // CREDIT SCORE SIMULATOR
+  // ---------------------------------------------------------------
+  // Deliberately doesn't compute a fake resulting score — FICO/VantageScore
+  // formulas are proprietary and nonlinear. This only surfaces known
+  // directional ranges pulled straight from published guidance (a 30-day
+  // late payment, a new hard inquiry), plus a qualitative utilization band,
+  // so it can't be mistaken for a real scoring simulation.
+  const simState = { late: false, inquiry: false };
+
+  function utilizationBand(pct) {
+    if (pct < 10) return { label: 'Ideal', note: 'well under 10%', neutral: true };
+    if (pct < 30) return { label: 'Good', note: 'under the 30% guideline', neutral: true };
+    if (pct < 50) return { label: 'Elevated', note: 'above the recommended 30%', neutral: false };
+    return { label: 'High', note: 'well above the recommended range', neutral: false };
+  }
+
+  function renderScoreImpact() {
+    const utilEl = document.getElementById('sim-util');
+    const resultsEl = document.getElementById('sim-results');
+    if (!utilEl || !resultsEl) return;
+
+    const utilPct = parseFloat(utilEl.value) || 0;
+    document.getElementById('sim-util-out').textContent = utilPct.toFixed(0) + '%';
+    const band = utilizationBand(utilPct);
+
+    const rows = [`
+      <div class="calc-sim-result-row${band.neutral ? ' calc-sim-neutral' : ''}">
+        <div class="calc-sim-result-lbl">Utilization at ${utilPct.toFixed(0)}% (${band.label})</div>
+        <div class="calc-sim-result-val">${band.note}</div>
+      </div>
+    `];
+
+    if (simState.late) {
+      rows.push(`
+        <div class="calc-sim-result-row">
+          <div class="calc-sim-result-lbl">30-day late payment</div>
+          <div class="calc-sim-result-val">-50 to -100+ pts</div>
+        </div>
+      `);
+    }
+    if (simState.inquiry) {
+      rows.push(`
+        <div class="calc-sim-result-row">
+          <div class="calc-sim-result-lbl">New hard inquiry</div>
+          <div class="calc-sim-result-val">-a few pts (~2 yrs visible)</div>
+        </div>
+      `);
+    }
+    if (!simState.late && !simState.inquiry) {
+      rows.push(`
+        <div class="calc-sim-result-row calc-sim-neutral">
+          <div class="calc-sim-result-lbl">No other scenarios toggled</div>
+          <div class="calc-sim-result-val">—</div>
+        </div>
+      `);
+    }
+
+    resultsEl.innerHTML = rows.join('');
+  }
+
+  function initScoreSimToggles() {
+    const lateToggle = document.getElementById('sim-late-toggle');
+    const inquiryToggle = document.getElementById('sim-inquiry-toggle');
+    if (lateToggle) {
+      lateToggle.addEventListener('click', () => {
+        simState.late = !simState.late;
+        lateToggle.classList.toggle('active', simState.late);
+        renderScoreImpact();
+      });
+    }
+    if (inquiryToggle) {
+      inquiryToggle.addEventListener('click', () => {
+        simState.inquiry = !simState.inquiry;
+        inquiryToggle.classList.toggle('active', simState.inquiry);
+        renderScoreImpact();
+      });
+    }
+  }
+
   function renderMortgage() {
     const priceEl = document.getElementById('mo-price');
     const downPctEl = document.getElementById('mo-down-pct');
@@ -430,6 +546,15 @@
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', renderFire);
     });
+
+    const utilInputs = ['util-limit', 'util-balance'];
+    utilInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', renderUtilization);
+    });
+
+    const simUtilEl = document.getElementById('sim-util');
+    if (simUtilEl) simUtilEl.addEventListener('input', renderScoreImpact);
   }
 
   function initCalculators() {
@@ -439,11 +564,14 @@
     initSubTabs();
     initFrequencySegmented();
     initMortgageModeSegmented();
+    initScoreSimToggles();
     initInputListeners();
 
     renderCompoundInterest();
     renderMortgage();
     renderFire();
+    renderUtilization();
+    renderScoreImpact();
   }
 
   if (document.readyState === 'loading') {
@@ -458,9 +586,12 @@
     renderCompoundInterest,
     renderMortgage,
     renderFire,
+    renderUtilization,
+    renderScoreImpact,
     calculateCompoundInterest,
     calculateMortgage,
-    calculateFire
+    calculateFire,
+    calculateUtilization
   };
 
 })();
