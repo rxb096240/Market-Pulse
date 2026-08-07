@@ -72,8 +72,9 @@ function showView(view){
   if(titleEl) titleEl.textContent = VIEW_TITLES[view] || '';
 
   if(view === 'home'){
-    refreshHomeView();
-    refreshVixIndex();
+    // Combine the home dashboard's independent card fetches so one slow/failed
+    // card (e.g. S&P 500 data unavailable) never blocks or throws past the other.
+    Promise.allSettled([refreshHomeView(), refreshSpxIndex()]);
   }else if(view === 'crypto-trending'){
     refreshTrending();
   }else if(view === 'crypto-overview'){

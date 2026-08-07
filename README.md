@@ -22,7 +22,7 @@ A free, real-time stock, crypto, and forex tracking dashboard with practice trad
 - **Practice Mode** — $10,000 simulated trading account with real live prices, zero real-money risk
 - **Portfolio Tracking** — Persisted stock and crypto holdings (Supabase), with cost basis, P/L, and P/L% calculations
 - **Home Dashboard**
-  - Market Pulse Index and live market snapshot strip
+  - S&P 500 index card with 1D/5D/1M/6M/1Y timeframe chart, and live market snapshot strip
   - **Suggested Allocation by Age** — age-bracket dropdown (20–30 through 60–70) showing a Stocks/Bonds/Cash/Crypto reference allocation
   - Today's Top Movers, side by side with Suggested Allocation
 
