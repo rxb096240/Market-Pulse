@@ -469,23 +469,48 @@ app.get('/api/crypto/markets', async (req, res) => {
   }
 });
 
-// GET /api/markets/vix — real CBOE VIX quote + intraday sparkline via Yahoo Finance
-app.get('/api/markets/vix', async (req, res) => {
+// GET /api/markets/spx?range=1D|5D|1M|6M|1Y — S&P 500 index quote + historical
+// chart via Yahoo Finance, one route serving all home-dashboard timeframes.
+// Each range is cached server-side under its own key/TTL via cachedFetch,
+// same pattern (and same upstream) the old /api/markets/vix route used —
+// short TTL for the fast-moving intraday range, longer TTL for the
+// slower-moving multi-month ranges, matching the ttl conventions used by the
+// other market-data routes above.
+const SPX_RANGE_CONFIG = {
+  '1D': { interval: '5m', range: '1d', ttlMs: 60_000 },
+  '5D': { interval: '15m', range: '5d', ttlMs: 5 * 60_000 },
+  '1M': { interval: '1d', range: '1mo', ttlMs: 15 * 60_000 },
+  '6M': { interval: '1d', range: '6mo', ttlMs: 60 * 60_000 },
+  '1Y': { interval: '1wk', range: '1y', ttlMs: 60 * 60_000 }
+};
+
+function formatSpxPointTime(ts, rangeKey) {
+  const d = new Date(ts * 1000);
+  if (rangeKey === '1D') return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (rangeKey === '5D') return d.toLocaleDateString('en-US', { weekday: 'short' });
+  if (rangeKey === '1Y') return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+app.get('/api/markets/spx', async (req, res) => {
+  const rangeKey = (req.query.range || '1D').toString().toUpperCase();
+  const config = SPX_RANGE_CONFIG[rangeKey];
+  if (!config) return res.status(400).json({ error: 'Invalid range. Use one of 1D, 5D, 1M, 6M, 1Y.' });
+
   try {
-    const chartRes = await fetch(
-      'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=5m&range=1d'
-    );
-    const chartData = await chartRes.json();
-    const result = chartData.chart.result[0];
+    const { data } = await cachedFetch(`markets:spx:${rangeKey}`, config.ttlMs, async () => {
+      return fetchJson(
+        `https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=${config.interval}&range=${config.range}`
+      );
+    }, 45_000);
+
+    const result = data.chart.result[0];
     const meta = result.meta;
     const timestamps = result.timestamp;
     const closes = result.indicators.quote[0].close;
 
     const points = timestamps
-      .map((ts, i) => ({
-        time: new Date(ts * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        close: closes[i]
-      }))
+      .map((ts, i) => ({ time: formatSpxPointTime(ts, rangeKey), close: closes[i] }))
       .filter(p => p.close !== null);
 
     const price = meta.regularMarketPrice;
@@ -493,9 +518,10 @@ app.get('/api/markets/vix', async (req, res) => {
     const change = price - prevClose;
     const changePercent = (change / prevClose) * 100;
 
-    res.json({ price, change, changePercent, points });
+    res.json({ price, change, changePercent, range: rangeKey, points });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch VIX data' });
+    console.error('S&P 500 fetch failed:', err.message);
+    res.status(502).json({ error: 'Failed to fetch S&P 500 data' });
   }
 });
 
