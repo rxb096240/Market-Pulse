@@ -949,6 +949,9 @@ const GNEWS_URLS = {
   world: 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en-US&gl=US&ceid=US:en',
   in: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
   technology: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en',
+  // No dedicated Google News topic ID for AI, so this uses their keyword-search
+  // RSS feed instead — same XML shape as the topic feeds above, just a different endpoint.
+  ai: 'https://news.google.com/rss/search?q=%22Artificial%20Intelligence%22%20OR%20%22AI%22&hl=en-US&gl=US&ceid=US:en',
   entertainment: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en',
   sports: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en',
   health: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US&ceid=US:en',
