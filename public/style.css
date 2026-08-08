@@ -1230,10 +1230,16 @@
 .admin-delete-btn:hover{ color:var(--down); border-color:var(--down); }
 .admin-delete-btn:disabled{ opacity:0.4; cursor:default; }
 
-/* Forex table: override the crypto/stock table's wide fixed column widths */
-#forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:160px; }
-#forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:80px; }
-#forexTable th:nth-child(3), #forexTable td:nth-child(3){ width:120px; }
+/* Forex table: only 2 columns now (code folded into Currency), so drop the
+   crypto/stock table's forced 720px min-width and split by percentage
+   instead of fixed px — keeps it from overflowing/scrolling on mobile. */
+#forexTable{ min-width:0; }
+#forexTable th:nth-child(1), #forexTable td:nth-child(1){ width:65%; }
+#forexTable th:nth-child(2), #forexTable td:nth-child(2){ width:35%; }
+/* Let long names ("Australian Dollar (AUD)") and the "Rate (per $1)" header
+   wrap instead of forcing horizontal scroll on narrow phone widths. */
+#forexTable td:nth-child(1){ white-space:normal; }
+#forexTable th{ white-space:normal; }
 
 #earningsContainer .markets-table th:nth-child(1), #earningsContainer .markets-table td:nth-child(1){ width:80px; }
 #earningsContainer .markets-table th:nth-child(2), #earningsContainer .markets-table td:nth-child(2){ width:230px; }
