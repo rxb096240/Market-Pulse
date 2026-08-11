@@ -202,6 +202,13 @@
 
   section.building{ padding: 56px 0 72px; }
 
+  .building-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 560px){ .building-grid{ grid-template-columns: 1fr; } }
+
   .callout{
     background: var(--surface);
     border: 1px solid var(--rule);
@@ -345,17 +352,31 @@
     </section>
 
     <section class="building">
-      <div class="callout">
-        <div class="callout-top">
-          <span class="live-dot" aria-hidden="true"></span>
-          <span class="callout-eyebrow">Currently building</span>
+      <div class="building-grid">
+        <div class="callout">
+          <div class="callout-top">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="callout-eyebrow">Currently building</span>
+          </div>
+          <h3>Market Pulse</h3>
+          <p>
+            A free, live dashboard for stocks, crypto, forex, and earnings — with a risk-free $10,000
+            practice account for anyone who wants to trade before they trade.
+          </p>
+          <a class="callout-link" href="https://market-pulse.fyi">market-pulse.fyi →</a>
         </div>
-        <h3>Market Pulse</h3>
-        <p>
-          A free, live dashboard for stocks, crypto, forex, and earnings — with a risk-free $10,000
-          practice account for anyone who wants to trade before they trade.
-        </p>
-        <a class="callout-link" href="https://market-pulse.fyi">market-pulse.fyi →</a>
+
+        <div class="callout">
+          <div class="callout-top">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="callout-eyebrow">Currently building</span>
+          </div>
+          <h3>Pickframe</h3>
+          <p>
+            Quiz your way to your next movie or TV pick, or see what others are watching.
+          </p>
+          <a class="callout-link" href="https://pick-frame.onrender.com/">pick-frame.onrender.com →</a>
+        </div>
       </div>
     </section>
   </div>
