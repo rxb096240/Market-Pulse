@@ -1312,7 +1312,12 @@ app.delete('/api/admin/users/:userId', async (req, res) => {
 
     res.json({ ok: true });
   } catch (e) {
-    console.error('admin delete user failed:', e.message);
+    // e.message alone was logging as "{}" — AuthError's useful fields
+    // (status/code/name) aren't always on .message, so log the whole
+    // shape until we know what's actually failing.
+    console.error('admin delete user failed:', {
+      message: e?.message, name: e?.name, status: e?.status, code: e?.code, cause: e?.cause,
+    });
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
