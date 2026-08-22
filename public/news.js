@@ -252,6 +252,7 @@ indiaNewsTopicSelect?.addEventListener('change', () => {
 /* ---- News: Google News RSS (Topics) ---- */
 const TOPIC_LABELS = {
   ai: 'AI',
+  crypto: 'Crypto',
   business: 'Business',
   entertainment: 'Entertainment',
   health: 'Health',
