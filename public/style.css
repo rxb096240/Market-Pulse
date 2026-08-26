@@ -800,7 +800,18 @@
     margin-bottom:16px;
   }
   .markets-header-row .trending-intro{ margin-bottom:0; }
-  [data-view-panel="news-topics"] .markets-header-row{ justify-content:center; }
+  [data-view-panel="news-topics"] .markets-header-row,
+  [data-view-panel="news-india"] .markets-header-row{
+    position:relative;
+    justify-content:flex-start;
+  }
+  [data-view-panel="news-topics"] .markets-header-row .markets-market-select,
+  [data-view-panel="news-india"] .markets-header-row .markets-market-select{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+  }
   .markets-market-select{
     background:var(--panel);
     color:var(--text);
