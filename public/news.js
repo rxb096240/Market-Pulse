@@ -58,7 +58,7 @@ async function fetchStockNewsFor(sym){
   }
 }
 
-function renderNewsColumn(elId, items){
+function renderNewsColumn(elId, items, { showTag = true } = {}){
   const el = document.getElementById(elId);
   if(!el) return;
   if(items.length === 0){
@@ -67,7 +67,7 @@ function renderNewsColumn(elId, items){
   }
   el.innerHTML = items.map(item => `
     <a class="news-item" href="${item.url}" target="_blank" rel="noopener noreferrer">
-      <span class="news-tag">${escapeHtml(item.tag)}</span>
+      ${showTag ? `<span class="news-tag">${escapeHtml(item.tag)}</span>` : ''}
       <div class="news-title">${escapeHtml(item.title)}</div>
       <div class="news-meta">${escapeHtml(item.source)} · ${item.time ? timeAgo(item.time) : ''}</div>
     </a>
@@ -183,7 +183,7 @@ async function refreshUsNews(){
     if(!usNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('usNewsList', dedupeSortAndTrim(items, 20));
+  renderNewsColumn('usNewsList', dedupeSortAndTrim(items, 20), { showTag: false });
   usNewsLoaded = true;
 }
 
@@ -197,7 +197,7 @@ async function refreshWorldNews(){
     if(!worldNewsLoaded) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('worldNewsList', dedupeSortAndTrim(items, 20));
+  renderNewsColumn('worldNewsList', dedupeSortAndTrim(items, 20), { showTag: false });
   worldNewsLoaded = true;
 }
 
@@ -239,7 +239,7 @@ async function refreshIndiaNews(){
     if(!loadedIndiaNewsTopics.has(topic)) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20));
+  renderNewsColumn('indiaNewsList', dedupeSortAndTrim(items, 20), { showTag: false });
   loadedIndiaNewsTopics.add(topic);
 }
 
@@ -282,7 +282,7 @@ async function refreshTopicNews(){
     if(!loadedNewsTopics.has(topic)) container.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
     return;
   }
-  renderNewsColumn('topicNewsList', dedupeSortAndTrim(items, 20));
+  renderNewsColumn('topicNewsList', dedupeSortAndTrim(items, 20), { showTag: false });
   loadedNewsTopics.add(topic);
 }
 
