@@ -9,12 +9,14 @@ const notifBellBtn = document.getElementById('notifBellBtn');
 const notifBadge = document.getElementById('notifBadge');
 const notifPanel = document.getElementById('notifPanel');
 const notifList = document.getElementById('notifList');
+const notifClearAllBtn = document.getElementById('notifClearAllBtn');
 
 let latestNotifRows = [];
 let notifPollTimer = null;
 
 function renderNotifList(rows){
   if(!notifList) return;
+  if(notifClearAllBtn) notifClearAllBtn.style.display = (rows && rows.length > 0) ? '' : 'none';
   if(!rows || rows.length === 0){
     notifList.innerHTML = '<div class="notif-empty">No alerts yet.</div>';
     return;
@@ -23,7 +25,10 @@ function renderNotifList(rows){
     <div class="notif-item${n.read ? '' : ' unread'}">
       <div class="notif-item-top ${n.direction}">
         <span>${escapeHtml(n.sym)} ${n.direction === 'up' ? '▲' : '▼'} ${Math.abs(n.change_pct).toFixed(1)}%</span>
-        <span class="notif-item-time">${timeAgo(new Date(n.created_at).getTime())}</span>
+        <span class="notif-item-right">
+          <span class="notif-item-time">${timeAgo(new Date(n.created_at).getTime())}</span>
+          <button class="notif-item-close" type="button" data-id="${n.id}" aria-label="Dismiss">&times;</button>
+        </span>
       </div>
       <div class="notif-item-body">${escapeHtml(n.name)}</div>
     </div>
@@ -80,6 +85,41 @@ async function markAllNotificationsRead(){
     .in('id', unreadIds);
   if(error) console.error('Failed to mark notifications read:', error);
 }
+
+async function deleteNotification(id){
+  if(!currentUser) return;
+  latestNotifRows = latestNotifRows.filter(n => n.id !== id); // optimistic
+  renderNotifList(latestNotifRows);
+  updateNotifBadge();
+
+  const { error } = await supabaseClient
+    .from('notifications')
+    .delete()
+    .eq('user_id', currentUser.id)
+    .eq('id', id);
+  if(error) console.error('Failed to delete notification:', error);
+}
+
+async function clearAllNotifications(){
+  if(!currentUser || latestNotifRows.length === 0) return;
+  latestNotifRows = []; // optimistic
+  renderNotifList(latestNotifRows);
+  updateNotifBadge();
+
+  const { error } = await supabaseClient
+    .from('notifications')
+    .delete()
+    .eq('user_id', currentUser.id);
+  if(error) console.error('Failed to clear notifications:', error);
+}
+
+notifList?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.notif-item-close');
+  if(!btn) return;
+  deleteNotification(btn.dataset.id);
+});
+
+notifClearAllBtn?.addEventListener('click', clearAllNotifications);
 
 // .notif-panel is position:fixed (viewport-relative) so it can never be
 // pushed off-screen on narrow viewports the way an absolutely-positioned
