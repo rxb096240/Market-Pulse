@@ -72,7 +72,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 initGrids();
 trackSavedPortfolioAssets().then(() => { refreshAll(); });
 renderPortfolio();
-tickClock();
 // showView() sets the active nav item + panel correctly regardless of which
 // section happens to carry the "active" class in the raw HTML, and triggers
 // the matching refresh (refreshHomeView() by default, since currentView
@@ -81,7 +80,6 @@ if(!VIEW_TITLES[currentView]) currentView = 'home';
 authReady.then(() => showView(currentView));
 setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
-setInterval(tickClock, 1000);
 setInterval(() => {
   if(currentView === 'stocks-overview') refreshMarketsSummary();
 }, 90000);

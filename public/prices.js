@@ -128,9 +128,3 @@ async function refreshAll(){
   }
 }
 
-
-function tickClock(){
-  const el = document.getElementById('clock-time');
-  if(el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12:false });
-}
-

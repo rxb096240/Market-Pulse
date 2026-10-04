@@ -9,10 +9,7 @@ const donateBtcCopyBtn = document.getElementById('donateBtcCopyBtn');
 function openDonateModal(){ donateModalBackdrop.classList.add('open'); }
 function closeDonateModal(){ donateModalBackdrop.classList.remove('open'); }
 
-donateNavBtn?.addEventListener('click', () => {
-  if(window.innerWidth <= 820) closeDrawer();
-  openDonateModal();
-});
+donateNavBtn?.addEventListener('click', openDonateModal);
 donateModalClose?.addEventListener('click', closeDonateModal);
 donateModalBackdrop?.addEventListener('click', (e) => {
   if(e.target === donateModalBackdrop) closeDonateModal();

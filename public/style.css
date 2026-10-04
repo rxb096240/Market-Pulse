@@ -214,6 +214,8 @@
 }
 .theme-toggle-btn:hover{ border-color:var(--amber); }
 
+.header-icon-rail{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
 .auth-menu-wrap{ position:relative; flex-shrink:0; }
 .auth-menu{
   display:none;
