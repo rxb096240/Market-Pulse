@@ -291,7 +291,9 @@
 }
 .avatar-icon svg{ width:88%; height:88%; overflow:visible; }
 
-.auth-btn-avatar{ width:28px; height:28px; }
+.auth-btn-avatar{ width:20px; height:20px; }
+
+#authBtn{ padding:7px 12px; }
 
 .lb-trader{ display:inline-flex; align-items:center; gap:8px; }
 .lb-avatar{ width:20px; height:20px; }
