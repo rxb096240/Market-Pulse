@@ -90,6 +90,7 @@ async function openAuthMenu(){
   authNicknameInput.value = practiceAccount?.nickname || '';
   renderAuthAvatarGrid();
   authMenu.classList.add('open');
+  refreshPushToggleUI?.();
 }
 function closeAuthMenu(){ authMenu.classList.remove('open'); }
 
