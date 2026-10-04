@@ -1415,6 +1415,200 @@ app.get('/api/practice/leaderboard', async (req, res) => {
   }
 });
 
+// ---- Watchlist price-move push notifications ----
+// Signed-in users can opt in (via the browser Push API) to be notified when
+// something on their watchlist moves +/-5%. VAPID keys authenticate this
+// server to the browser push services (web-push spec) -- generated once
+// with `npx web-push generate-vapid-keys` and set as env vars; without them
+// this whole feature just stays off (no subscribe endpoint, no checker).
+const webpush = require('web-push');
+const PUSH_ENABLED = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+if (PUSH_ENABLED) {
+  webpush.setVapidDetails(
+    `mailto:${ADMIN_EMAIL || 'admin@example.com'}`,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
+async function getAuthedUserId(req){
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) return null;
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data?.user) return null;
+  return data.user.id;
+}
+
+app.get('/api/push/public-key', (req, res) => {
+  if (!PUSH_ENABLED) return res.status(404).json({ error: 'Push notifications not configured' });
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+app.post('/api/push/subscribe', async (req, res) => {
+  if (!PUSH_ENABLED) return res.status(404).json({ error: 'Push notifications not configured' });
+  const userId = await getAuthedUserId(req);
+  if (!userId) return res.status(401).json({ error: 'Sign in required' });
+
+  const { endpoint, keys } = req.body || {};
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    return res.status(400).json({ error: 'Invalid subscription' });
+  }
+
+  const { error } = await supabaseAdmin.from('push_subscriptions').upsert({
+    user_id: userId,
+    endpoint,
+    p256dh: keys.p256dh,
+    auth: keys.auth
+  }, { onConflict: 'endpoint' });
+
+  if (error) {
+    console.error('push subscribe failed:', error.message);
+    return res.status(500).json({ error: 'Failed to save subscription' });
+  }
+  res.json({ ok: true });
+});
+
+app.post('/api/push/unsubscribe', async (req, res) => {
+  if (!PUSH_ENABLED) return res.status(404).json({ error: 'Push notifications not configured' });
+  const userId = await getAuthedUserId(req);
+  if (!userId) return res.status(401).json({ error: 'Sign in required' });
+
+  const { endpoint } = req.body || {};
+  if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
+
+  const { error } = await supabaseAdmin.from('push_subscriptions')
+    .delete()
+    .eq('user_id', userId)
+    .eq('endpoint', endpoint);
+
+  if (error) {
+    console.error('push unsubscribe failed:', error.message);
+    return res.status(500).json({ error: 'Failed to remove subscription' });
+  }
+  res.json({ ok: true });
+});
+
+const ALERT_THRESHOLD_PCT = 5;
+
+// Per `${userId}:${assetType}:${assetKey}`: whether this symbol is currently
+// "armed" to fire again. Starts armed (undefined reads as armed below) so a
+// symbol already past threshold when the server boots still fires once;
+// after firing it's disarmed until the move drops back under the threshold,
+// which is what keeps a sustained move from re-notifying every 5 minutes.
+// In-memory and not persisted -- a redeploy re-arms everything, which in the
+// worst case means one extra notification per symbol, not a missed one.
+const alertArmed = new Map();
+
+// NYSE/Nasdaq regular hours only (9:30am-4:00pm ET, Mon-Fri). Doesn't know
+// about market holidays, so a holiday just means a few wasted stock checks
+// that day -- harmless, and simpler than maintaining a holiday calendar.
+function isUsMarketOpen(){
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false,
+    weekday: 'short', hour: '2-digit', minute: '2-digit'
+  }).formatToParts(new Date());
+  const get = type => parts.find(p => p.type === type)?.value;
+  const weekday = get('weekday');
+  if (weekday === 'Sat' || weekday === 'Sun') return false;
+  const minutesSinceMidnight = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
+  return minutesSinceMidnight >= (9 * 60 + 30) && minutesSinceMidnight < (16 * 60);
+}
+
+// Checks every subscribed user's watchlist for a +/-5% move and pushes a
+// notification on each fresh crossing. Crypto is checked every run (24h
+// change, same figure already shown on its card); stocks only while the US
+// market is open (change since previous close, ditto) -- reusing the same
+// cached-friendly fetchers the rest of the app already uses, and deduping
+// symbols across users, so this doesn't add a new load pattern on top of
+// what the dashboard itself already does.
+async function checkWatchlistAlerts(){
+  try {
+    const { data: subs, error: subErr } = await supabaseAdmin.from('push_subscriptions').select('*');
+    if (subErr) { console.error('watchlist alert: subs fetch failed:', subErr.message); return; }
+    if (!subs || subs.length === 0) return;
+
+    const subsByUser = {};
+    subs.forEach(s => { (subsByUser[s.user_id] ||= []).push(s); });
+    const userIds = Object.keys(subsByUser);
+
+    const { data: watchRows, error: watchErr } = await supabaseAdmin
+      .from('watchlists')
+      .select('user_id, asset_type, asset_key, sym, name')
+      .in('user_id', userIds);
+    if (watchErr) { console.error('watchlist alert: watchlist fetch failed:', watchErr.message); return; }
+    if (!watchRows || watchRows.length === 0) return;
+
+    const marketOpen = isUsMarketOpen();
+    const relevantRows = watchRows.filter(r => r.asset_type === 'crypto' || marketOpen);
+    if (relevantRows.length === 0) return;
+
+    const stockSyms = Array.from(new Set(relevantRows.filter(r => r.asset_type === 'stock').map(r => r.asset_key)));
+    const cryptoIds = Array.from(new Set(relevantRows.filter(r => r.asset_type === 'crypto').map(r => r.asset_key)));
+
+    const [stockResults, cryptoData] = await Promise.all([
+      Promise.allSettled(stockSyms.map(sym => fetchYahooChartQuote(sym))),
+      cryptoIds.length > 0
+        ? fetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cryptoIds.join(','))}&vs_currencies=usd&include_24hr_change=true`, 8000, COINGECKO_HEADERS)
+            .then(r => r.data).catch(() => ({}))
+        : Promise.resolve({})
+    ]);
+
+    const stockChangeBySym = {};
+    stockResults.forEach((r, i) => {
+      if (r.status === 'fulfilled') stockChangeBySym[stockSyms[i]] = r.value.changePct;
+    });
+
+    const notifyTasks = [];
+    for (const row of relevantRows) {
+      const changePct = row.asset_type === 'crypto'
+        ? cryptoData[row.asset_key]?.usd_24h_change
+        : stockChangeBySym[row.asset_key];
+      if (changePct === undefined || changePct === null || Number.isNaN(changePct)) continue;
+
+      const key = `${row.user_id}:${row.asset_type}:${row.asset_key}`;
+      const pastThreshold = Math.abs(changePct) >= ALERT_THRESHOLD_PCT;
+
+      if (!pastThreshold) {
+        alertArmed.set(key, true);
+        continue;
+      }
+      if (alertArmed.get(key) === false) continue; // already notified this crossing
+
+      alertArmed.set(key, false);
+      const direction = changePct >= 0 ? 'up' : 'down';
+      const payload = JSON.stringify({
+        title: `${row.sym} ${direction} ${Math.abs(changePct).toFixed(1)}%`,
+        body: `${row.name} is ${direction} ${Math.abs(changePct).toFixed(1)}% today.`,
+        url: '/'
+      });
+
+      (subsByUser[row.user_id] || []).forEach(sub => {
+        notifyTasks.push(
+          webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            payload
+          ).catch(async (err) => {
+            // 404/410 means the browser revoked this subscription (site data
+            // cleared, notifications disabled, etc.) -- stop retrying it.
+            if (err.statusCode === 404 || err.statusCode === 410) {
+              await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+            } else {
+              console.error('push send failed:', sub.endpoint, err.message);
+            }
+          })
+        );
+      });
+    }
+
+    await Promise.allSettled(notifyTasks);
+  } catch (e) {
+    console.error('watchlist alert check failed:', e.message);
+  }
+}
+
+if (PUSH_ENABLED) {
+  setInterval(checkWatchlistAlerts, 5 * 60_000);
+}
 
 // ---- Serve the static frontend (index.html, script.js, style.css) ----
 const publicDir = path.join(__dirname, 'public');
