@@ -331,6 +331,90 @@
   cursor:pointer;
 }
 .auth-menu-logout-btn:hover{ color:var(--down); filter:brightness(1.15); }
+
+.notif-bell-wrap{ position:relative; flex-shrink:0; }
+.notif-bell-btn{
+  position:relative;
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:1px solid var(--panel-border);
+  border-radius:8px;
+  color:var(--text);
+  cursor:pointer;
+}
+.notif-bell-btn:hover{ border-color:var(--amber); color:var(--amber); }
+.notif-bell-btn svg{ width:18px; height:18px; }
+.notif-badge{
+  position:absolute;
+  top:-4px;
+  right:-4px;
+  min-width:16px;
+  height:16px;
+  padding:0 3px;
+  border-radius:8px;
+  background:var(--down);
+  color:#fff;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  font-weight:700;
+  line-height:16px;
+  text-align:center;
+}
+.notif-panel{
+  display:none;
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;
+  width:300px;
+  max-height:360px;
+  overflow-y:auto;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:10px;
+  padding:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.25);
+  z-index:30;
+}
+.notif-panel.open{ display:block; }
+.notif-item{
+  padding:9px 0;
+  border-bottom:1px solid var(--panel-border);
+}
+.notif-item:last-child{ border-bottom:none; }
+.notif-item-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px;
+  font-weight:700;
+}
+.notif-item-top.up{ color:var(--up); }
+.notif-item-top.down{ color:var(--down); }
+.notif-item-time{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:var(--muted);
+  flex-shrink:0;
+}
+.notif-item-body{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+}
+.notif-item.unread{ background:var(--bg-alt); margin:0 -6px; padding:9px 6px; border-radius:6px; }
+.notif-empty{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--muted);
+  text-align:center;
+  padding:16px 0;
+}
 .hamburger-btn span{
   display:block;
   width:100%;

@@ -97,6 +97,7 @@ function closeAuthMenu(){ authMenu.classList.remove('open'); }
 async function updateAuthUI(){
   refreshAuthButtonLabel();
   if(!currentUser) closeAuthMenu();
+  refreshNotifBell?.();
   const adminGroup = document.getElementById('adminNavGroup');
   if(adminGroup){
     if(currentUser){

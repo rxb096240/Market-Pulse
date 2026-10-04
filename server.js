@@ -1582,6 +1582,22 @@ async function checkWatchlistAlerts(){
         url: '/'
       });
 
+      // Logged alongside the push so the in-app bell icon has a history to
+      // show -- same crossing, just persisted instead of fire-and-forget.
+      notifyTasks.push(
+        supabaseAdmin.from('notifications').insert({
+          user_id: row.user_id,
+          asset_type: row.asset_type,
+          asset_key: row.asset_key,
+          sym: row.sym,
+          name: row.name,
+          direction,
+          change_pct: changePct
+        }).then(({ error }) => {
+          if (error) console.error('notification log failed:', error.message);
+        })
+      );
+
       (subsByUser[row.user_id] || []).forEach(sub => {
         notifyTasks.push(
           webpush.sendNotification(
