@@ -81,14 +81,35 @@ async function markAllNotificationsRead(){
   if(error) console.error('Failed to mark notifications read:', error);
 }
 
+// .notif-panel is position:fixed (viewport-relative) so it can never be
+// pushed off-screen on narrow viewports the way an absolutely-positioned
+// dropdown anchored to a bell that isn't flush with the screen edge would
+// be -- this computes where that fixed panel should sit, clamped to stay
+// fully inside the viewport regardless of screen width.
+function positionNotifPanel(){
+  if(!notifBellBtn || !notifPanel) return;
+  const rect = notifBellBtn.getBoundingClientRect();
+  const gutter = 16;
+  const panelWidth = Math.min(300, window.innerWidth - gutter * 2);
+  let left = rect.right - panelWidth;
+  left = Math.max(gutter, Math.min(left, window.innerWidth - panelWidth - gutter));
+  notifPanel.style.left = `${left}px`;
+  notifPanel.style.top = `${rect.bottom + 6}px`;
+}
+
 notifBellBtn?.addEventListener('click', (e) => {
   e.stopPropagation();
   const opening = !notifPanel.classList.contains('open');
+  if(opening) positionNotifPanel();
   notifPanel.classList.toggle('open');
   if(opening){
     renderNotifList(latestNotifRows);
     markAllNotificationsRead();
   }
+});
+
+window.addEventListener('resize', () => {
+  if(notifPanel?.classList.contains('open')) positionNotifPanel();
 });
 
 document.addEventListener('click', (e) => {

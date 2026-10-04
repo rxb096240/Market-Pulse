@@ -370,11 +370,10 @@
 }
 .notif-panel{
   display:none;
-  position:absolute;
-  top:calc(100% + 6px);
-  right:0;
+  position:fixed;
   width:300px;
-  max-height:360px;
+  max-width:calc(100vw - 32px);
+  max-height:min(360px, 70vh);
   overflow-y:auto;
   background:var(--panel);
   border:1px solid var(--panel-border);
@@ -478,12 +477,6 @@
     letter-spacing:1px; text-transform:uppercase;
   }
   .header-right{ display:flex; align-items:center; gap:16px; min-width:0;}
-  #clock{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px; color:var(--muted); text-align:right;
-  }
-  #clock span{ color:var(--text); }
-
   /* ---- Ticker tape ---- */
   .tape-wrap{
     border-bottom:1px solid var(--panel-border);
