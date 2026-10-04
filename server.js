@@ -1490,15 +1490,6 @@ app.post('/api/push/unsubscribe', async (req, res) => {
 
 const ALERT_THRESHOLD_PCT = 5;
 
-// Per `${userId}:${assetType}:${assetKey}`: whether this symbol is currently
-// "armed" to fire again. Starts armed (undefined reads as armed below) so a
-// symbol already past threshold when the server boots still fires once;
-// after firing it's disarmed until the move drops back under the threshold,
-// which is what keeps a sustained move from re-notifying every 5 minutes.
-// In-memory and not persisted -- a redeploy re-arms everything, which in the
-// worst case means one extra notification per symbol, not a missed one.
-const alertArmed = new Map();
-
 // NYSE/Nasdaq regular hours only (9:30am-4:00pm ET, Mon-Fri). Doesn't know
 // about market holidays, so a holiday just means a few wasted stock checks
 // that day -- harmless, and simpler than maintaining a holiday calendar.
@@ -1542,6 +1533,21 @@ async function checkWatchlistAlerts(){
     const relevantRows = watchRows.filter(r => r.asset_type === 'crypto' || marketOpen);
     if (relevantRows.length === 0) return;
 
+    // Persisted "armed to fire again" state, keyed per user+symbol -- stored
+    // in alert_state instead of an in-memory Map so a redeploy doesn't wipe
+    // it and cause everything still past threshold to immediately re-fire.
+    // Missing row = armed (default), matching a symbol never checked before.
+    const { data: stateRows, error: stateErr } = await supabaseAdmin
+      .from('alert_state')
+      .select('user_id, asset_type, asset_key, armed')
+      .in('user_id', userIds);
+    if (stateErr) { console.error('watchlist alert: state fetch failed:', stateErr.message); return; }
+
+    const armedByKey = new Map();
+    (stateRows || []).forEach(s => {
+      armedByKey.set(`${s.user_id}:${s.asset_type}:${s.asset_key}`, s.armed);
+    });
+
     const stockSyms = Array.from(new Set(relevantRows.filter(r => r.asset_type === 'stock').map(r => r.asset_key)));
     const cryptoIds = Array.from(new Set(relevantRows.filter(r => r.asset_type === 'crypto').map(r => r.asset_key)));
 
@@ -1559,6 +1565,7 @@ async function checkWatchlistAlerts(){
     });
 
     const notifyTasks = [];
+    const stateUpserts = [];
     for (const row of relevantRows) {
       const changePct = row.asset_type === 'crypto'
         ? cryptoData[row.asset_key]?.usd_24h_change
@@ -1567,14 +1574,19 @@ async function checkWatchlistAlerts(){
 
       const key = `${row.user_id}:${row.asset_type}:${row.asset_key}`;
       const pastThreshold = Math.abs(changePct) >= ALERT_THRESHOLD_PCT;
+      const wasArmed = armedByKey.get(key) !== false; // missing row defaults to armed
 
       if (!pastThreshold) {
-        alertArmed.set(key, true);
+        // Only needs a write if it was previously disarmed -- re-arming an
+        // already-armed (or never-seen) symbol would just be a no-op write.
+        if (!wasArmed) {
+          stateUpserts.push({ user_id: row.user_id, asset_type: row.asset_type, asset_key: row.asset_key, armed: true });
+        }
         continue;
       }
-      if (alertArmed.get(key) === false) continue; // already notified this crossing
+      if (!wasArmed) continue; // already notified this crossing
 
-      alertArmed.set(key, false);
+      stateUpserts.push({ user_id: row.user_id, asset_type: row.asset_type, asset_key: row.asset_key, armed: false });
       const direction = changePct >= 0 ? 'up' : 'down';
       const payload = JSON.stringify({
         title: `${row.sym} ${direction} ${Math.abs(changePct).toFixed(1)}%`,
@@ -1614,6 +1626,13 @@ async function checkWatchlistAlerts(){
           })
         );
       });
+    }
+
+    if (stateUpserts.length > 0) {
+      const { error: upsertErr } = await supabaseAdmin
+        .from('alert_state')
+        .upsert(stateUpserts, { onConflict: 'user_id,asset_type,asset_key' });
+      if (upsertErr) console.error('watchlist alert: state upsert failed:', upsertErr.message);
     }
 
     await Promise.allSettled(notifyTasks);
