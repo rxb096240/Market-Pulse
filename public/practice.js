@@ -72,6 +72,7 @@ async function loadPracticeAccount(){
   await fetchPracticePrices(practiceHoldings);
 
   renderPracticeMode();
+  if(currentView === 'home') refreshHomeDashboard?.();
 }
 
 function currentPracticePriceFor(holding){

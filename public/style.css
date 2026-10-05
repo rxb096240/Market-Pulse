@@ -1531,6 +1531,13 @@
     margin:0 0 26px;
   }
   .home-dash-section{ margin-bottom:32px; }
+  .home-dash-cash-row{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:12px;
+  }
+  .home-dash-cash-row strong{ color:var(--text); font-weight:600; }
   .home-dash-head{
     display:flex;
     justify-content:space-between;

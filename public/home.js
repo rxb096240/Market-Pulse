@@ -162,12 +162,12 @@ async function refreshHomeView(){
   refreshTopMovers();
 }
 
-/* ---- Home: signed-in dashboard (watchlist + portfolio + relevant news) ----
+/* ---- Home: signed-in dashboard (watchlist + practice portfolio + relevant news) ----
    Takes over Home in place of the generic overview above once signed in.
    Built entirely from data the app already loads for the signed-in user
-   (COINS/STOCKS *are* their watchlist, PORTFOLIO their holdings) rather
-   than fetching anything new -- refreshed whenever Home is shown and every
-   90s alongside the rest of the app while parked on it. */
+   (COINS/STOCKS *are* their watchlist, practiceHoldings their paper trading
+   account) rather than fetching anything new -- refreshed whenever Home is
+   shown and every 90s alongside the rest of the app while parked on it. */
 
 function updateHomeModeForAuth(){
   const anon = document.getElementById('homeAnonymous');
@@ -184,31 +184,38 @@ function renderHomeDashboardGreeting(){
   el.textContent = nickname ? `Welcome back, ${nickname}` : 'Welcome back';
 }
 
+// Shows the paper trading (practice_holdings) portfolio, not the real one
+// tracked under Stocks/Crypto -> Portfolio -- same reasoning as the Admin
+// Portfolio fix: that's a different account entirely, and Home should
+// reflect the practice account people actually use day to day.
 function renderHomeDashboardPortfolio(){
   const summaryEl = document.getElementById('homeDashSummary');
+  const cashRow = document.getElementById('homeDashCashRow');
   const wrapEl = document.getElementById('homeDashHoldingsWrap');
   const bodyEl = document.getElementById('homeDashHoldingsBody');
   const emptyEl = document.getElementById('homeDashHoldingsEmpty');
   if(!summaryEl || !bodyEl) return;
 
-  if(!PORTFOLIO || PORTFOLIO.length === 0){
+  if(!practiceAccount){
     summaryEl.style.display = 'none';
+    if(cashRow) cashRow.style.display = 'none';
     if(wrapEl) wrapEl.style.display = 'none';
     if(emptyEl) emptyEl.style.display = '';
     return;
   }
-  if(wrapEl) wrapEl.style.display = '';
-  if(emptyEl) emptyEl.style.display = 'none';
+  if(wrapEl) wrapEl.style.display = practiceHoldings.length > 0 ? '' : 'none';
+  if(emptyEl) emptyEl.style.display = practiceHoldings.length > 0 ? 'none' : '';
   summaryEl.style.display = 'grid';
+  if(cashRow){ cashRow.style.display = ''; document.getElementById('homeDashCashBalance').textContent = fmtUsd(practiceAccount.cash_balance); }
 
-  let totalValue = 0, totalCost = 0;
-  const rows = PORTFOLIO.map(entry => {
-    const price = currentPriceFor(entry);
-    const cost = entry.qty * entry.avgPrice;
+  let holdingsValue = 0, totalCost = 0;
+  const rows = practiceHoldings.map(entry => {
+    const price = currentPracticePriceFor(entry);
+    const cost = entry.qty * entry.avg_price;
     const value = price !== undefined ? entry.qty * price : null;
     const plPct = value !== null && cost > 0 ? ((value - cost) / cost) * 100 : null;
     totalCost += cost;
-    if(value !== null) totalValue += value;
+    if(value !== null) holdingsValue += value;
     return { sym: entry.sym, qty: entry.qty, value, plPct };
   }).sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 6);
 
@@ -221,8 +228,12 @@ function renderHomeDashboardPortfolio(){
     </tr>
   `).join('');
 
-  const totalPl = totalValue - totalCost;
-  const totalPlPct = totalCost > 0 ? (totalPl / totalCost) * 100 : 0;
+  // Total value/P&L are against the full $10,000 starting balance (cash +
+  // holdings), same definition the leaderboard uses -- not just the
+  // holdings' own cost basis, so it reflects the whole practice account.
+  const totalValue = practiceAccount.cash_balance + holdingsValue;
+  const totalPl = totalValue - 10000;
+  const totalPlPct = (totalPl / 10000) * 100;
   const plCls = totalPl >= 0 ? 'up' : 'down';
   const sign = totalPl >= 0 ? '+' : '';
   document.getElementById('homeDashTotalValue').textContent = fmtUsd(totalValue);
