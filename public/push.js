@@ -34,7 +34,7 @@ async function refreshPushToggleUI(){
     return;
   }
   pushToggleBtn.style.display = '';
-  if (pushHint) { pushHint.style.display = ''; pushHint.textContent = `Get notified when a watchlist symbol moves ±5%.`; }
+  if (pushHint) { pushHint.style.display = ''; pushHint.textContent = `Get notified on a ±10% crypto move or ±5% stock move.`; }
 
   const sub = await getExistingPushSubscription();
   pushToggleBtn.textContent = sub ? 'Disable' : 'Enable';
@@ -66,7 +66,7 @@ async function enablePushAlerts(){
     });
     if (!res.ok) throw new Error('subscribe request failed');
 
-    pushHint.textContent = `You'll be notified when a watchlist symbol moves ±5%.`;
+    pushHint.textContent = `You'll be notified on a ±10% crypto move or ±5% stock move.`;
   } catch (e) {
     console.error('Failed to enable push alerts:', e);
     pushHint.textContent = 'Could not enable price alerts.';

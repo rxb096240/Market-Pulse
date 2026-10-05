@@ -1572,7 +1572,9 @@ app.get('/api/admin/feedback', async (req, res) => {
   }
 });
 
-const ALERT_THRESHOLD_PCT = 5;
+// Crypto gets a higher bar than stocks since it's routinely more volatile --
+// a 5% day is unremarkable for crypto but a real move for most stocks.
+const ALERT_THRESHOLD_PCT = { crypto: 10, stock: 5 };
 
 // NYSE/Nasdaq regular hours only (9:30am-4:00pm ET, Mon-Fri). Doesn't know
 // about market holidays, so a holiday just means a few wasted stock checks
@@ -1657,7 +1659,7 @@ async function checkWatchlistAlerts(){
       if (changePct === undefined || changePct === null || Number.isNaN(changePct)) continue;
 
       const key = `${row.user_id}:${row.asset_type}:${row.asset_key}`;
-      const pastThreshold = Math.abs(changePct) >= ALERT_THRESHOLD_PCT;
+      const pastThreshold = Math.abs(changePct) >= ALERT_THRESHOLD_PCT[row.asset_type];
       const wasArmed = armedByKey.get(key) !== false; // missing row defaults to armed
 
       if (!pastThreshold) {
