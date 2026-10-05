@@ -290,7 +290,10 @@ async function loadUserWatchlist(){
     .eq('user_id', currentUser.id);
 
   if(error){ console.error('Failed to load watchlist:', error); return; }
-  if(!data || data.length === 0) return;
+  if(!data || data.length === 0){
+    if(currentView === 'home') refreshHomeDashboard?.();
+    return;
+  }
 
   const savedCrypto = data.filter(row => row.asset_type === 'crypto');
   const savedStocks = data.filter(row => row.asset_type === 'stock');
@@ -306,6 +309,7 @@ async function loadUserWatchlist(){
 
   initGrids();
   refreshAll();
+  if(currentView === 'home') refreshHomeDashboard?.();
 }
 
 async function saveWatchlistItem(type, key, sym, name){

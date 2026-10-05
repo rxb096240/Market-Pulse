@@ -82,4 +82,5 @@ setInterval(refreshAll, 90000);
 setInterval(refreshCurrentViewNews, 5 * 60 * 1000);
 setInterval(() => {
   if(currentView === 'stocks-overview') refreshMarketsSummary();
+  if(currentView === 'home' && currentUser) refreshHomeDashboard?.();
 }, 90000);

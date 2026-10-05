@@ -98,6 +98,7 @@ async function updateAuthUI(){
   refreshAuthButtonLabel();
   if(!currentUser) closeAuthMenu();
   refreshNotifBell?.();
+  updateHomeModeForAuth?.();
   const adminGroup = document.getElementById('adminNavGroup');
   if(adminGroup){
     if(currentUser){

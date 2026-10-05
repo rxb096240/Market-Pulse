@@ -141,6 +141,9 @@ async function refreshTopMovers(){
 }
 
 async function refreshHomeView(){
+  updateHomeModeForAuth();
+  if(currentUser){ refreshHomeDashboard(); return; }
+
   if(!homeLoaded){
     const el = document.getElementById('homeSnapshot');
     if(el) el.innerHTML = '<div class="news-loading">Loading market snapshot…</div>';
@@ -157,6 +160,134 @@ async function refreshHomeView(){
 
   renderHomeSnapshot(picked.length > 0 ? picked : items.slice(0, 4));
   refreshTopMovers();
+}
+
+/* ---- Home: signed-in dashboard (watchlist + portfolio + relevant news) ----
+   Takes over Home in place of the generic overview above once signed in.
+   Built entirely from data the app already loads for the signed-in user
+   (COINS/STOCKS *are* their watchlist, PORTFOLIO their holdings) rather
+   than fetching anything new -- refreshed whenever Home is shown and every
+   90s alongside the rest of the app while parked on it. */
+
+function updateHomeModeForAuth(){
+  const anon = document.getElementById('homeAnonymous');
+  const signedIn = document.getElementById('homeSignedIn');
+  if(!anon || !signedIn) return;
+  anon.style.display = currentUser ? 'none' : '';
+  signedIn.style.display = currentUser ? '' : 'none';
+}
+
+function renderHomeDashboardGreeting(){
+  const el = document.getElementById('homeGreeting');
+  if(!el) return;
+  const nickname = (practiceAccount?.nickname || '').trim();
+  el.textContent = nickname ? `Welcome back, ${nickname}` : 'Welcome back';
+}
+
+function renderHomeDashboardPortfolio(){
+  const summaryEl = document.getElementById('homeDashSummary');
+  const wrapEl = document.getElementById('homeDashHoldingsWrap');
+  const bodyEl = document.getElementById('homeDashHoldingsBody');
+  const emptyEl = document.getElementById('homeDashHoldingsEmpty');
+  if(!summaryEl || !bodyEl) return;
+
+  if(!PORTFOLIO || PORTFOLIO.length === 0){
+    summaryEl.style.display = 'none';
+    if(wrapEl) wrapEl.style.display = 'none';
+    if(emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if(wrapEl) wrapEl.style.display = '';
+  if(emptyEl) emptyEl.style.display = 'none';
+  summaryEl.style.display = 'grid';
+
+  let totalValue = 0, totalCost = 0;
+  const rows = PORTFOLIO.map(entry => {
+    const price = currentPriceFor(entry);
+    const cost = entry.qty * entry.avgPrice;
+    const value = price !== undefined ? entry.qty * price : null;
+    const plPct = value !== null && cost > 0 ? ((value - cost) / cost) * 100 : null;
+    totalCost += cost;
+    if(value !== null) totalValue += value;
+    return { sym: entry.sym, qty: entry.qty, value, plPct };
+  }).sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 6);
+
+  bodyEl.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.sym)}</td>
+      <td class="num">${r.qty < 1 ? r.qty.toFixed(4) : parseFloat(r.qty.toFixed(2))}</td>
+      <td class="num">${r.value !== null ? fmtUsd(r.value) : '--'}</td>
+      <td class="num${r.plPct !== null ? (r.plPct >= 0 ? ' up' : ' down') : ''}">${r.plPct !== null ? (r.plPct >= 0 ? '+' : '') + r.plPct.toFixed(1) + '%' : '--'}</td>
+    </tr>
+  `).join('');
+
+  const totalPl = totalValue - totalCost;
+  const totalPlPct = totalCost > 0 ? (totalPl / totalCost) * 100 : 0;
+  const plCls = totalPl >= 0 ? 'up' : 'down';
+  const sign = totalPl >= 0 ? '+' : '';
+  document.getElementById('homeDashTotalValue').textContent = fmtUsd(totalValue);
+  document.getElementById('homeDashTotalCost').textContent = fmtUsd(totalCost);
+  const plEl = document.getElementById('homeDashTotalPl');
+  plEl.textContent = sign + fmtUsd(totalPl);
+  plEl.className = 'summary-value ' + plCls;
+  const plPctEl = document.getElementById('homeDashTotalPlPct');
+  plPctEl.textContent = sign + totalPlPct.toFixed(2) + '%';
+  plPctEl.className = 'summary-value ' + plCls;
+}
+
+function renderHomeDashboardWatchlist(){
+  const grid = document.getElementById('homeDashWatchlistGrid');
+  const emptyEl = document.getElementById('homeDashWatchlistEmpty');
+  if(!grid) return;
+
+  const items = [
+    ...COINS.map(c => ({ key: c.id, sym: c.sym, name: c.name, color: c.color, type: 'crypto' })),
+    ...STOCKS.map(s => ({ key: s.sym, sym: s.sym, name: s.name, color: s.color, type: 'stock' }))
+  ].slice(0, 6);
+
+  if(items.length === 0){
+    grid.innerHTML = '';
+    if(emptyEl) emptyEl.style.display = '';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display = 'none';
+
+  grid.innerHTML = items.map(item => {
+    const d = item.type === 'crypto' ? latestCryptoData[item.key] : latestStockData[item.key];
+    const price = item.type === 'crypto' ? d?.usd : d?.price;
+    const changePct = item.type === 'crypto' ? d?.usd_24h_change : d?.changePct;
+    const hasChange = changePct !== undefined && changePct !== null;
+    const cls = hasChange && changePct >= 0 ? 'up' : 'down';
+    const arrow = hasChange && changePct >= 0 ? '▲' : '▼';
+    return `
+      <div class="card" style="--coin-color:${item.color};">
+        <div class="card-top">
+          <div class="coin-id"><div class="coin-sym">${escapeHtml(item.sym)}</div><div class="coin-name">${escapeHtml(item.name)}</div></div>
+        </div>
+        <div class="price">${price !== undefined ? '$' + fmtPrice(price) : '--'}</div>
+        <div class="meta-row"><span class="chg ${cls}">${hasChange ? arrow + ' ' + Math.abs(changePct).toFixed(2) + '%' : '--'}</span></div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function refreshHomeDashboardNews(){
+  const el = document.getElementById('homeDashNewsList');
+  if(!el) return;
+  if(COINS.length === 0 && STOCKS.length === 0){
+    el.innerHTML = '<div class="news-empty">Add something to your watchlist to see relevant news here.</div>';
+    return;
+  }
+  const [cryptoNews, stockNews] = await Promise.all([fetchCryptoNews(), fetchAllStockNews()]);
+  renderNewsColumn('homeDashNewsList', dedupeSortAndTrim([...cryptoNews, ...stockNews], 6));
+}
+
+function refreshHomeDashboard(){
+  if(!currentUser) return;
+  renderHomeDashboardGreeting();
+  renderHomeDashboardPortfolio();
+  renderHomeDashboardWatchlist();
+  refreshHomeDashboardNews();
 }
 
 document.querySelectorAll('.home-panel-link[data-target-view]').forEach(link => {

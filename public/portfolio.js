@@ -59,6 +59,7 @@ async function loadUserPortfolio(){
   savePortfolio(); // keep localStorage in sync as an offline fallback
   await fetchPortfolioPrices(PORTFOLIO);
   renderPortfolio();
+  if(currentView === 'home') refreshHomeDashboard?.();
 }
 
 async function saveSupabasePortfolioItem(entry){

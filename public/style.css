@@ -1518,6 +1518,38 @@
     background:var(--panel-border);
   }
 
+  /* ---- Home dashboard (signed-in users) ---- */
+  .home-dash-greeting{
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 4px;
+  }
+  .home-dash-sub{
+    color:var(--muted);
+    font-size:13.5px;
+    margin:0 0 26px;
+  }
+  .home-dash-section{ margin-bottom:32px; }
+  .home-dash-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .home-dash-head .section-label{ flex:1; margin-bottom:0; }
+  .home-dash-links{ display:flex; gap:14px; flex-shrink:0; }
+  .home-dash-link{ font-size:12.5px; white-space:nowrap; }
+
+  #homeDashHoldingsTable th:nth-child(1), #homeDashHoldingsTable td:nth-child(1){ width:30%; }
+  #homeDashHoldingsTable th:nth-child(2), #homeDashHoldingsTable td:nth-child(2){ width:20%; }
+  #homeDashHoldingsTable th:nth-child(3), #homeDashHoldingsTable td:nth-child(3){ width:25%; }
+  #homeDashHoldingsTable th:nth-child(4), #homeDashHoldingsTable td:nth-child(4){ width:25%; }
+  #homeDashHoldingsTable .num{ text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
+  #homeDashHoldingsTable .num.up{ color:var(--up); }
+  #homeDashHoldingsTable .num.down{ color:var(--down); }
+
   .grid{
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(230px,1fr));

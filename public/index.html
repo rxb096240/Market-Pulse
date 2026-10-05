@@ -244,6 +244,7 @@
 
       <!-- Home -->
       <section class="view-panel active" data-view-panel="home">
+      <div id="homeAnonymous">
         <div class="home-hero">
           <div class="home-hero-copy">
             <div class="home-eyebrow">Welcome to Pulse</div>
@@ -371,6 +372,57 @@
             <div class="home-chart-note" id="homeTopMoversNote"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Signed-in users see this instead of the generic overview above -->
+      <div id="homeSignedIn" style="display:none;">
+        <h1 class="home-dash-greeting" id="homeGreeting">Welcome back</h1>
+        <p class="home-dash-sub">Your watchlist, portfolio, and the news behind both.</p>
+
+        <div class="home-dash-section">
+          <div class="home-dash-head">
+            <span class="section-label" style="margin:0;">Portfolio</span>
+            <span class="home-dash-links">
+              <a href="#" class="home-panel-link home-dash-link" data-target-view="crypto-portfolio">Crypto →</a>
+              <a href="#" class="home-panel-link home-dash-link" data-target-view="stocks-portfolio">Stocks →</a>
+            </span>
+          </div>
+          <div class="summary-bar" id="homeDashSummary" style="display:none;">
+            <div class="summary-item"><span class="summary-label">Total Value</span><span class="summary-value" id="homeDashTotalValue">$0.00</span></div>
+            <div class="summary-item"><span class="summary-label">Total Cost</span><span class="summary-value" id="homeDashTotalCost">$0.00</span></div>
+            <div class="summary-item"><span class="summary-label">Total P/L</span><span class="summary-value" id="homeDashTotalPl">$0.00</span></div>
+            <div class="summary-item"><span class="summary-label">Total P/L %</span><span class="summary-value" id="homeDashTotalPlPct">0.00%</span></div>
+          </div>
+          <div class="markets-table-wrap" id="homeDashHoldingsWrap">
+            <table class="markets-table" id="homeDashHoldingsTable">
+              <thead><tr><th>Symbol</th><th>Qty</th><th>Value</th><th>P/L %</th></tr></thead>
+              <tbody id="homeDashHoldingsBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="homeDashHoldingsEmpty" style="display:none;">No holdings yet — add some under Stocks or Crypto → Portfolio.</div>
+        </div>
+
+        <div class="home-dash-section">
+          <div class="home-dash-head">
+            <span class="section-label" style="margin:0;">Watchlist</span>
+            <span class="home-dash-links">
+              <a href="#" class="home-panel-link home-dash-link" data-target-view="crypto-watchlist">Crypto →</a>
+              <a href="#" class="home-panel-link home-dash-link" data-target-view="stocks-watchlist">Stocks →</a>
+            </span>
+          </div>
+          <div class="grid" id="homeDashWatchlistGrid"></div>
+          <div class="empty" id="homeDashWatchlistEmpty" style="display:none;">Nothing tracked yet — add a coin or stock under Stocks or Crypto → Watchlist.</div>
+        </div>
+
+        <div class="home-dash-section">
+          <div class="home-dash-head">
+            <span class="section-label" style="margin:0;">News for your watchlist</span>
+          </div>
+          <div class="news-list" id="homeDashNewsList">
+            <div class="news-loading">Loading news…</div>
+          </div>
+        </div>
+      </div>
       </section>
 
 <!-- Admin Reports -->
