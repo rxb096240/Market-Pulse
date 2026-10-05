@@ -160,6 +160,7 @@
       <button class="nav-item" data-view="admin-users">Users</button>
       <button class="nav-item" data-view="admin-portfolio">Portfolio</button>
       <button class="nav-item" data-view="admin-feedback">Feedback</button>
+      <button class="nav-item" data-view="admin-sports">Sports</button>
       </div>
     </div>
 
@@ -540,6 +541,21 @@
         <tr><td colspan="4" class="news-loading">Loading…</td></tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<!-- Admin Sports -->
+<section class="view-panel" data-view-panel="admin-sports">
+  <div class="trending-intro">Scores and headlines for NFL. Visible only to the admin account.</div>
+
+  <div class="section-label">Scores</div>
+  <div class="scores-list" id="adminSportsScores">
+    <div class="news-loading">Loading scores…</div>
+  </div>
+
+  <div class="section-label" style="margin-top:24px;">Headlines</div>
+  <div class="news-list" id="adminSportsNews">
+    <div class="news-loading">Loading news…</div>
   </div>
 </section>
 
@@ -2251,6 +2267,7 @@
 <script src="topmovers.js"></script>
 <script src="spx.js"></script>
 <script src="admin.js"></script>
+<script src="sports.js"></script>
 <script src="theme.js"></script>
 <script src="nav.js"></script>
 <script src="main.js"></script>

@@ -59,7 +59,8 @@ const VIEW_TITLES = {
   'admin-reports': 'Admin · Reports',
   'admin-users': 'Admin · Users',
   'admin-portfolio': 'Admin · Portfolio',
-  'admin-feedback': 'Admin · Feedback'
+  'admin-feedback': 'Admin · Feedback',
+  'admin-sports': 'Admin · Sports'
 };
 
 function showView(view){
@@ -136,6 +137,8 @@ function showView(view){
   refreshAdminPortfolio();
 }else if(view === 'admin-feedback'){
   refreshAdminFeedback();
+}else if(view === 'admin-sports'){
+  refreshAdminSports();
 }
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {

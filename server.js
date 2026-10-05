@@ -954,6 +954,9 @@ const GNEWS_URLS = {
   ai: 'https://news.google.com/rss/search?q=%22Artificial%20Intelligence%22%20OR%20%22AI%22&hl=en-US&gl=US&ceid=US:en',
   // No dedicated Google News topic ID for crypto either — same keyword-search approach as AI.
   crypto: 'https://news.google.com/rss/search?q=crypto%20OR%20cryptocurrency%20OR%20bitcoin&hl=en-US&gl=US&ceid=US:en',
+  // Same keyword-search approach again — used by the admin-only Sports page,
+  // not exposed in the public News · Topics dropdown.
+  nfl: 'https://news.google.com/rss/search?q=NFL&hl=en-US&gl=US&ceid=US:en',
   entertainment: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en',
   sports: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en',
   health: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US&ceid=US:en',
@@ -1569,6 +1572,59 @@ app.get('/api/admin/feedback', async (req, res) => {
   } catch (e) {
     console.error('admin feedback fetch failed:', e.message);
     res.status(500).json({ error: 'Failed to fetch feedback' });
+  }
+});
+
+// ---- Admin Sports (NFL only for now) ----
+// ESPN's site API is free and unofficial -- no API key, no documented
+// contract, widely used by hobby projects for exactly this. Proxied (not
+// called from the browser) for the same CORS/consistency reasons every
+// other upstream here is, and cached briefly since scores change slowly
+// enough that a 60s-stale read is never actually wrong in a meaningful way.
+const SPORTS_SCOREBOARD_URLS = {
+  nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+};
+
+app.get('/api/admin/sports/:league/scores', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const league = (req.params.league || '').toString();
+    const url = SPORTS_SCOREBOARD_URLS[league];
+    if (!url) return res.status(400).json({ error: `Unsupported league: ${league}` });
+
+    const { data } = await cachedFetch(`sports:${league}`, 60_000, () => fetchJson(url, 8000));
+
+    const games = (data.events || []).map(event => {
+      const competition = event.competitions?.[0];
+      const competitors = competition?.competitors || [];
+      const home = competitors.find(c => c.homeAway === 'home');
+      const away = competitors.find(c => c.homeAway === 'away');
+      const toTeam = c => c ? {
+        name: c.team?.displayName || c.team?.name || 'TBD',
+        abbreviation: c.team?.abbreviation || '',
+        score: c.score ?? null,
+        winner: !!c.winner
+      } : null;
+      return {
+        id: event.id,
+        state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
+        statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || '',
+        home: toTeam(home),
+        away: toTeam(away)
+      };
+    });
+
+    res.json(games);
+  } catch (e) {
+    console.error('admin sports scores fetch failed:', req.params.league, e.message);
+    res.status(502).json({ error: 'Failed to fetch scores' });
   }
 });
 
