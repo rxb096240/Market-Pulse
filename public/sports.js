@@ -26,6 +26,18 @@ function sortSportsGames(games){
   });
 }
 
+// Keeps every live/upcoming game, but only the N most recent completed ones
+// -- otherwise a full week of finals buries the games actually worth
+// checking under ones that are already decided and old news.
+function limitCompletedGames(sortedGames, maxCompleted){
+  let seen = 0;
+  return sortedGames.filter(g => {
+    if(g.state !== 'post') return true;
+    seen++;
+    return seen <= maxCompleted;
+  });
+}
+
 function renderSportsScores(games){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
@@ -34,7 +46,8 @@ function renderSportsScores(games){
     return;
   }
 
-  el.innerHTML = sortSportsGames(games).map(g => {
+  const limited = limitCompletedGames(sortSportsGames(games), 5);
+  el.innerHTML = limited.map(g => {
     const statusCls = g.state === 'in' ? 'live' : '';
     const awayScore = g.away?.score !== null && g.away?.score !== undefined ? g.away.score : '--';
     const homeScore = g.home?.score !== null && g.home?.score !== undefined ? g.home.score : '--';
@@ -86,7 +99,53 @@ async function refreshSportsNews(){
   }
 }
 
+function renderSportsStandings(groups){
+  const el = document.getElementById('adminSportsStandings');
+  if(!el) return;
+  if(!groups || groups.length === 0){
+    el.innerHTML = '<div class="news-empty">Standings unavailable.</div>';
+    return;
+  }
+
+  el.innerHTML = groups.map(g => `
+    <div class="standings-group">
+      <div class="standings-group-name">${escapeHtml(g.name)}</div>
+      <table class="markets-table standings-table">
+        <thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th></tr></thead>
+        <tbody>
+          ${g.entries.map(e => `
+            <tr>
+              <td>${escapeHtml(e.team)}</td>
+              <td class="num">${e.wins}</td>
+              <td class="num">${e.losses}</td>
+              <td class="num">${e.ties}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+}
+
+async function refreshSportsStandings(){
+  const el = document.getElementById('adminSportsStandings');
+  if(!el) return;
+  try{
+    const token = await getAccessToken();
+    const res = await fetch(`${API_BASE}/api/admin/sports/nfl/standings`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if(res.status === 403){ el.innerHTML = '<div class="empty">Not authorized.</div>'; return; }
+    if(!res.ok) throw new Error('bad response');
+    renderSportsStandings(await res.json());
+  }catch(e){
+    console.error('NFL standings fetch failed:', e);
+    el.innerHTML = '<div class="err">Standings unavailable — try again shortly.</div>';
+  }
+}
+
 function refreshAdminSports(){
   refreshSportsScores();
+  refreshSportsStandings();
   refreshSportsNews();
 }

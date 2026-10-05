@@ -1629,6 +1629,64 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
   }
 });
 
+// Standings -- same unofficial ESPN API, a different (less-verified) corner
+// of it than the scoreboard endpoint above. ESPN nests standings by
+// conference/division in a way that isn't fully confirmed from here (no
+// outbound access to espn.com to test against), so this walks the
+// `children` tree recursively and collects every node that actually has
+// `standings.entries`, rather than assuming a fixed nesting depth -- works
+// whichever way it turns out to be grouped.
+const SPORTS_STANDINGS_URLS = {
+  nfl: 'https://site.api.espn.com/apis/v2/sports/football/nfl/standings'
+};
+
+function extractStandingsGroups(node, groups) {
+  if (!node) return groups;
+  if (node.standings?.entries?.length) {
+    groups.push({
+      name: node.name || node.abbreviation || node.shortName || 'Standings',
+      entries: node.standings.entries.map(e => {
+        const stat = key => e.stats?.find(s => s.name === key || s.abbreviation === key)?.value;
+        return {
+          team: e.team?.displayName || e.team?.name || 'TBD',
+          wins: stat('wins') ?? stat('W') ?? 0,
+          losses: stat('losses') ?? stat('L') ?? 0,
+          ties: stat('ties') ?? stat('T') ?? 0
+        };
+      })
+    });
+  }
+  (node.children || []).forEach(child => extractStandingsGroups(child, groups));
+  return groups;
+}
+
+app.get('/api/admin/sports/:league/standings', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const league = (req.params.league || '').toString();
+    const url = SPORTS_STANDINGS_URLS[league];
+    if (!url) return res.status(400).json({ error: `Unsupported league: ${league}` });
+
+    // Standings move slowly (once a game or two a week) -- cached far
+    // longer than scores to avoid hammering an unofficial endpoint for
+    // data that's essentially static between games.
+    const { data } = await cachedFetch(`sports:${league}:standings`, 10 * 60_000, () => fetchJson(url, 8000));
+
+    const groups = extractStandingsGroups(data, []);
+    res.json(groups);
+  } catch (e) {
+    console.error('admin sports standings fetch failed:', req.params.league, e.message);
+    res.status(502).json({ error: 'Failed to fetch standings' });
+  }
+});
+
 // Crypto gets a higher bar than stocks since it's routinely more volatile --
 // a 5% day is unremarkable for crypto but a real move for most stocks.
 const ALERT_THRESHOLD_PCT = { crypto: 10, stock: 5 };
