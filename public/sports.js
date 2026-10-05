@@ -99,9 +99,6 @@ async function refreshSportsNews(){
   }
 }
 
-let latestStandingsGroups = [];
-let activeStandingsConference = 'AFC';
-
 // Group names come back as e.g. "AFC East"/"NFC West" -- splitting on that
 // prefix sidesteps needing to know exactly how ESPN nests conference vs.
 // division in the raw response, which still isn't fully confirmed.
@@ -112,28 +109,8 @@ function standingsConferenceOf(name){
   return 'Other';
 }
 
-function renderSportsStandings(groups){
-  const el = document.getElementById('adminSportsStandings');
-  if(!el) return;
-  if(groups) latestStandingsGroups = groups;
-  if(latestStandingsGroups.length === 0){
-    el.innerHTML = '<div class="news-empty">Standings unavailable.</div>';
-    return;
-  }
-
-  const present = Array.from(new Set(latestStandingsGroups.map(g => standingsConferenceOf(g.name))));
-  const order = ['AFC', 'NFC'].filter(c => present.includes(c)).concat(present.filter(c => c !== 'AFC' && c !== 'NFC'));
-  if(!order.includes(activeStandingsConference)) activeStandingsConference = order[0];
-
-  const tabsHtml = order.length > 1 ? `
-    <div class="admin-pf-tabs">
-      ${order.map(c => `<button class="admin-pf-tab${c === activeStandingsConference ? ' active' : ''}" data-conf="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}
-    </div>
-  ` : '';
-
-  const visibleGroups = latestStandingsGroups.filter(g => standingsConferenceOf(g.name) === activeStandingsConference);
-
-  el.innerHTML = tabsHtml + visibleGroups.map(g => `
+function standingsGroupHtml(g){
+  return `
     <div class="standings-group">
       <div class="standings-group-name">${escapeHtml(g.name)}</div>
       <table class="markets-table standings-table">
@@ -150,15 +127,38 @@ function renderSportsStandings(groups){
         </tbody>
       </table>
     </div>
-  `).join('');
+  `;
 }
 
-document.getElementById('adminSportsStandings')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.admin-pf-tab');
-  if(!btn) return;
-  activeStandingsConference = btn.dataset.conf;
-  renderSportsStandings(null);
-});
+function renderSportsStandings(groups){
+  const el = document.getElementById('adminSportsStandings');
+  if(!el) return;
+  if(!groups || groups.length === 0){
+    el.innerHTML = '<div class="news-empty">Standings unavailable.</div>';
+    return;
+  }
+
+  const present = Array.from(new Set(groups.map(g => standingsConferenceOf(g.name))));
+  const order = ['AFC', 'NFC'].filter(c => present.includes(c)).concat(present.filter(c => c !== 'AFC' && c !== 'NFC'));
+
+  // Side by side when there's more than one conference to show; a single
+  // column (no point splitting) if the data only ever resolves to one.
+  if(order.length <= 1){
+    el.innerHTML = groups.map(standingsGroupHtml).join('');
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="standings-columns">
+      ${order.map(c => `
+        <div class="standings-column">
+          <div class="standings-conf-label">${escapeHtml(c)}</div>
+          ${groups.filter(g => standingsConferenceOf(g.name) === c).map(standingsGroupHtml).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
 async function refreshSportsStandings(){
   const el = document.getElementById('adminSportsStandings');
