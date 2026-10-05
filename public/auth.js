@@ -2,6 +2,7 @@
 // On login/logout it re-syncs watchlist, portfolio, and practice data across the other modules.
 
 let currentUser = null;
+let isAdminUser = false;
 let authMode = 'signin'; // or 'signup'
 
 const authBtn = document.getElementById('authBtn');
@@ -98,22 +99,26 @@ async function updateAuthUI(){
   refreshAuthButtonLabel();
   if(!currentUser) closeAuthMenu();
   refreshNotifBell?.();
-  updateHomeModeForAuth?.();
   const adminGroup = document.getElementById('adminNavGroup');
-  if(adminGroup){
-    if(currentUser){
-      try{
-        const token = await getAccessToken();
-        const res = await fetch(`${API_BASE}/api/admin/check`, { headers: { Authorization: `Bearer ${token}` } });
-        const { isAdmin } = await res.json();
-        adminGroup.style.display = isAdmin ? '' : 'none';
-      }catch(e){
-        adminGroup.style.display = 'none';
-      }
-    }else{
-      adminGroup.style.display = 'none';
+  if(currentUser){
+    try{
+      const token = await getAccessToken();
+      const res = await fetch(`${API_BASE}/api/admin/check`, { headers: { Authorization: `Bearer ${token}` } });
+      const { isAdmin } = await res.json();
+      isAdminUser = isAdmin;
+    }catch(e){
+      isAdminUser = false;
     }
+  }else{
+    isAdminUser = false;
   }
+  if(adminGroup) adminGroup.style.display = isAdminUser ? '' : 'none';
+  // Admin keeps seeing the regular (signed-out-style) Home for now rather
+  // than the personalized watchlist/portfolio/news dashboard -- that's a
+  // deliberate call, not a gap: an admin-specific Home redesign is a
+  // separate, not-yet-built thing, and showing them their own (empty)
+  // watchlist/portfolio in the meantime isn't useful.
+  updateHomeModeForAuth?.();
 }
 
 

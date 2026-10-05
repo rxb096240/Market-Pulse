@@ -142,7 +142,7 @@ async function refreshTopMovers(){
 
 async function refreshHomeView(){
   updateHomeModeForAuth();
-  if(currentUser){ refreshHomeDashboard(); return; }
+  if(currentUser && !isAdminUser){ refreshHomeDashboard(); return; }
 
   if(!homeLoaded){
     const el = document.getElementById('homeSnapshot');
@@ -173,8 +173,10 @@ function updateHomeModeForAuth(){
   const anon = document.getElementById('homeAnonymous');
   const signedIn = document.getElementById('homeSignedIn');
   if(!anon || !signedIn) return;
-  anon.style.display = currentUser ? 'none' : '';
-  signedIn.style.display = currentUser ? '' : 'none';
+  // Admin keeps the regular Home for now (see updateAuthUI in auth.js).
+  const showDashboard = currentUser && !isAdminUser;
+  anon.style.display = showDashboard ? 'none' : '';
+  signedIn.style.display = showDashboard ? '' : 'none';
 }
 
 function renderHomeDashboardGreeting(){
@@ -301,7 +303,7 @@ async function refreshHomeDashboardNews(){
 }
 
 function refreshHomeDashboard(){
-  if(!currentUser) return;
+  if(!currentUser || isAdminUser) return;
   // Each section wrapped separately so one throwing (a bad price, a null
   // somewhere) can't silently take down the other two -- they're otherwise
   // independent and have no reason to depend on each other succeeding.
