@@ -1332,20 +1332,35 @@ app.get('/api/admin/user-portfolio', async (req, res) => {
     const targetUserId = (req.query.userId || '').toString();
     if (!targetUserId) return res.status(400).json({ error: 'Missing userId' });
 
-    const { data, error } = await supabaseAdmin
-      .from('portfolio_holdings')
-      .select('asset_type, asset_key, sym, name, qty, avg_price')
-      .eq('user_id', targetUserId);
-    if (error) throw error;
+    // Paper trading (practice_holdings), not the real portfolio_holdings
+    // tracked under Stocks/Crypto -> Portfolio -- those are a different
+    // thing (manually-entered real holdings) and were confusing to look at
+    // here when what the admin actually wants is the practice account.
+    const [{ data: holdings, error: holdingsErr }, { data: account, error: accountErr }] = await Promise.all([
+      supabaseAdmin
+        .from('practice_holdings')
+        .select('asset_type, asset_key, sym, name, qty, avg_price')
+        .eq('user_id', targetUserId),
+      supabaseAdmin
+        .from('practice_accounts')
+        .select('cash_balance')
+        .eq('user_id', targetUserId)
+        .maybeSingle()
+    ]);
+    if (holdingsErr) throw holdingsErr;
+    if (accountErr) throw accountErr;
 
-    res.json(data.map(r => ({
-      type: r.asset_type,
-      key: r.asset_key,
-      sym: r.sym,
-      name: r.name,
-      qty: r.qty,
-      avgPrice: r.avg_price
-    })));
+    res.json({
+      cashBalance: account?.cash_balance ?? null,
+      holdings: holdings.map(r => ({
+        type: r.asset_type,
+        key: r.asset_key,
+        sym: r.sym,
+        name: r.name,
+        qty: r.qty,
+        avgPrice: r.avg_price
+      }))
+    });
   } catch (e) {
     console.error('admin user-portfolio fetch failed:', e.message);
     res.status(500).json({ error: 'Failed to fetch portfolio' });

@@ -438,7 +438,7 @@
 
 <!-- Admin Portfolio -->
 <section class="view-panel" data-view-panel="admin-portfolio">
-  <div class="trending-intro">View any registered user's portfolio holdings. Visible only to the admin account.</div>
+  <div class="trending-intro">View any registered user's paper trading (practice mode) portfolio. Visible only to the admin account.</div>
 
   <div class="markets-header-row">
     <div class="trending-intro" style="margin:0;">Select user</div>
@@ -448,6 +448,7 @@
   </div>
 
   <div id="adminPfBody" style="display:none;">
+    <div class="trending-intro" style="margin:0 0 14px;">Cash balance: <strong id="adminPfCashBalance" style="color:var(--text);">$0.00</strong></div>
     <div class="admin-pf-tabs">
       <button class="admin-pf-tab active" data-admin-pf-tab="stock">Stocks</button>
       <button class="admin-pf-tab" data-admin-pf-tab="crypto">Crypto</button>

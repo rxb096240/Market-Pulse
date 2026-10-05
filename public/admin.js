@@ -211,7 +211,9 @@ async function loadAdminUserPortfolio(userId){
     return;
   }
 
-  const entries = await res.json();
+  const { cashBalance, holdings: entries } = await res.json();
+  const cashRow = document.getElementById('adminPfCashBalance');
+  if(cashRow) cashRow.textContent = cashBalance !== null ? fmtUsd(cashBalance) : '—';
   const prices = await fetchAdminPfPrices(entries);
 
   renderAdminPfGroup(entries.filter(e => e.type === 'stock'), prices, {
