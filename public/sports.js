@@ -99,15 +99,41 @@ async function refreshSportsNews(){
   }
 }
 
+let latestStandingsGroups = [];
+let activeStandingsConference = 'AFC';
+
+// Group names come back as e.g. "AFC East"/"NFC West" -- splitting on that
+// prefix sidesteps needing to know exactly how ESPN nests conference vs.
+// division in the raw response, which still isn't fully confirmed.
+function standingsConferenceOf(name){
+  const n = (name || '').trim().toUpperCase();
+  if(n.startsWith('AFC')) return 'AFC';
+  if(n.startsWith('NFC')) return 'NFC';
+  return 'Other';
+}
+
 function renderSportsStandings(groups){
   const el = document.getElementById('adminSportsStandings');
   if(!el) return;
-  if(!groups || groups.length === 0){
+  if(groups) latestStandingsGroups = groups;
+  if(latestStandingsGroups.length === 0){
     el.innerHTML = '<div class="news-empty">Standings unavailable.</div>';
     return;
   }
 
-  el.innerHTML = groups.map(g => `
+  const present = Array.from(new Set(latestStandingsGroups.map(g => standingsConferenceOf(g.name))));
+  const order = ['AFC', 'NFC'].filter(c => present.includes(c)).concat(present.filter(c => c !== 'AFC' && c !== 'NFC'));
+  if(!order.includes(activeStandingsConference)) activeStandingsConference = order[0];
+
+  const tabsHtml = order.length > 1 ? `
+    <div class="admin-pf-tabs">
+      ${order.map(c => `<button class="admin-pf-tab${c === activeStandingsConference ? ' active' : ''}" data-conf="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}
+    </div>
+  ` : '';
+
+  const visibleGroups = latestStandingsGroups.filter(g => standingsConferenceOf(g.name) === activeStandingsConference);
+
+  el.innerHTML = tabsHtml + visibleGroups.map(g => `
     <div class="standings-group">
       <div class="standings-group-name">${escapeHtml(g.name)}</div>
       <table class="markets-table standings-table">
@@ -126,6 +152,13 @@ function renderSportsStandings(groups){
     </div>
   `).join('');
 }
+
+document.getElementById('adminSportsStandings')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.admin-pf-tab');
+  if(!btn) return;
+  activeStandingsConference = btn.dataset.conf;
+  renderSportsStandings(null);
+});
 
 async function refreshSportsStandings(){
   const el = document.getElementById('adminSportsStandings');
