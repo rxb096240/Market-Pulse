@@ -180,6 +180,10 @@
       <button class="nav-item" id="donateNavBtn" type="button"><span class="btn-emoji">☕</span> Donate</button>
     </div>
 
+    <div class="nav-group">
+      <button class="nav-item" id="feedbackNavBtn" type="button"><span class="btn-emoji">💬</span> Feedback</button>
+    </div>
+
   </nav>
 
   <div class="app-main">
@@ -2122,6 +2126,35 @@
     </div>
   </div>
 </div>
+  <div class="news-modal-backdrop" id="feedbackModalBackdrop">
+  <div class="news-modal" style="max-width:420px; height:auto;">
+    <div class="news-modal-header">
+      <div class="news-modal-title">Send feedback</div>
+      <button class="news-modal-close" id="feedbackModalClose">×</button>
+    </div>
+    <div style="padding:18px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <div class="fb-field-label">Type</div>
+        <div class="fb-chip-row" id="feedbackTypeRow">
+          <button class="fb-chip active" type="button" data-type="suggestion">Suggestion</button>
+          <button class="fb-chip" type="button" data-type="bug">Bug</button>
+          <button class="fb-chip" type="button" data-type="feature">Feature request</button>
+        </div>
+      </div>
+      <div>
+        <div class="fb-field-label">Message</div>
+        <textarea id="feedbackMessage" class="qty-input fb-textarea" placeholder="What's on your mind?" maxlength="4000"></textarea>
+      </div>
+      <div id="feedbackEmailRow" style="display:none;">
+        <div class="fb-field-label">Email <span class="fb-field-optional">(optional)</span></div>
+        <input id="feedbackEmail" type="email" class="qty-input" placeholder="you@example.com" style="width:100%;">
+      </div>
+      <div id="feedbackSignedInHint" class="fb-hint" style="display:none;"></div>
+      <div id="feedbackError" class="fb-error"></div>
+      <button class="add-btn" id="feedbackSubmitBtn" type="button" style="width:100%; box-sizing:border-box;">Send feedback</button>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="state.js"></script>
 <script src="avatars.js"></script>
@@ -2129,6 +2162,7 @@
 <script src="push.js"></script>
 <script src="notifications.js"></script>
 <script src="donate.js"></script>
+<script src="feedback.js"></script>
 <script src="watchlist.js"></script>
 <script src="prices.js"></script>
 <script src="trending.js"></script>

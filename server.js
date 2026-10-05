@@ -1488,6 +1488,45 @@ app.post('/api/push/unsubscribe', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Feedback ----
+// Open to anonymous visitors too (no requireAuth gate), so this resolves
+// the Bearer token itself only when one is present, rather than rejecting
+// the request without one. Writes go through the service role client --
+// there's no auth.uid() for a signed-out submitter, so a client-side
+// insert under RLS has nothing to scope to.
+const FEEDBACK_TYPES = new Set(['suggestion', 'bug', 'feature']);
+
+app.post('/api/feedback', async (req, res) => {
+  const { type, message, email } = req.body || {};
+  if (!FEEDBACK_TYPES.has(type)) return res.status(400).json({ error: 'Invalid feedback type' });
+  const trimmed = (message || '').toString().trim();
+  if (!trimmed) return res.status(400).json({ error: 'Message is required' });
+  if (trimmed.length > 4000) return res.status(400).json({ error: 'Message is too long' });
+
+  let userId = null;
+  let resolvedEmail = (email || '').toString().trim().slice(0, 320) || null;
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (token) {
+    const { data } = await supabaseAdmin.auth.getUser(token);
+    if (data?.user) {
+      userId = data.user.id;
+      resolvedEmail = data.user.email || resolvedEmail;
+    }
+  }
+
+  const { error } = await supabaseAdmin.from('feedback').insert({
+    user_id: userId,
+    email: resolvedEmail,
+    type,
+    message: trimmed
+  });
+  if (error) {
+    console.error('feedback insert failed:', error.message);
+    return res.status(500).json({ error: 'Failed to submit feedback' });
+  }
+  res.json({ ok: true });
+});
+
 const ALERT_THRESHOLD_PCT = 5;
 
 // NYSE/Nasdaq regular hours only (9:30am-4:00pm ET, Mon-Fri). Doesn't know
