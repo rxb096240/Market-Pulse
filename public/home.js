@@ -251,10 +251,17 @@ function renderHomeDashboardWatchlist(){
   const emptyEl = document.getElementById('homeDashWatchlistEmpty');
   if(!grid) return;
 
-  const items = [
-    ...COINS.map(c => ({ key: c.id, sym: c.sym, name: c.name, color: c.color, type: 'crypto' })),
-    ...STOCKS.map(s => ({ key: s.sym, sym: s.sym, name: s.name, color: s.color, type: 'stock' }))
-  ].slice(0, 6);
+  const cryptoItems = COINS.map(c => ({ key: c.id, sym: c.sym, name: c.name, color: c.color, type: 'crypto' }));
+  const stockItems = STOCKS.map(s => ({ key: s.sym, sym: s.sym, name: s.name, color: s.color, type: 'stock' }));
+
+  // Interleaved instead of concat+slice -- a flat slice(0, 6) let a long
+  // crypto watchlist (listed first) crowd stocks out of the preview
+  // entirely once crypto alone filled the 6-item cap.
+  const items = [];
+  for (let i = 0; items.length < 6 && (i < cryptoItems.length || i < stockItems.length); i++) {
+    if (cryptoItems[i]) items.push(cryptoItems[i]);
+    if (items.length < 6 && stockItems[i]) items.push(stockItems[i]);
+  }
 
   if(items.length === 0){
     grid.innerHTML = '';
