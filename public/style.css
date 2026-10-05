@@ -2111,7 +2111,7 @@
     color:var(--text);
     margin-bottom:6px;
   }
-  .standings-table{ max-width:420px; }
+  .standings-table{ width:100%; min-width:0; max-width:420px; }
   .standings-table th:nth-child(1), .standings-table td:nth-child(1){ width:auto; }
   .standings-table th:nth-child(2), .standings-table td:nth-child(2),
   .standings-table th:nth-child(3), .standings-table td:nth-child(3),
