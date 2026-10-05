@@ -3,6 +3,29 @@
 // the existing Google News proxy (same keyword-search pattern as AI/Crypto
 // in news.js, just not exposed in the public News · Topics dropdown).
 
+// ESPN's shortDetail is just "Final" once a game's done -- no date attached
+// -- so a completed game needs its date appended separately to tell a
+// Sunday's final from last week's.
+function sportsStatusText(g){
+  if(g.state !== 'post' || !g.date) return g.statusDetail || '';
+  const d = new Date(g.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${g.statusDetail || 'Final'} · ${d}`;
+}
+
+// Live first, then upcoming (soonest first), then completed (most recent
+// first) -- so the games actually worth checking right now aren't buried
+// under a week's worth of already-decided ones.
+const SPORTS_STATE_PRIORITY = { in: 0, pre: 1, post: 2 };
+function sortSportsGames(games){
+  return [...games].sort((a, b) => {
+    const pDiff = (SPORTS_STATE_PRIORITY[a.state] ?? 3) - (SPORTS_STATE_PRIORITY[b.state] ?? 3);
+    if(pDiff !== 0) return pDiff;
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return a.state === 'post' ? bTime - aTime : aTime - bTime;
+  });
+}
+
 function renderSportsScores(games){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
@@ -11,7 +34,7 @@ function renderSportsScores(games){
     return;
   }
 
-  el.innerHTML = games.map(g => {
+  el.innerHTML = sortSportsGames(games).map(g => {
     const statusCls = g.state === 'in' ? 'live' : '';
     const awayScore = g.away?.score !== null && g.away?.score !== undefined ? g.away.score : '--';
     const homeScore = g.home?.score !== null && g.home?.score !== undefined ? g.home.score : '--';
@@ -27,7 +50,7 @@ function renderSportsScores(games){
             <span class="score-team-val">${escapeHtml(String(homeScore))}</span>
           </div>
         </div>
-        <div class="score-status ${statusCls}">${escapeHtml(g.statusDetail || '')}</div>
+        <div class="score-status ${statusCls}">${escapeHtml(sportsStatusText(g))}</div>
       </div>
     `;
   }).join('');

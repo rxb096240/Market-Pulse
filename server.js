@@ -1614,6 +1614,7 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
       } : null;
       return {
         id: event.id,
+        date: event.date || null, // ISO timestamp -- shortDetail alone omits the date once a game is Final
         state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
         statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || '',
         home: toTeam(home),
