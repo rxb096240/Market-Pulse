@@ -284,10 +284,13 @@ async function refreshHomeDashboardNews(){
 
 function refreshHomeDashboard(){
   if(!currentUser) return;
-  renderHomeDashboardGreeting();
-  renderHomeDashboardPortfolio();
-  renderHomeDashboardWatchlist();
-  refreshHomeDashboardNews();
+  // Each section wrapped separately so one throwing (a bad price, a null
+  // somewhere) can't silently take down the other two -- they're otherwise
+  // independent and have no reason to depend on each other succeeding.
+  try{ renderHomeDashboardGreeting(); }catch(e){ console.error('Home dashboard greeting failed:', e); }
+  try{ renderHomeDashboardPortfolio(); }catch(e){ console.error('Home dashboard portfolio failed:', e); }
+  try{ renderHomeDashboardWatchlist(); }catch(e){ console.error('Home dashboard watchlist failed:', e); }
+  refreshHomeDashboardNews().catch(e => console.error('Home dashboard news failed:', e));
 }
 
 document.querySelectorAll('.home-panel-link[data-target-view]').forEach(link => {
