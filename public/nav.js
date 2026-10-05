@@ -58,7 +58,8 @@ const VIEW_TITLES = {
   'social-hackernews': 'Social · Hacker News',
   'admin-reports': 'Admin · Reports',
   'admin-users': 'Admin · Users',
-  'admin-portfolio': 'Admin · Portfolio'
+  'admin-portfolio': 'Admin · Portfolio',
+  'admin-feedback': 'Admin · Feedback'
 };
 
 function showView(view){
@@ -133,6 +134,8 @@ function showView(view){
   refreshAdminUsers();
 }else if(view === 'admin-portfolio'){
   refreshAdminPortfolio();
+}else if(view === 'admin-feedback'){
+  refreshAdminFeedback();
 }
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {

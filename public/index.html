@@ -159,6 +159,7 @@
       <button class="nav-item" data-view="admin-reports">Reports</button>
       <button class="nav-item" data-view="admin-users">Users</button>
       <button class="nav-item" data-view="admin-portfolio">Portfolio</button>
+      <button class="nav-item" data-view="admin-feedback">Feedback</button>
       </div>
     </div>
 
@@ -473,6 +474,19 @@
       </div>
       <div class="grid" id="adminPfCryptoGrid"><div class="empty">No crypto holdings for this user.</div></div>
     </div>
+  </div>
+</section>
+
+<!-- Admin Feedback -->
+<section class="view-panel" data-view-panel="admin-feedback">
+  <div class="trending-intro">Suggestions, bug reports, and feature requests submitted through the Feedback form. Visible only to the admin account.</div>
+  <div class="markets-table-wrap">
+    <table class="markets-table" id="adminFeedbackTable">
+      <thead><tr><th>Type</th><th>Message</th><th>Email</th><th>Submitted</th></tr></thead>
+      <tbody id="adminFeedbackTableBody">
+        <tr><td colspan="4" class="news-loading">Loading…</td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 

@@ -1336,6 +1336,11 @@
 #adminUsersTable th:nth-child(4), #adminUsersTable td:nth-child(4){ width:44px; }
 
 .admin-user-delete-cell{ text-align:center; }
+
+#adminFeedbackTable th:nth-child(1), #adminFeedbackTable td:nth-child(1){ width:100px; }
+#adminFeedbackTable th:nth-child(2), #adminFeedbackTable td:nth-child(2){ width:auto; }
+#adminFeedbackTable th:nth-child(3), #adminFeedbackTable td:nth-child(3){ width:220px; }
+#adminFeedbackTable th:nth-child(4), #adminFeedbackTable td:nth-child(4){ width:100px; }
 .admin-delete-btn{
   width:24px; height:24px;
   display:inline-flex; align-items:center; justify-content:center;
@@ -2021,6 +2026,22 @@
     color:var(--down);
     min-height:14px;
   }
+  .fb-type-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:4px;
+    border:1px solid var(--panel-border);
+    white-space:nowrap;
+  }
+  .fb-type-suggestion{ color:var(--amber); border-color:var(--amber); }
+  .fb-type-bug{ color:var(--down); border-color:var(--down); }
+  .fb-type-feature{ color:var(--up); border-color:var(--up); }
+  .admin-feedback-message{ max-width:420px; white-space:normal; line-height:1.5; }
 
 /* ============================================================
    CALCULATOR FEATURE — STYLES

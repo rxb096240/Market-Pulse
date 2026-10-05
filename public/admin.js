@@ -79,6 +79,39 @@ document.getElementById('adminUsersTableBody')?.addEventListener('click', async 
   btn.closest('tr')?.remove();
 });
 
+const ADMIN_FEEDBACK_TYPE_LABELS = { suggestion: 'Suggestion', bug: 'Bug', feature: 'Feature' };
+
+async function refreshAdminFeedback(){
+  const body = document.getElementById('adminFeedbackTableBody');
+  if(!body) return;
+
+  const token = await getAccessToken();
+  const res = await fetch(`${API_BASE}/api/admin/feedback`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if(res.status === 403){
+    body.innerHTML = '<tr><td colspan="4" class="empty">Not authorized.</td></tr>';
+    return;
+  }
+  if(!res.ok){
+    body.innerHTML = '<tr><td colspan="4" class="err">Failed to load feedback.</td></tr>';
+    return;
+  }
+
+  const items = await res.json();
+  body.innerHTML = items.length
+    ? items.map(f => `
+      <tr>
+        <td><span class="fb-type-badge fb-type-${f.type}">${ADMIN_FEEDBACK_TYPE_LABELS[f.type] || f.type}</span></td>
+        <td class="admin-feedback-message">${escapeHtml(f.message)}</td>
+        <td>${escapeHtml(f.email || '—')}</td>
+        <td>${timeAgo(new Date(f.createdAt).getTime())}</td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="4" class="empty">No feedback yet.</td></tr>';
+}
+
 async function refreshAdminPortfolio(){
   const select = document.getElementById('adminPfUserSelect');
   if(!select) return;

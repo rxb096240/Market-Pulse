@@ -1542,6 +1542,36 @@ app.post('/api/feedback', async (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/admin/feedback', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('feedback')
+      .select('id, type, message, email, created_at')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+
+    res.json(data.map(r => ({
+      id: r.id,
+      type: r.type,
+      message: r.message,
+      email: r.email,
+      createdAt: r.created_at
+    })));
+  } catch (e) {
+    console.error('admin feedback fetch failed:', e.message);
+    res.status(500).json({ error: 'Failed to fetch feedback' });
+  }
+});
+
 const ALERT_THRESHOLD_PCT = 5;
 
 // NYSE/Nasdaq regular hours only (9:30am-4:00pm ET, Mon-Fri). Doesn't know
