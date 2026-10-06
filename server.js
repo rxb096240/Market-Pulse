@@ -1585,6 +1585,19 @@ const SPORTS_SCOREBOARD_URLS = {
   nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
 };
 
+// ESPN's scoreboard with no params only returns the "current" week -- once that
+// week's games are all final (e.g. Tue/Wed before the next week's slate exists
+// yet), there's nothing live or upcoming left to show. Requesting an explicit
+// date range spanning a couple weeks back and forward keeps live/upcoming games
+// visible whenever they exist, alongside the recently completed ones.
+function sportsDateRangeParam(daysBack, daysForward) {
+  const fmt = d => `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`;
+  const now = new Date();
+  const start = new Date(now); start.setUTCDate(start.getUTCDate() - daysBack);
+  const end = new Date(now); end.setUTCDate(end.getUTCDate() + daysForward);
+  return `${fmt(start)}-${fmt(end)}`;
+}
+
 app.get('/api/admin/sports/:league/scores', async (req, res) => {
   try {
     const token = (req.headers.authorization || '').replace('Bearer ', '');
@@ -1596,10 +1609,13 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
     }
 
     const league = (req.params.league || '').toString();
-    const url = SPORTS_SCOREBOARD_URLS[league];
-    if (!url) return res.status(400).json({ error: `Unsupported league: ${league}` });
+    const baseUrl = SPORTS_SCOREBOARD_URLS[league];
+    if (!baseUrl) return res.status(400).json({ error: `Unsupported league: ${league}` });
 
-    const { data } = await cachedFetch(`sports:${league}`, 60_000, () => fetchJson(url, 8000));
+    const dateRange = sportsDateRangeParam(10, 10);
+    const url = `${baseUrl}?dates=${dateRange}`;
+
+    const { data } = await cachedFetch(`sports:${league}:${dateRange}`, 60_000, () => fetchJson(url, 8000));
 
     const games = (data.events || []).map(event => {
       const competition = event.competitions?.[0];
