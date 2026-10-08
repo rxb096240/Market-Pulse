@@ -2118,8 +2118,8 @@
   .standings-table th:nth-child(4), .standings-table td:nth-child(4){ width:38px; padding-left:6px; padding-right:6px; }
   .standings-table .num{ text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
 
-  .standings-columns{ display:flex; gap:28px; flex-wrap:wrap; }
-  .standings-column{ flex:1; min-width:260px; }
+  .standings-columns{ display:flex; gap:16px; flex-wrap:wrap; }
+  .standings-column{ flex:1; min-width:170px; }
   .standings-conf-label{
     font-family:'IBM Plex Mono',monospace;
     font-size:11px;

@@ -1613,9 +1613,18 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
     if (!baseUrl) return res.status(400).json({ error: `Unsupported league: ${league}` });
 
     const dateRange = sportsDateRangeParam(10, 10);
-    const url = `${baseUrl}?dates=${dateRange}`;
+    const rangedUrl = `${baseUrl}?dates=${dateRange}`;
 
-    const { data } = await cachedFetch(`sports:${league}:${dateRange}`, 60_000, () => fetchJson(url, 8000));
+    // Fall back to the plain (unparameterized) scoreboard if the date-range
+    // request errors for any reason -- better to show "current week" games
+    // than nothing at all.
+    let data;
+    try {
+      ({ data } = await cachedFetch(`sports:${league}:${dateRange}`, 60_000, () => fetchJson(rangedUrl, 8000)));
+    } catch (rangedErr) {
+      console.error('admin sports ranged scores fetch failed, falling back:', league, rangedErr.message);
+      ({ data } = await cachedFetch(`sports:${league}:fallback`, 60_000, () => fetchJson(baseUrl, 8000)));
+    }
 
     const games = (data.events || []).map(event => {
       const competition = event.competitions?.[0];
