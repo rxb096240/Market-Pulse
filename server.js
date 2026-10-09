@@ -957,6 +957,7 @@ const GNEWS_URLS = {
   // Same keyword-search approach again — used by the admin-only Sports page,
   // not exposed in the public News · Topics dropdown.
   nfl: 'https://news.google.com/rss/search?q=NFL&hl=en-US&gl=US&ceid=US:en',
+  nba: 'https://news.google.com/rss/search?q=NBA&hl=en-US&gl=US&ceid=US:en',
   entertainment: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en',
   sports: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en',
   health: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US&ceid=US:en',
@@ -1582,7 +1583,8 @@ app.get('/api/admin/feedback', async (req, res) => {
 // other upstream here is, and cached briefly since scores change slowly
 // enough that a 60s-stale read is never actually wrong in a meaningful way.
 const SPORTS_SCOREBOARD_URLS = {
-  nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard'
+  nfl: 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+  nba: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard'
 };
 
 // ESPN's scoreboard with no params only returns the "current" week -- once that
@@ -1676,7 +1678,8 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
 // `standings.entries`, rather than assuming a fixed nesting depth -- works
 // whichever way it turns out to be grouped.
 const SPORTS_STANDINGS_URLS = {
-  nfl: 'https://site.api.espn.com/apis/v2/sports/football/nfl/standings'
+  nfl: 'https://site.api.espn.com/apis/v2/sports/football/nfl/standings',
+  nba: 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings'
 };
 
 function extractStandingsGroups(node, groups) {

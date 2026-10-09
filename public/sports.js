@@ -1,7 +1,14 @@
-// Admin Sports page (NFL only for now): scores proxied from ESPN's
-// unofficial site API via /api/admin/sports/:league/scores, headlines via
-// the existing Google News proxy (same keyword-search pattern as AI/Crypto
-// in news.js, just not exposed in the public News · Topics dropdown).
+// Admin Sports page: scores/standings proxied from ESPN's unofficial site
+// API via /api/admin/sports/:league/{scores,standings}, headlines via the
+// existing Google News proxy (same keyword-search pattern as AI/Crypto in
+// news.js, just not exposed in the public News · Topics dropdown). The tab
+// bar at the top of the panel switches which league is shown.
+
+const SPORTS_LEAGUES = {
+  nfl: { label: 'NFL', hasTies: true },
+  nba: { label: 'NBA', hasTies: false }
+};
+let currentSportsLeague = 'nfl';
 
 // ESPN's shortDetail is just "Final" once a game's done -- no date attached
 // -- so a completed game needs its date appended separately to tell a
@@ -55,7 +62,7 @@ function renderSportsScores(games){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
   if(!games || games.length === 0){
-    el.innerHTML = '<div class="news-empty">No NFL games right now.</div>';
+    el.innerHTML = `<div class="news-empty">No ${escapeHtml(SPORTS_LEAGUES[currentSportsLeague].label)} games right now.</div>`;
     return;
   }
 
@@ -89,64 +96,81 @@ function renderSportsScores(games){
 async function refreshSportsScores(){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
+  const league = currentSportsLeague;
   try{
     const token = await getAccessToken();
-    const res = await fetch(`${API_BASE}/api/admin/sports/nfl/scores`, {
+    const res = await fetch(`${API_BASE}/api/admin/sports/${league}/scores`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    if(league !== currentSportsLeague) return; // user switched tabs while this was in flight
     if(res.status === 403){ el.innerHTML = '<div class="empty">Not authorized.</div>'; return; }
     if(!res.ok) throw new Error('bad response');
     renderSportsScores(await res.json());
   }catch(e){
-    console.error('NFL scores fetch failed:', e);
-    el.innerHTML = '<div class="err">Scores unavailable — try again shortly.</div>';
+    console.error(`${SPORTS_LEAGUES[league].label} scores fetch failed:`, e);
+    if(league === currentSportsLeague) el.innerHTML = '<div class="err">Scores unavailable — try again shortly.</div>';
   }
 }
 
 async function refreshSportsNews(){
   const el = document.getElementById('adminSportsNews');
   if(!el) return;
+  const league = currentSportsLeague;
+  const label = SPORTS_LEAGUES[league].label;
   try{
-    const items = await fetchGoogleNews(`${API_BASE}/api/news/google?edition=nfl`, 'NFL');
+    const items = await fetchGoogleNews(`${API_BASE}/api/news/google?edition=${league}`, label);
+    if(league !== currentSportsLeague) return; // user switched tabs while this was in flight
     if(items.length === 0){ el.innerHTML = '<div class="err">News unavailable — try again shortly.</div>'; return; }
     renderNewsColumn('adminSportsNews', dedupeSortAndTrim(items, 12), { showTag: false });
   }catch(e){
-    console.error('NFL news fetch failed:', e);
-    el.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
+    console.error(`${label} news fetch failed:`, e);
+    if(league === currentSportsLeague) el.innerHTML = '<div class="err">News unavailable — try again shortly.</div>';
   }
 }
 
 // Group names come back as either abbreviated division names ("AFC East")
-// or full conference names ("American Football Conference") depending on
-// how ESPN nests conference vs. division for a given pull -- match both
-// forms rather than assuming one.
+// or full conference names ("American Football Conference"/"Eastern
+// Conference") depending on how ESPN nests conference vs. division for a
+// given pull and sport -- match both forms rather than assuming one.
+const CONFERENCE_PATTERNS = [
+  { key: 'AFC', label: 'American Football Conference', test: n => n.startsWith('AFC') || n.includes('AMERICAN FOOTBALL CONFERENCE') },
+  { key: 'NFC', label: 'National Football Conference', test: n => n.startsWith('NFC') || n.includes('NATIONAL FOOTBALL CONFERENCE') },
+  { key: 'EAST', label: 'Eastern Conference', test: n => n.startsWith('EAST') || n.includes('EASTERN CONFERENCE') },
+  { key: 'WEST', label: 'Western Conference', test: n => n.startsWith('WEST') || n.includes('WESTERN CONFERENCE') }
+];
+const CONFERENCE_ORDER = CONFERENCE_PATTERNS.map(p => p.key);
+
 function standingsConferenceOf(name){
   const n = (name || '').trim().toUpperCase();
-  if(n.startsWith('AFC') || n.includes('AMERICAN FOOTBALL CONFERENCE')) return 'AFC';
-  if(n.startsWith('NFC') || n.includes('NATIONAL FOOTBALL CONFERENCE')) return 'NFC';
-  return 'Other';
+  return CONFERENCE_PATTERNS.find(p => p.test(n))?.key || 'Other';
+}
+
+function standingsConferenceLabel(key){
+  return CONFERENCE_PATTERNS.find(p => p.key === key)?.label || key;
 }
 
 // One table per conference. When ESPN splits a conference into divisions,
 // each division's teams get a sub-header row inside that same table rather
 // than a separate small <table> per division. When a conference comes back
 // as a single flat group (no division breakdown), the group's own name
-// already duplicates the column's AFC/NFC label above it, so that header
-// row is skipped.
-function conferenceTableHtml(groups){
+// already duplicates the column's conference label above it, so that header
+// row is skipped. The Ties column only applies to leagues that have ties
+// (NFL does, NBA doesn't).
+function conferenceTableHtml(groups, hasTies){
   const showGroupHeaders = groups.length > 1;
+  const headerCols = hasTies ? 4 : 3;
   return `
     <table class="markets-table standings-table">
-      <thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th></tr></thead>
+      <thead><tr><th>Team</th><th>W</th><th>L</th>${hasTies ? '<th>T</th>' : ''}</tr></thead>
       <tbody>
         ${groups.map(g => `
-          ${showGroupHeaders ? `<tr class="standings-div-row"><td colspan="4">${escapeHtml(g.name)}</td></tr>` : ''}
+          ${showGroupHeaders ? `<tr class="standings-div-row"><td colspan="${headerCols}">${escapeHtml(g.name)}</td></tr>` : ''}
           ${g.entries.map(e => `
             <tr>
               <td>${escapeHtml(e.team)}</td>
               <td class="num">${e.wins}</td>
               <td class="num">${e.losses}</td>
-              <td class="num">${e.ties}</td>
+              ${hasTies ? `<td class="num">${e.ties}</td>` : ''}
             </tr>
           `).join('')}
         `).join('')}
@@ -163,24 +187,23 @@ function renderSportsStandings(groups){
     return;
   }
 
+  const hasTies = SPORTS_LEAGUES[currentSportsLeague].hasTies;
   const present = Array.from(new Set(groups.map(g => standingsConferenceOf(g.name))));
-  const order = ['AFC', 'NFC'].filter(c => present.includes(c)).concat(present.filter(c => c !== 'AFC' && c !== 'NFC'));
+  const order = CONFERENCE_ORDER.filter(c => present.includes(c)).concat(present.filter(c => !CONFERENCE_ORDER.includes(c)));
 
   // Side by side when there's more than one conference to show; a single
   // column (no point splitting) if the data only ever resolves to one.
   if(order.length <= 1){
-    el.innerHTML = conferenceTableHtml(groups);
+    el.innerHTML = conferenceTableHtml(groups, hasTies);
     return;
   }
-
-  const CONFERENCE_LABELS = { AFC: 'American Football Conference', NFC: 'National Football Conference' };
 
   el.innerHTML = `
     <div class="standings-columns">
       ${order.map(c => `
         <div class="standings-column">
-          <div class="standings-conf-label">${escapeHtml(CONFERENCE_LABELS[c] || c)}</div>
-          ${conferenceTableHtml(groups.filter(g => standingsConferenceOf(g.name) === c))}
+          <div class="standings-conf-label">${escapeHtml(standingsConferenceLabel(c))}</div>
+          ${conferenceTableHtml(groups.filter(g => standingsConferenceOf(g.name) === c), hasTies)}
         </div>
       `).join('')}
     </div>
@@ -190,19 +213,39 @@ function renderSportsStandings(groups){
 async function refreshSportsStandings(){
   const el = document.getElementById('adminSportsStandings');
   if(!el) return;
+  const league = currentSportsLeague;
   try{
     const token = await getAccessToken();
-    const res = await fetch(`${API_BASE}/api/admin/sports/nfl/standings`, {
+    const res = await fetch(`${API_BASE}/api/admin/sports/${league}/standings`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    if(league !== currentSportsLeague) return; // user switched tabs while this was in flight
     if(res.status === 403){ el.innerHTML = '<div class="empty">Not authorized.</div>'; return; }
     if(!res.ok) throw new Error('bad response');
     renderSportsStandings(await res.json());
   }catch(e){
-    console.error('NFL standings fetch failed:', e);
-    el.innerHTML = '<div class="err">Standings unavailable — try again shortly.</div>';
+    console.error(`${SPORTS_LEAGUES[league].label} standings fetch failed:`, e);
+    if(league === currentSportsLeague) el.innerHTML = '<div class="err">Standings unavailable — try again shortly.</div>';
   }
 }
+
+function setSportsLeague(league){
+  if(!SPORTS_LEAGUES[league] || league === currentSportsLeague) return;
+  currentSportsLeague = league;
+  document.querySelectorAll('#sportsLeagueTabs .admin-pf-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.league === league);
+  });
+  document.getElementById('adminSportsScores').innerHTML = '<div class="news-loading">Loading scores…</div>';
+  document.getElementById('adminSportsStandings').innerHTML = '<div class="news-loading">Loading standings…</div>';
+  document.getElementById('adminSportsNews').innerHTML = '<div class="news-loading">Loading news…</div>';
+  refreshAdminSports();
+}
+
+document.getElementById('sportsLeagueTabs')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.admin-pf-tab');
+  if(!btn) return;
+  setSportsLeague(btn.dataset.league);
+});
 
 function refreshAdminSports(){
   refreshSportsScores();
