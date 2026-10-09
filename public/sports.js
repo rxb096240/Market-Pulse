@@ -5,8 +5,11 @@
 // bar at the top of the panel switches which league is shown.
 
 const SPORTS_LEAGUES = {
-  nfl: { label: 'NFL', hasTies: true },
-  nba: { label: 'NBA', hasTies: false }
+  nfl: { label: 'NFL', hasTies: true, hasStandings: true },
+  nba: { label: 'NBA', hasTies: false, hasStandings: true },
+  // Cricket doesn't have a win-loss standings table in this view (no single
+  // ongoing league the way nfl/nba are), so it skips that section entirely.
+  cricket: { label: 'Cricket', hasStandings: false }
 };
 let currentSportsLeague = 'nfl';
 
@@ -102,6 +105,62 @@ function renderSportsScores(games){
   el.innerHTML = scoresListHtml(liveUpcoming.length > 0 ? liveUpcoming : completed);
 }
 
+// Cricket's score is a string like "245/6 (42.3 ov)" per team rather than a
+// single number, and a match can have multiple innings per side -- too
+// different from NFL/NBA's shape to reuse scoreRowHtml/renderSportsScores,
+// so it gets its own renderer. Only two buckets (no "upcoming" column) per
+// what was asked for: recent live scores and recent completed games.
+function cricketMatchRowHtml(m){
+  const statusCls = m.state === 'in' ? 'live' : '';
+  return `
+    <div class="score-row">
+      <div class="score-teams">
+        ${(m.teams || []).map(t => `
+          <div class="score-team-row">
+            <span class="score-team-name${t?.winner ? ' winner' : ''}">${escapeHtml(t?.name || 'TBD')}</span>
+            <span class="score-team-val">${escapeHtml(t?.scoreDisplay || '--')}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="score-status ${statusCls}">${escapeHtml(m.statusDetail || '')}</div>
+    </div>
+  `;
+}
+
+function cricketMatchesListHtml(matches){
+  return `<div class="scores-list">${matches.map(cricketMatchRowHtml).join('')}</div>`;
+}
+
+function renderCricketScores(matches){
+  const el = document.getElementById('adminSportsScores');
+  if(!el) return;
+  if(!matches || matches.length === 0){
+    el.innerHTML = '<div class="news-empty">No cricket matches right now.</div>';
+    return;
+  }
+
+  const live = matches.filter(m => m.state !== 'post');
+  const completed = matches.filter(m => m.state === 'post').slice(0, 5);
+
+  if(live.length > 0 && completed.length > 0){
+    el.innerHTML = `
+      <div class="scores-columns">
+        <div class="scores-column">
+          <div class="scores-col-label">Live</div>
+          ${cricketMatchesListHtml(live)}
+        </div>
+        <div class="scores-column">
+          <div class="scores-col-label">Completed</div>
+          ${cricketMatchesListHtml(completed)}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = cricketMatchesListHtml(live.length > 0 ? live : completed);
+}
+
 async function refreshSportsScores(){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
@@ -114,7 +173,9 @@ async function refreshSportsScores(){
     if(league !== currentSportsLeague) return; // user switched tabs while this was in flight
     if(res.status === 403){ el.innerHTML = '<div class="empty">Not authorized.</div>'; return; }
     if(!res.ok) throw new Error('bad response');
-    renderSportsScores(await res.json());
+    const games = await res.json();
+    if(league === 'cricket') renderCricketScores(games);
+    else renderSportsScores(games);
   }catch(e){
     console.error(`${SPORTS_LEAGUES[league].label} scores fetch failed:`, e);
     if(league === currentSportsLeague) el.innerHTML = '<div class="err">Scores unavailable — try again shortly.</div>';
@@ -257,8 +318,12 @@ document.getElementById('sportsLeagueTabs')?.addEventListener('click', (e) => {
 });
 
 function refreshAdminSports(){
+  const hasStandings = SPORTS_LEAGUES[currentSportsLeague].hasStandings;
+  const standingsSection = document.getElementById('adminSportsStandingsSection');
+  if(standingsSection) standingsSection.style.display = hasStandings ? '' : 'none';
+
   refreshSportsScores();
-  refreshSportsStandings();
+  if(hasStandings) refreshSportsStandings();
   refreshSportsNews();
 }
 
