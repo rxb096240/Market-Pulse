@@ -99,27 +99,31 @@ async function refreshSportsNews(){
   }
 }
 
-// Group names come back as e.g. "AFC East"/"NFC West" -- splitting on that
-// prefix sidesteps needing to know exactly how ESPN nests conference vs.
-// division in the raw response, which still isn't fully confirmed.
+// Group names come back as either abbreviated division names ("AFC East")
+// or full conference names ("American Football Conference") depending on
+// how ESPN nests conference vs. division for a given pull -- match both
+// forms rather than assuming one.
 function standingsConferenceOf(name){
   const n = (name || '').trim().toUpperCase();
-  if(n.startsWith('AFC')) return 'AFC';
-  if(n.startsWith('NFC')) return 'NFC';
+  if(n.startsWith('AFC') || n.includes('AMERICAN FOOTBALL CONFERENCE')) return 'AFC';
+  if(n.startsWith('NFC') || n.includes('NATIONAL FOOTBALL CONFERENCE')) return 'NFC';
   return 'Other';
 }
 
-// One table per conference, with each division's teams under a sub-header
-// row inside that same table -- rather than a separate small <table> per
-// division, which added repeated header/border chrome and forced far more
-// vertical scrolling than the standings data itself needs.
+// One table per conference. When ESPN splits a conference into divisions,
+// each division's teams get a sub-header row inside that same table rather
+// than a separate small <table> per division. When a conference comes back
+// as a single flat group (no division breakdown), the group's own name
+// already duplicates the column's AFC/NFC label above it, so that header
+// row is skipped.
 function conferenceTableHtml(groups){
+  const showGroupHeaders = groups.length > 1;
   return `
     <table class="markets-table standings-table">
       <thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th></tr></thead>
       <tbody>
         ${groups.map(g => `
-          <tr class="standings-div-row"><td colspan="4">${escapeHtml(g.name)}</td></tr>
+          ${showGroupHeaders ? `<tr class="standings-div-row"><td colspan="4">${escapeHtml(g.name)}</td></tr>` : ''}
           ${g.entries.map(e => `
             <tr>
               <td>${escapeHtml(e.team)}</td>
