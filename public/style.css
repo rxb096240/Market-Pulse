@@ -2094,6 +2094,7 @@
     align-items:center;
     gap:12px;
     flex-wrap:wrap;
+    max-width:440px;
   }
   .score-teams{ display:flex; flex-direction:column; gap:3px; min-width:0; }
   .score-team-row{ display:flex; justify-content:space-between; gap:16px; min-width:200px; }
