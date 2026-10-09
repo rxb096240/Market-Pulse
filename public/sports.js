@@ -33,10 +33,19 @@ function sortSportsGames(games){
   });
 }
 
+// ESPN sends a literal "0" (not null) for a team's score before a game
+// starts, so a not-yet-started game needs its score blanked out explicitly
+// rather than just falling back on null/undefined -- otherwise it reads as
+// a real 0-0 score instead of "hasn't kicked off yet".
+function scoreValueFor(g, team){
+  if(g.state === 'pre') return '--';
+  return team?.score !== null && team?.score !== undefined ? team.score : '--';
+}
+
 function scoreRowHtml(g){
   const statusCls = g.state === 'in' ? 'live' : '';
-  const awayScore = g.away?.score !== null && g.away?.score !== undefined ? g.away.score : '--';
-  const homeScore = g.home?.score !== null && g.home?.score !== undefined ? g.home.score : '--';
+  const awayScore = scoreValueFor(g, g.away);
+  const homeScore = scoreValueFor(g, g.home);
   return `
     <div class="score-row">
       <div class="score-teams">
@@ -251,4 +260,21 @@ function refreshAdminSports(){
   refreshSportsScores();
   refreshSportsStandings();
   refreshSportsNews();
+}
+
+// Only scores need to move live -- standings and news change far more
+// slowly (and are already cached server-side for minutes), so polling just
+// re-hits the scores endpoint while the Admin Sports page is actually open.
+let sportsScoresPollTimer = null;
+
+function startSportsScoresPolling(){
+  stopSportsScoresPolling();
+  sportsScoresPollTimer = setInterval(refreshSportsScores, 30_000);
+}
+
+function stopSportsScoresPolling(){
+  if(sportsScoresPollTimer){
+    clearInterval(sportsScoresPollTimer);
+    sportsScoresPollTimer = null;
+  }
 }

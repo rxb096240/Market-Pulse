@@ -69,6 +69,10 @@ function showView(view){
   trackNavVisit(view);
   updateTopBannerVisibility(view);
   buildTape();
+  // Only the Admin Sports page polls scores -- stop it on every navigation
+  // away so it doesn't keep hitting the API from other views, then the
+  // admin-sports branch below restarts it if that's where we're headed.
+  stopSportsScoresPolling();
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
@@ -139,6 +143,7 @@ function showView(view){
   refreshAdminFeedback();
 }else if(view === 'admin-sports'){
   refreshAdminSports();
+  startSportsScoresPolling();
 }
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
