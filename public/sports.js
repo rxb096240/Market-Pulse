@@ -109,13 +109,17 @@ function standingsConferenceOf(name){
   return 'Other';
 }
 
-function standingsGroupHtml(g){
+// One table per conference, with each division's teams under a sub-header
+// row inside that same table -- rather than a separate small <table> per
+// division, which added repeated header/border chrome and forced far more
+// vertical scrolling than the standings data itself needs.
+function conferenceTableHtml(groups){
   return `
-    <div class="standings-group">
-      <div class="standings-group-name">${escapeHtml(g.name)}</div>
-      <table class="markets-table standings-table">
-        <thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th></tr></thead>
-        <tbody>
+    <table class="markets-table standings-table">
+      <thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th></tr></thead>
+      <tbody>
+        ${groups.map(g => `
+          <tr class="standings-div-row"><td colspan="4">${escapeHtml(g.name)}</td></tr>
           ${g.entries.map(e => `
             <tr>
               <td>${escapeHtml(e.team)}</td>
@@ -124,9 +128,9 @@ function standingsGroupHtml(g){
               <td class="num">${e.ties}</td>
             </tr>
           `).join('')}
-        </tbody>
-      </table>
-    </div>
+        `).join('')}
+      </tbody>
+    </table>
   `;
 }
 
@@ -144,7 +148,7 @@ function renderSportsStandings(groups){
   // Side by side when there's more than one conference to show; a single
   // column (no point splitting) if the data only ever resolves to one.
   if(order.length <= 1){
-    el.innerHTML = groups.map(standingsGroupHtml).join('');
+    el.innerHTML = conferenceTableHtml(groups);
     return;
   }
 
@@ -153,7 +157,7 @@ function renderSportsStandings(groups){
       ${order.map(c => `
         <div class="standings-column">
           <div class="standings-conf-label">${escapeHtml(c)}</div>
-          ${groups.filter(g => standingsConferenceOf(g.name) === c).map(standingsGroupHtml).join('')}
+          ${conferenceTableHtml(groups.filter(g => standingsConferenceOf(g.name) === c))}
         </div>
       `).join('')}
     </div>
