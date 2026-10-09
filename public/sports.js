@@ -156,11 +156,13 @@ function renderSportsStandings(groups){
     return;
   }
 
+  const CONFERENCE_LABELS = { AFC: 'American Football Conference', NFC: 'National Football Conference' };
+
   el.innerHTML = `
     <div class="standings-columns">
       ${order.map(c => `
         <div class="standings-column">
-          <div class="standings-conf-label">${escapeHtml(c)}</div>
+          <div class="standings-conf-label">${escapeHtml(CONFERENCE_LABELS[c] || c)}</div>
           ${conferenceTableHtml(groups.filter(g => standingsConferenceOf(g.name) === c))}
         </div>
       `).join('')}
