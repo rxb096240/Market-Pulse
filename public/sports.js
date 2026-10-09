@@ -26,16 +26,29 @@ function sortSportsGames(games){
   });
 }
 
-// Keeps every live/upcoming game, but only the N most recent completed ones
-// -- otherwise a full week of finals buries the games actually worth
-// checking under ones that are already decided and old news.
-function limitCompletedGames(sortedGames, maxCompleted){
-  let seen = 0;
-  return sortedGames.filter(g => {
-    if(g.state !== 'post') return true;
-    seen++;
-    return seen <= maxCompleted;
-  });
+function scoreRowHtml(g){
+  const statusCls = g.state === 'in' ? 'live' : '';
+  const awayScore = g.away?.score !== null && g.away?.score !== undefined ? g.away.score : '--';
+  const homeScore = g.home?.score !== null && g.home?.score !== undefined ? g.home.score : '--';
+  return `
+    <div class="score-row">
+      <div class="score-teams">
+        <div class="score-team-row">
+          <span class="score-team-name${g.away?.winner ? ' winner' : ''}">${escapeHtml(g.away?.name || 'TBD')}</span>
+          <span class="score-team-val">${escapeHtml(String(awayScore))}</span>
+        </div>
+        <div class="score-team-row">
+          <span class="score-team-name${g.home?.winner ? ' winner' : ''}">${escapeHtml(g.home?.name || 'TBD')}</span>
+          <span class="score-team-val">${escapeHtml(String(homeScore))}</span>
+        </div>
+      </div>
+      <div class="score-status ${statusCls}">${escapeHtml(sportsStatusText(g))}</div>
+    </div>
+  `;
+}
+
+function scoresListHtml(games){
+  return `<div class="scores-list">${games.map(scoreRowHtml).join('')}</div>`;
 }
 
 function renderSportsScores(games){
@@ -46,27 +59,31 @@ function renderSportsScores(games){
     return;
   }
 
-  const limited = limitCompletedGames(sortSportsGames(games), 5);
-  el.innerHTML = limited.map(g => {
-    const statusCls = g.state === 'in' ? 'live' : '';
-    const awayScore = g.away?.score !== null && g.away?.score !== undefined ? g.away.score : '--';
-    const homeScore = g.home?.score !== null && g.home?.score !== undefined ? g.home.score : '--';
-    return `
-      <div class="score-row">
-        <div class="score-teams">
-          <div class="score-team-row">
-            <span class="score-team-name${g.away?.winner ? ' winner' : ''}">${escapeHtml(g.away?.name || 'TBD')}</span>
-            <span class="score-team-val">${escapeHtml(String(awayScore))}</span>
-          </div>
-          <div class="score-team-row">
-            <span class="score-team-name${g.home?.winner ? ' winner' : ''}">${escapeHtml(g.home?.name || 'TBD')}</span>
-            <span class="score-team-val">${escapeHtml(String(homeScore))}</span>
-          </div>
+  const sorted = sortSportsGames(games);
+  const liveUpcoming = sorted.filter(g => g.state !== 'post');
+  // Otherwise a full week of finals buries the games actually worth checking
+  // under ones that are already decided and old news.
+  const completed = sorted.filter(g => g.state === 'post').slice(0, 5);
+
+  // Side by side when both sides actually have something to show; a split
+  // would just leave one column empty otherwise.
+  if(liveUpcoming.length > 0 && completed.length > 0){
+    el.innerHTML = `
+      <div class="scores-columns">
+        <div class="scores-column">
+          <div class="scores-col-label">Live &amp; Upcoming</div>
+          ${scoresListHtml(liveUpcoming)}
         </div>
-        <div class="score-status ${statusCls}">${escapeHtml(sportsStatusText(g))}</div>
+        <div class="scores-column">
+          <div class="scores-col-label">Completed</div>
+          ${scoresListHtml(completed)}
+        </div>
       </div>
     `;
-  }).join('');
+    return;
+  }
+
+  el.innerHTML = scoresListHtml(liveUpcoming.length > 0 ? liveUpcoming : completed);
 }
 
 async function refreshSportsScores(){
