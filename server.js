@@ -1612,21 +1612,35 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
     const baseUrl = SPORTS_SCOREBOARD_URLS[league];
     if (!baseUrl) return res.status(400).json({ error: `Unsupported league: ${league}` });
 
-    const dateRange = sportsDateRangeParam(10, 10);
+    const dateRange = sportsDateRangeParam(14, 10);
     const rangedUrl = `${baseUrl}?dates=${dateRange}`;
 
-    // Fall back to the plain (unparameterized) scoreboard if the date-range
-    // request errors for any reason -- better to show "current week" games
-    // than nothing at all.
-    let data;
-    try {
-      ({ data } = await cachedFetch(`sports:${league}:${dateRange}`, 60_000, () => fetchJson(rangedUrl, 8000)));
-    } catch (rangedErr) {
-      console.error('admin sports ranged scores fetch failed, falling back:', league, rangedErr.message);
-      ({ data } = await cachedFetch(`sports:${league}:fallback`, 60_000, () => fetchJson(baseUrl, 8000)));
+    // Fetch both the plain "current week" scoreboard and an explicit wider
+    // date-range request, then merge (deduped by event id). ESPN's
+    // week-based NFL scoreboard doesn't reliably expand to a multi-week
+    // range the way day-based sports do, so relying on the ranged request
+    // alone could leave too few completed games to backfill "last 5
+    // completed" with -- merging both sources hedges against that.
+    const [currentResult, rangedResult] = await Promise.allSettled([
+      cachedFetch(`sports:${league}:current`, 60_000, () => fetchJson(baseUrl, 8000)),
+      cachedFetch(`sports:${league}:${dateRange}`, 60_000, () => fetchJson(rangedUrl, 8000))
+    ]);
+
+    if (currentResult.status === 'rejected' && rangedResult.status === 'rejected') {
+      throw currentResult.reason;
+    }
+    if (currentResult.status === 'rejected') console.error('admin sports current scores fetch failed:', league, currentResult.reason.message);
+    if (rangedResult.status === 'rejected') console.error('admin sports ranged scores fetch failed:', league, rangedResult.reason.message);
+
+    const eventsById = new Map();
+    for (const result of [currentResult, rangedResult]) {
+      if (result.status !== 'fulfilled') continue;
+      for (const event of result.value.data.events || []) {
+        eventsById.set(event.id, event);
+      }
     }
 
-    const games = (data.events || []).map(event => {
+    const games = Array.from(eventsById.values()).map(event => {
       const competition = event.competitions?.[0];
       const competitors = competition?.competitors || [];
       const home = competitors.find(c => c.homeAway === 'home');
