@@ -1631,7 +1631,14 @@ app.get('/api/admin/sports/cricket/scores', async (req, res) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    const { data } = await cachedFetch('sports:cricket:current', 60_000, () => fetchJson(CRICKET_SCOREBOARD_URL, 8000));
+    // Cricinfo's API 403s our default bot-like User-Agent -- it's meant for
+    // their own site, so a browser-like UA + matching Referer gets treated
+    // as a normal same-site request instead.
+    const { data } = await cachedFetch('sports:cricket:current', 60_000, () => fetchJson(CRICKET_SCOREBOARD_URL, 8000, {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': 'https://www.espncricinfo.com/live-cricket-score',
+      'Accept': 'application/json'
+    }));
 
     const rawMatches = data.matches || data.matchesList || [];
     console.log('cricket raw response (for shape verification):', JSON.stringify(rawMatches[0] ?? Object.keys(data)).slice(0, 2000));
