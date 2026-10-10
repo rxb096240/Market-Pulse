@@ -45,12 +45,16 @@ function scoreValueFor(g, team){
   return team?.score !== null && team?.score !== undefined ? team.score : '--';
 }
 
+// Populated on every render so the click handler below can look a game back
+// up by id without embedding its full JSON into the row's markup.
+let sportsGamesById = new Map();
+
 function scoreRowHtml(g){
   const statusCls = g.state === 'in' ? 'live' : '';
   const awayScore = scoreValueFor(g, g.away);
   const homeScore = scoreValueFor(g, g.home);
   return `
-    <div class="score-row">
+    <div class="score-row" data-game-id="${escapeHtml(String(g.id))}">
       <div class="score-teams">
         <div class="score-team-row">
           <span class="score-team-name${g.away?.winner ? ' winner' : ''}">${escapeHtml(g.away?.name || 'TBD')}</span>
@@ -73,6 +77,7 @@ function scoresListHtml(games){
 function renderSportsScores(games){
   const el = document.getElementById('adminSportsScores');
   if(!el) return;
+  sportsGamesById = new Map((games || []).map(g => [String(g.id), g]));
   if(!games || games.length === 0){
     el.innerHTML = `<div class="news-empty">No ${escapeHtml(SPORTS_LEAGUES[currentSportsLeague].label)} games right now.</div>`;
     return;
@@ -343,3 +348,78 @@ function stopSportsScoresPolling(){
     sportsScoresPollTimer = null;
   }
 }
+
+/* ---- Game detail modal ---- */
+const gameDetailModalBackdrop = document.getElementById('gameDetailModalBackdrop');
+const gameDetailModalClose = document.getElementById('gameDetailModalClose');
+const gameDetailTitle = document.getElementById('gameDetailTitle');
+const gameDetailMeta = document.getElementById('gameDetailMeta');
+const gameDetailBody = document.getElementById('gameDetailBody');
+
+function gameDetailStatRow(label, value){
+  return `
+    <div class="stock-detail-item">
+      <span class="stock-detail-label">${escapeHtml(label)}</span>
+      <span class="stock-detail-value">${escapeHtml(value || '--')}</span>
+    </div>
+  `;
+}
+
+// Quarter/period-by-period score table -- only shown when ESPN actually
+// sent linescores for both sides (not every event has them, e.g. a game
+// that hasn't started yet).
+function gameDetailPeriodsHtml(g){
+  const awayLines = g.away?.linescores || [];
+  const homeLines = g.home?.linescores || [];
+  if(awayLines.length === 0 || homeLines.length === 0) return '';
+  const periodHeaders = awayLines.map((_, i) => `<th>${i + 1}</th>`).join('');
+  const periodRow = (name, lines, total) => `
+    <tr>
+      <td>${escapeHtml(name)}</td>
+      ${lines.map(v => `<td class="num">${escapeHtml(v === null ? '-' : String(v))}</td>`).join('')}
+      <td class="num">${escapeHtml(total === null || total === undefined ? '-' : String(total))}</td>
+    </tr>
+  `;
+  return `
+    <table class="markets-table periods-table" style="margin-top:14px;">
+      <thead><tr><th>Team</th>${periodHeaders}<th>T</th></tr></thead>
+      <tbody>
+        ${periodRow(g.away?.name || 'Away', awayLines, g.away?.score)}
+        ${periodRow(g.home?.name || 'Home', homeLines, g.home?.score)}
+      </tbody>
+    </table>
+  `;
+}
+
+function closeGameDetailModal(){ gameDetailModalBackdrop?.classList.remove('open'); }
+
+function openGameDetailModal(g){
+  if(!gameDetailModalBackdrop) return;
+  gameDetailTitle.textContent = `${g.away?.name || 'TBD'} @ ${g.home?.name || 'TBD'}`;
+  gameDetailMeta.textContent = sportsStatusText(g);
+
+  const stats = [
+    g.away?.record ? [`${g.away.name} record`, g.away.record] : null,
+    g.home?.record ? [`${g.home.name} record`, g.home.record] : null,
+    g.venue ? ['Venue', g.venue] : null,
+    g.broadcast ? ['Broadcast', g.broadcast] : null
+  ].filter(Boolean);
+
+  gameDetailBody.innerHTML = `
+    ${stats.length > 0 ? `<div class="stock-detail-grid">${stats.map(([l, v]) => gameDetailStatRow(l, v)).join('')}</div>` : '<div class="news-empty">No additional details available.</div>'}
+    ${gameDetailPeriodsHtml(g)}
+  `;
+  gameDetailModalBackdrop.classList.add('open');
+}
+
+document.getElementById('adminSportsScores')?.addEventListener('click', (e) => {
+  const row = e.target.closest('.score-row');
+  if(!row) return;
+  const game = sportsGamesById.get(row.dataset.gameId);
+  if(game) openGameDetailModal(game);
+});
+
+gameDetailModalClose?.addEventListener('click', closeGameDetailModal);
+gameDetailModalBackdrop?.addEventListener('click', (e) => {
+  if(e.target === gameDetailModalBackdrop) closeGameDetailModal();
+});

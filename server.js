@@ -1735,19 +1735,28 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
       const competitors = competition?.competitors || [];
       const home = competitors.find(c => c.homeAway === 'home');
       const away = competitors.find(c => c.homeAway === 'away');
+      // The scoreboard event already carries more than the row view uses --
+      // record and period-by-period scores per team, plus venue/broadcast at
+      // the event level -- pulled through here so the game detail modal has
+      // something to show without a second request per click.
       const toTeam = c => c ? {
         name: c.team?.displayName || c.team?.name || 'TBD',
         abbreviation: c.team?.abbreviation || '',
         score: c.score ?? null,
-        winner: !!c.winner
+        winner: !!c.winner,
+        record: c.records?.find(r => r.type === 'total')?.summary || c.records?.[0]?.summary || null,
+        linescores: (c.linescores || []).map(l => (l.displayValue ?? l.value ?? null))
       } : null;
+      const venueParts = [competition?.venue?.fullName, competition?.venue?.address?.city, competition?.venue?.address?.state].filter(Boolean);
       return {
         id: event.id,
         date: event.date || null, // ISO timestamp -- shortDetail alone omits the date once a game is Final
         state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
         statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || '',
         home: toTeam(home),
-        away: toTeam(away)
+        away: toTeam(away),
+        venue: venueParts.length > 0 ? venueParts.join(', ') : null,
+        broadcast: competition?.broadcasts?.[0]?.names?.join(', ') || null
       };
     });
 

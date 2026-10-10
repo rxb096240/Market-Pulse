@@ -2106,7 +2106,10 @@
     gap:12px;
     flex-wrap:wrap;
     max-width:440px;
+    cursor:pointer;
+    transition:border-color .15s ease;
   }
+  .score-row:hover{ border-color:var(--amber); }
   .score-teams{ display:flex; flex-direction:column; gap:3px; min-width:0; }
   .score-team-row{ display:flex; justify-content:space-between; gap:16px; min-width:200px; }
   .score-team-name{ font-size:13.5px; font-weight:600; color:var(--muted); }
@@ -2135,6 +2138,20 @@
     color:var(--muted);
   }
   .standings-div-row:first-child td{ padding-top:11px; }
+
+  /* Quarter/period-by-period score table in the game detail modal -- a
+     different column count per sport (OT adds a period), so it uses
+     table-layout:auto instead of the standings table's fixed nth-child
+     widths, which assume exactly 4 columns and collided with team names. */
+  .periods-table{ width:100%; min-width:0; max-width:none; table-layout:auto; }
+  .periods-table th:first-child, .periods-table td:first-child{ text-align:left; }
+  .periods-table th:not(:first-child), .periods-table td:not(:first-child){
+    text-align:right;
+    font-family:'IBM Plex Mono',monospace;
+    font-variant-numeric:tabular-nums;
+    padding-left:12px;
+    padding-right:12px;
+  }
 
   .standings-columns{ display:flex; gap:16px; flex-wrap:wrap; }
   .standings-column{ flex:1; min-width:170px; }
