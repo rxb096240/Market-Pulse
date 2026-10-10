@@ -1601,6 +1601,67 @@ function sportsDateRangeParam(daysBack, daysForward) {
   return `${fmt(start)}-${fmt(end)}`;
 }
 
+// Cricket doesn't fit the NFL/NBA shape below: a team's score is a string
+// like "245/6 (42.3 ov)" rather than a single number, a Test match can have
+// two innings per side, and there's no single ongoing "league" the way
+// nfl/nba are -- this pulls whatever matches ESPN's cricket scoreboard
+// currently has live or recently completed across all series, rather than
+// scoping to one competition. This endpoint is the least verified of the
+// sports integrations (no outbound access to espn.com from here to confirm
+// the exact response shape), so it logs a sample raw event on every
+// request for now to make it possible to diagnose from Render's logs if
+// the parsing below doesn't match what ESPN actually sends.
+//
+// Registered BEFORE the generic '/:league/scores' route below -- Express
+// matches routes in registration order, and ':league' would otherwise
+// swallow 'cricket' too (returning its generic "Unsupported league" 400
+// with no server-side log), so this dedicated route would never be reached
+// if it came after.
+const CRICKET_SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard';
+
+app.get('/api/admin/sports/cricket/scores', async (req, res) => {
+  try {
+    const token = (req.headers.authorization || '').replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Missing auth token' });
+
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const { data } = await cachedFetch('sports:cricket:current', 60_000, () => fetchJson(CRICKET_SCOREBOARD_URL, 8000));
+
+    if (data.events?.[0]) {
+      console.log('cricket sample event (for shape verification):', JSON.stringify(data.events[0]).slice(0, 2000));
+    }
+
+    const matches = (data.events || []).map(event => {
+      const competition = event.competitions?.[0];
+      const competitors = competition?.competitors || [];
+      const toTeam = c => c ? {
+        name: c.team?.displayName || c.team?.name || 'TBD',
+        // Prefer a per-innings summary ("245/6" & "180/10" for a completed
+        // Test's two innings) and fall back to whatever flat score field
+        // is present if linescores isn't.
+        scoreDisplay: (c.linescores || []).map(l => l.displayValue).filter(Boolean).join(' & ') || c.score || null,
+        winner: !!c.winner
+      } : null;
+      return {
+        id: event.id,
+        date: event.date || null,
+        state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
+        statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || event.status?.type?.detail || '',
+        teams: competitors.map(toTeam)
+      };
+    });
+
+    res.json(matches);
+  } catch (e) {
+    console.error('admin cricket scores fetch failed:', e.message);
+    res.status(502).json({ error: 'Failed to fetch cricket scores' });
+  }
+});
+
 app.get('/api/admin/sports/:league/scores', async (req, res) => {
   try {
     const token = (req.headers.authorization || '').replace('Bearer ', '');
@@ -1668,61 +1729,6 @@ app.get('/api/admin/sports/:league/scores', async (req, res) => {
   } catch (e) {
     console.error('admin sports scores fetch failed:', req.params.league, e.message);
     res.status(502).json({ error: 'Failed to fetch scores' });
-  }
-});
-
-// Cricket doesn't fit the NFL/NBA shape above: a team's score is a string
-// like "245/6 (42.3 ov)" rather than a single number, a Test match can have
-// two innings per side, and there's no single ongoing "league" the way
-// nfl/nba are -- this pulls whatever matches ESPN's cricket scoreboard
-// currently has live or recently completed across all series, rather than
-// scoping to one competition. This endpoint is the least verified of the
-// sports integrations (no outbound access to espn.com from here to confirm
-// the exact response shape), so it logs a sample raw event on every
-// request for now to make it possible to diagnose from Render's logs if
-// the parsing below doesn't match what ESPN actually sends.
-const CRICKET_SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard';
-
-app.get('/api/admin/sports/cricket/scores', async (req, res) => {
-  try {
-    const token = (req.headers.authorization || '').replace('Bearer ', '');
-    if (!token) return res.status(401).json({ error: 'Missing auth token' });
-
-    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
-    if (userErr || !userData?.user || userData.user.email !== ADMIN_EMAIL) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
-
-    const { data } = await cachedFetch('sports:cricket:current', 60_000, () => fetchJson(CRICKET_SCOREBOARD_URL, 8000));
-
-    if (data.events?.[0]) {
-      console.log('cricket sample event (for shape verification):', JSON.stringify(data.events[0]).slice(0, 2000));
-    }
-
-    const matches = (data.events || []).map(event => {
-      const competition = event.competitions?.[0];
-      const competitors = competition?.competitors || [];
-      const toTeam = c => c ? {
-        name: c.team?.displayName || c.team?.name || 'TBD',
-        // Prefer a per-innings summary ("245/6" & "180/10" for a completed
-        // Test's two innings) and fall back to whatever flat score field
-        // is present if linescores isn't.
-        scoreDisplay: (c.linescores || []).map(l => l.displayValue).filter(Boolean).join(' & ') || c.score || null,
-        winner: !!c.winner
-      } : null;
-      return {
-        id: event.id,
-        date: event.date || null,
-        state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
-        statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || event.status?.type?.detail || '',
-        teams: competitors.map(toTeam)
-      };
-    });
-
-    res.json(matches);
-  } catch (e) {
-    console.error('admin cricket scores fetch failed:', e.message);
-    res.status(502).json({ error: 'Failed to fetch cricket scores' });
   }
 });
 
