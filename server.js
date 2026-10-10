@@ -1604,20 +1604,22 @@ function sportsDateRangeParam(daysBack, daysForward) {
 // Cricket doesn't fit the NFL/NBA shape below: a team's score is a string
 // like "245/6 (42.3 ov)" rather than a single number, a Test match can have
 // two innings per side, and there's no single ongoing "league" the way
-// nfl/nba are -- this pulls whatever matches ESPN's cricket scoreboard
-// currently has live or recently completed across all series, rather than
-// scoping to one competition. This endpoint is the least verified of the
-// sports integrations (no outbound access to espn.com from here to confirm
-// the exact response shape), so it logs a sample raw event on every
-// request for now to make it possible to diagnose from Render's logs if
-// the parsing below doesn't match what ESPN actually sends.
+// nfl/nba are. ESPN's generic site.api.espn.com has no leagueless cricket
+// feed -- it 404s without a specific competition ID -- so this instead
+// calls ESPN Cricinfo's own API, the one that actually powers
+// espncricinfo.com's "Live Cricket Score" homepage (all live/recent
+// matches across every series at once, which is what was asked for here).
+// This is the least verified integration so far (no outbound access to
+// espn.com/espncricinfo.com from here to confirm the exact response
+// shape), so it logs the raw response on every request for now to make it
+// diagnosable from Render's logs if the parsing below doesn't match.
 //
 // Registered BEFORE the generic '/:league/scores' route below -- Express
 // matches routes in registration order, and ':league' would otherwise
 // swallow 'cricket' too (returning its generic "Unsupported league" 400
 // with no server-side log), so this dedicated route would never be reached
 // if it came after.
-const CRICKET_SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard';
+const CRICKET_SCOREBOARD_URL = 'https://hs-consumer-api.espncricinfo.com/v1/pages/matches/current?lang=en';
 
 app.get('/api/admin/sports/cricket/scores', async (req, res) => {
   try {
@@ -1631,27 +1633,44 @@ app.get('/api/admin/sports/cricket/scores', async (req, res) => {
 
     const { data } = await cachedFetch('sports:cricket:current', 60_000, () => fetchJson(CRICKET_SCOREBOARD_URL, 8000));
 
-    if (data.events?.[0]) {
-      console.log('cricket sample event (for shape verification):', JSON.stringify(data.events[0]).slice(0, 2000));
-    }
+    const rawMatches = data.matches || data.matchesList || [];
+    console.log('cricket raw response (for shape verification):', JSON.stringify(rawMatches[0] ?? Object.keys(data)).slice(0, 2000));
 
-    const matches = (data.events || []).map(event => {
-      const competition = event.competitions?.[0];
-      const competitors = competition?.competitors || [];
-      const toTeam = c => c ? {
-        name: c.team?.displayName || c.team?.name || 'TBD',
-        // Prefer a per-innings summary ("245/6" & "180/10" for a completed
-        // Test's two innings) and fall back to whatever flat score field
-        // is present if linescores isn't.
-        scoreDisplay: (c.linescores || []).map(l => l.displayValue).filter(Boolean).join(' & ') || c.score || null,
-        winner: !!c.winner
-      } : null;
+    const matches = rawMatches.map(match => {
+      const teamsSrc = match.teams || [match.team1, match.team2].filter(Boolean);
+      const toTeam = t => {
+        if (!t) return null;
+        const team = t.team || t;
+        const scores = t.score || t.scores || [];
+        const scoreDisplay = Array.isArray(scores) && scores.length
+          ? scores.map(s => {
+              const runs = s.runs ?? s.R ?? '';
+              const wickets = s.wickets ?? s.W;
+              const overs = s.overs ?? s.O;
+              const wicketsPart = (wickets !== undefined && wickets !== null) ? `/${wickets}` : '';
+              const oversPart = (overs !== undefined && overs !== null) ? ` (${overs} ov)` : '';
+              return `${runs}${wicketsPart}${oversPart}`;
+            }).join(' & ')
+          : null;
+        return {
+          name: team.name || team.longName || team.abbreviation || 'TBD',
+          scoreDisplay,
+          winner: !!(t.winner || team.winner)
+        };
+      };
+
+      const statusText = (match.statusText || match.status || '').toString();
+      const statusLower = statusText.toLowerCase();
+      const state = statusLower.includes('live') ? 'in'
+        : (statusLower.includes('result') || statusLower.includes('won') || statusLower.includes('complete') || statusLower.includes('draw') || statusLower.includes('tied')) ? 'post'
+        : 'pre';
+
       return {
-        id: event.id,
-        date: event.date || null,
-        state: event.status?.type?.state || 'pre', // 'pre' | 'in' | 'post'
-        statusDetail: event.status?.type?.shortDetail || event.status?.type?.description || event.status?.type?.detail || '',
-        teams: competitors.map(toTeam)
+        id: match.objectId || match.id || match.matchId || null,
+        date: match.startDate || match.date || null,
+        state,
+        statusDetail: statusText || match.title || '',
+        teams: teamsSrc.map(toTeam)
       };
     });
 
