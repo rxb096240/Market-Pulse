@@ -1976,6 +1976,128 @@ if (PUSH_ENABLED) {
   setInterval(checkWatchlistAlerts, 5 * 60_000);
 }
 
+// ---- NFL game-live push notifications (admin only) ----
+// Same push infrastructure as the watchlist alerts above, just notifying
+// the admin account's own subscription(s) the moment an NFL game goes
+// live, instead of a user's watchlist crossing a price threshold. Reuses
+// alert_state for dedup, but as a one-shot flag rather than an
+// armed/disarmed toggle -- game ids never repeat, so once a game's fired
+// it never needs to re-arm the way a price crossing does.
+let cachedAdminUserId = null;
+async function getAdminUserId(){
+  if (cachedAdminUserId) return cachedAdminUserId;
+  if (!ADMIN_EMAIL) return null;
+  for (let page = 1; page <= 10; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) { console.error('sports alert: admin lookup failed:', error.message); return null; }
+    const match = data.users.find(u => u.email === ADMIN_EMAIL);
+    if (match) { cachedAdminUserId = match.id; return cachedAdminUserId; }
+    if (data.users.length < 1000) break;
+  }
+  return null;
+}
+
+async function checkSportsAlerts(){
+  try {
+    const adminUserId = await getAdminUserId();
+    if (!adminUserId) return;
+
+    const { data: subs, error: subErr } = await supabaseAdmin.from('push_subscriptions').select('*').eq('user_id', adminUserId);
+    if (subErr) { console.error('sports alert: subs fetch failed:', subErr.message); return; }
+    if (!subs || subs.length === 0) return;
+
+    // Same cache keys as the /scores endpoint -- this piggybacks on
+    // whichever of the two already fetched it within the last 60s rather
+    // than doubling up on upstream calls.
+    const baseUrl = SPORTS_SCOREBOARD_URLS.nfl;
+    const dateRange = sportsDateRangeParam(14, 10);
+    const rangedUrl = `${baseUrl}?dates=${dateRange}`;
+
+    const [currentResult, rangedResult] = await Promise.allSettled([
+      cachedFetch('sports:nfl:current', 60_000, () => fetchJson(baseUrl, 8000)),
+      cachedFetch(`sports:nfl:${dateRange}`, 60_000, () => fetchJson(rangedUrl, 8000))
+    ]);
+
+    const eventsById = new Map();
+    for (const result of [currentResult, rangedResult]) {
+      if (result.status !== 'fulfilled') continue;
+      for (const event of result.value.data.events || []) {
+        eventsById.set(event.id, event);
+      }
+    }
+
+    const liveGames = Array.from(eventsById.values())
+      .filter(event => event.status?.type?.state === 'in')
+      .map(event => {
+        const competition = event.competitions?.[0];
+        const competitors = competition?.competitors || [];
+        const home = competitors.find(c => c.homeAway === 'home');
+        const away = competitors.find(c => c.homeAway === 'away');
+        return {
+          id: event.id,
+          homeName: home?.team?.displayName || home?.team?.name || 'TBD',
+          awayName: away?.team?.displayName || away?.team?.name || 'TBD'
+        };
+      });
+    if (liveGames.length === 0) return;
+
+    const { data: stateRows, error: stateErr } = await supabaseAdmin
+      .from('alert_state')
+      .select('asset_key, armed')
+      .eq('user_id', adminUserId)
+      .eq('asset_type', 'nfl_game');
+    if (stateErr) { console.error('sports alert: state fetch failed:', stateErr.message); return; }
+
+    const armedByGameId = new Map();
+    (stateRows || []).forEach(s => armedByGameId.set(s.asset_key, s.armed));
+
+    const stateUpserts = [];
+    const notifyTasks = [];
+    for (const game of liveGames) {
+      const wasArmed = armedByGameId.get(game.id) !== false; // missing row = never notified yet
+      if (!wasArmed) continue; // already notified this game going live
+
+      stateUpserts.push({ user_id: adminUserId, asset_type: 'nfl_game', asset_key: game.id, armed: false });
+
+      const payload = JSON.stringify({
+        title: 'NFL game live',
+        body: `${game.awayName} @ ${game.homeName} just kicked off.`,
+        url: '/#admin-sports'
+      });
+
+      subs.forEach(sub => {
+        notifyTasks.push(
+          webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            payload
+          ).catch(async (err) => {
+            if (err.statusCode === 404 || err.statusCode === 410) {
+              await supabaseAdmin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+            } else {
+              console.error('sports push send failed:', sub.endpoint, err.message);
+            }
+          })
+        );
+      });
+    }
+
+    if (stateUpserts.length > 0) {
+      const { error: upsertErr } = await supabaseAdmin
+        .from('alert_state')
+        .upsert(stateUpserts, { onConflict: 'user_id,asset_type,asset_key' });
+      if (upsertErr) console.error('sports alert: state upsert failed:', upsertErr.message);
+    }
+
+    await Promise.allSettled(notifyTasks);
+  } catch (e) {
+    console.error('sports alert check failed:', e.message);
+  }
+}
+
+if (PUSH_ENABLED) {
+  setInterval(checkSportsAlerts, 5 * 60_000);
+}
+
 // ---- Serve the static frontend (index.html, script.js, style.css) ----
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir));
